@@ -1,0 +1,54 @@
+:root {
+	--shadow-color: 0deg 0% 0%;
+	  --shadow-elevation-medium:
+	  0.5px 0.5px 0.7px hsl(var(--shadow-color) / 0.14),
+	  1.1px 1.1px 1.5px -0.9px hsl(var(--shadow-color) / 0.12),
+	  2.4px 2.5px 3.3px -1.8px hsl(var(--shadow-color) / 0.1),
+	  5.3px 5.6px 7.3px -2.7px hsl(var(--shadow-color) / 0.09),
+	  11px 11.4px 15.1px -3.6px hsl(var(--shadow-color) / 0.07);
+}
+
+.image-rename-modal .modal {
+	width: 65%;
+	min-width: 600px;
+}
+.image-rename-modal .modal-content {
+	padding: 10px 5px;
+}
+.image-rename-modal .image-container {
+	display: flex;
+	justify-content: center;
+}
+
+.image-rename-modal .origin-path {
+	padding: 10px 0;
+	color: var(--text-muted);
+}
+.image-rename-modal .image-container img {
+	display: block;
+	max-height: 300px;
+	box-shadow: var(--shadow-elevation-medium);
+}
+
+.image-rename-modal .setting-item-control input {
+	min-width: 300px;
+}
+
+
+/* settings */
+
+.long-description-setting-item {
+	flex-wrap: wrap;
+}
+.long-description-setting-item .setting-item-description {
+	white-space: pre-wrap;
+	line-height: 1.3em;
+}
+
+.long-description-setting-item .setting-item-control {
+	padding-top: 10px;
+}
+.long-description-setting-item .setting-item-control input {
+	min-width: 300px;
+	width: 50%;
+}

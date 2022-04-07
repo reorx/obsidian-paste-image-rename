@@ -1,14 +1,14 @@
 /* TODOs:
- * - check name existence when saving
- * - add context menu for renaming the link/file
+ * - [ ] check name existence when saving
+ * - [ ] add context menu for renaming the link/file
+ * - [ ] batch rename all pasted images in a file
  */
 import {
-	App, Plugin, PluginSettingTab, Setting,
-	TFile, TAbstractFile,
-	Modal,
+  App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
+  Modal,
 } from 'obsidian';
-import $ from 'cash-dom';
 
+import { DEBUG } from './utils';
 
 interface PluginSettings {
 	// ${imageNameKey}-${input}${numberSuffix('-')}
@@ -23,8 +23,6 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	autoRenameIfNoInputRequired: false,
 }
 
-const DEBUG = true
-
 const PASTED_IMAGE_PREFIX = 'Pasted image '
 
 
@@ -33,8 +31,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 	debugModal: ImageRenameModal|null
 
 	async onload() {
+		const pkg = require('../package.json')
+		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings();
-		console.log('paste image rename plugin loaded')
 
 		this.registerEvent(
 			this.app.vault.on('create', (file) => {
@@ -92,14 +91,6 @@ function isPastedImage(file: TAbstractFile): boolean {
 	return false
 }
 
-const modalContent = `
-<div class="image"><img></div>
-<div class="inputs">
-	<input type="text" placeholder="title" class="title">
-	<input type="button" value="save" class="save">
-</div>
-`
-
 class ImageRenameModal extends Modal {
 	src: TFile
 
@@ -112,9 +103,43 @@ class ImageRenameModal extends Modal {
 		this.containerEl.addClass('image-rename-modal')
 		const { contentEl } = this;
 
-		const content = $(modalContent)
-		content.find('.image img').attr('src', this.app.vault.getResourcePath(this.src))
-		$(contentEl).append(content)
+		const imageContainer = contentEl.createDiv({
+			cls: 'image-container',
+		})
+		imageContainer.createEl('img', {
+			attr: {
+				src: this.app.vault.getResourcePath(this.src),
+			}
+		})
+
+		contentEl.createEl('div', {
+			cls: 'origin-path',
+			text: `Image path: ${this.src.path}`,
+		})
+
+		new Setting(contentEl)
+			.setName('New name')
+			.setDesc('templates: ')
+			.addText(text => text
+				.setValue('')
+				.onChange(async (value) => {
+					console.log(value)
+				}
+				))
+
+		new Setting(contentEl)
+			.addButton(button => {
+				button
+					.setButtonText('Rename')
+					.onClick(() => {
+						this.close()
+					})
+			})
+			.addButton(button => {
+				button
+					.setButtonText('Cancel')
+					.onClick(() => { this.close() })
+			})
 	}
 
 	onClose() {
@@ -149,6 +174,7 @@ class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('New name pattern')
 			.setDesc(newNamePatternDesc)
+			.setClass('long-description-setting-item')
 			.addText(text => text
 				.setPlaceholder('${imageNameKey}-${input}')
 				.setValue(this.plugin.settings.newNamePattern)
