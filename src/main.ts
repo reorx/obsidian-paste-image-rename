@@ -24,7 +24,7 @@ interface PluginSettings {
 // TODO two functions: rename, autoRename
 
 const DEFAULT_SETTINGS: PluginSettings = {
-	imageNamePattern: '{{imageNameKey}}-',
+	imageNamePattern: '{{imageNameKey}}',
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
 	autoRename: false,
@@ -88,13 +88,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openRenameModal(file, newName)
 			return
 		}
-
-		const dedupedNewName = await this.deduplicateNewName(newName, file)
-		debugLog('deduplicated newName:', dedupedNewName)
+		this.renameFile(file, newName)
 	}
 
-	async renameFile(file: TFile, newPath: string) {
-		const newName = path.basename(newPath)
+	async renameFile(file: TFile, newName: string) {
+		// deduplicate name
+		newName = await this.deduplicateNewName(newName, file)
+		debugLog('deduplicated newName:', newName)
+		const originName = path.basename(file.path)
+
+		// file system operation
+		const newPath = path.join(path.dirname(file.path), newName)
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
@@ -110,8 +114,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 			return
 		}
 
-		const linkText = `[[${file.basename}]]`,
+		const linkText = `[[${originName}]]`,
 			newLinkText = `[[${newName}]]`;
+		debugLog('replace text', linkText, newLinkText)
 		editor.setValue(
 			editor.getValue().replace(linkText, newLinkText)
 		)
@@ -120,8 +125,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	openRenameModal(file: TFile, newName: string) {
-		const modal = new ImageRenameModal(this.app, file as TFile, newName, (filepath: string) => {
-			this.renameFile(file, filepath)
+		const modal = new ImageRenameModal(this.app, file as TFile, newName, (confirmedName: string) => {
+			this.renameFile(file, confirmedName)
 		})
 		this.modals.push(modal)
 		modal.open()
@@ -236,7 +241,6 @@ class ImageRenameModal extends Modal {
 		this.src = src
 		this.newName = newName
 		this.renameFunc = renameFunc
-		console.log('parsed', this.newName)
 	}
 
 	onOpen() {
@@ -255,7 +259,7 @@ class ImageRenameModal extends Modal {
 		const getNewPath = (name: string) => {
 			return path.join(path.dirname(this.src.path), name)
 		}
-		let newPath = getNewPath(this.newName)
+		let newName = this.newName
 		const newNameParsed = path.parse(this.newName)
 
 		const infoET = createElementTree(contentEl, {
@@ -284,7 +288,7 @@ class ImageRenameModal extends Modal {
 						},
 						{
 							tag: 'span',
-							text: newPath,
+							text: getNewPath(newName),
 						}
 					],
 				}
@@ -292,8 +296,8 @@ class ImageRenameModal extends Modal {
 		})
 
 		const doRename = async () => {
-			debugLog('doRename', newPath)
-			this.renameFunc(newPath)
+			debugLog('doRename', newName)
+			this.renameFunc(newName)
 		}
 
 		const nameSetting = new Setting(contentEl)
@@ -302,8 +306,8 @@ class ImageRenameModal extends Modal {
 			.addText(text => text
 				.setValue(newNameParsed.name)
 				.onChange(async (value) => {
-					newPath = getNewPath(value + newNameParsed.ext)
-					infoET.children[1].children[1].el.innerText = newPath
+					newName = value + newNameParsed.ext
+					infoET.children[1].children[1].el.innerText = getNewPath(newName)
 				}
 				))
 		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
