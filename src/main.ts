@@ -1,6 +1,6 @@
 /* TODOs:
- * - [ ] check name existence when saving
- * - [ ] imageNameKey in frontmatter
+ * - [x] check name existence when saving
+ * - [x] imageNameKey in frontmatter
  * - [ ] add context menu for renaming the link/file
  * - [ ] batch rename all pasted images in a file
  */
@@ -20,8 +20,6 @@ interface PluginSettings {
 	dupNumberDelimiter: string
 	autoRename: boolean
 }
-
-// TODO two functions: rename, autoRename
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	imageNamePattern: '{{imageNameKey}}',
@@ -137,8 +135,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 		let imageNameKey = ''
 		const activeFile = this.getActiveFile()
 		if (activeFile) {
-			debugLog('frontmatter', this.app.metadataCache.getFileCache(activeFile).frontmatter)
-			imageNameKey = this.app.metadataCache.getFileCache(activeFile).frontmatter?.imageNameKey || ''
+			const fileCache = this.app.metadataCache.getFileCache(activeFile)
+			if (fileCache) {
+				debugLog('frontmatter', fileCache.frontmatter)
+				imageNameKey = fileCache.frontmatter?.imageNameKey || ''
+			} else {
+				console.warn('could not get file cache from active file', activeFile.name)
+			}
 		}
 
 		const stem = renderTemplate(this.settings.imageNamePattern, { imageNameKey })
