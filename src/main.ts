@@ -81,11 +81,11 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	async renameImage(file: TFile, autoRename: boolean = false) {
-		const { newName, isMeaningful }= this.generateNewName(file)
+		const { stem, newName, isMeaningful }= this.generateNewName(file)
 		debugLog('generated newName:', newName, isMeaningful)
 
 		if (!isMeaningful || !autoRename) {
-			this.openRenameModal(file, newName)
+			this.openRenameModal(file, isMeaningful ? stem : '')
 			return
 		}
 		this.renameFile(file, newName)
@@ -130,7 +130,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			]
 		})
 
-		new Notice(`Renamed ${file.name} to ${newName}`)
+		new Notice(`Renamed ${originName} to ${newName}`)
 	}
 
 	openRenameModal(file: TFile, newName: string) {
@@ -159,6 +159,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
 
 		return {
+			stem,
 			newName: stem + path.extname(file.path),
 			isMeaningful: stem.replace(meaninglessRegex, '') !== '',
 		}
@@ -247,19 +248,20 @@ function isPastedImage(file: TAbstractFile): boolean {
 
 class ImageRenameModal extends Modal {
 	src: TFile
-	newName: string
+	stem: string
 	renameFunc: (path: string) => void
 
-	constructor(app: App, src: TFile, newName: string, renameFunc: (path: string) => void) {
+	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => void) {
 		super(app);
 		this.src = src
-		this.newName = newName
+		this.stem = stem
 		this.renameFunc = renameFunc
 	}
 
 	onOpen() {
 		this.containerEl.addClass('image-rename-modal')
-		const { contentEl } = this;
+		const { contentEl, titleEl } = this;
+		titleEl.setText('Rename image')
 
 		const imageContainer = contentEl.createDiv({
 			cls: 'image-container',
@@ -270,11 +272,10 @@ class ImageRenameModal extends Modal {
 			}
 		})
 
-		const getNewPath = (name: string) => {
-			return path.join(path.dirname(this.src.path), name)
-		}
-		let newName = this.newName
-		const newNameParsed = path.parse(this.newName)
+		let stem = this.stem
+		const ext = path.extname(this.src.path)
+		const getNewName = (stem: string) => stem + ext
+		const getNewPath = (stem: string) => path.join(path.dirname(this.src.path), getNewName(stem))
 
 		const infoET = createElementTree(contentEl, {
 			tag: 'ul',
@@ -302,7 +303,7 @@ class ImageRenameModal extends Modal {
 						},
 						{
 							tag: 'span',
-							text: getNewPath(newName),
+							text: getNewPath(stem),
 						}
 					],
 				}
@@ -310,18 +311,21 @@ class ImageRenameModal extends Modal {
 		})
 
 		const doRename = async () => {
-			debugLog('doRename', newName)
-			this.renameFunc(newName)
+			debugLog('doRename', stem)
+			this.renameFunc(getNewName(stem))
 		}
 
 		const nameSetting = new Setting(contentEl)
 			.setName('New name')
 			.setDesc('templates: ')
 			.addText(text => text
-				.setValue(newNameParsed.name)
+				.setValue(stem)
 				.onChange(async (value) => {
-					newName = value + newNameParsed.ext
-					infoET.children[1].children[1].el.innerText = getNewPath(newName)
+					// TODO show input error
+					// if (!value) {
+					// }
+					stem = value
+					infoET.children[1].children[1].el.innerText = getNewPath(stem)
 				}
 				))
 		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
