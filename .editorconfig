@@ -1,7 +1,7 @@
 # top-most EditorConfig file
 root = true
 
-[*]
+[*.ts]
 charset = utf-8
 insert_final_newline = true
 indent_style = tab
