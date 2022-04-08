@@ -38,6 +38,23 @@ You can change the pattern for new name generating by updating the "Image name p
 
 For detailed explanation, and other features such as auto renaming, please refer to [Settings](#settings).
 
+
+### Add prefix/suffix to duplicated names
+
+The plugin will always try to add a prefix/suffix if there's a file of the same name.
+
+Let's continue from the last section and paste the second image, the prompt will still show the new name as "my-blog", now if we just click "Rename", the file will be renamed as "my-blog-1.png", not "my-blog.png":
+
+![](images/document.png)
+
+The `-1` suffix is generated according to the default settings:
+- Because "Duplicate number at start" is false, suffix is used rather than prefix
+- "Duplicate number delimiter" `-` is put before the number `1`
+
+If we paste the third image without editing the "New name" input, its name will be "my-blog-2.png", the number is increased according to the largest number of "my-blog-?.png" in the attachment directory.
+
+This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequencially by the pattern and `imageNameKey` set.
+
 ## Settings
 
 - Image name pattern
