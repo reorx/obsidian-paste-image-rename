@@ -156,11 +156,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 		let dupNameRegex
 		if (this.settings.dupNumberAtStart) {
 			dupNameRegex = new RegExp(
-				`^(?<number>\d+)${delimiter}(?<name>${newNameObj.name})${newNameObj.ext}$`)
+				`^(?<number>\\d+)${delimiter}(?<name>${newNameObj.name})${newNameObj.ext}$`)
 		} else {
 			dupNameRegex = new RegExp(
-				`^(?<name>${newNameObj.name})${delimiter}(?<number>\d+)${newNameObj.ext}$`)
+				`^(?<name>${newNameObj.name})${delimiter}(?<number>\\d+)${newNameObj.ext}$`)
 		}
+		debugLog('dupNameRegex', dupNameRegex)
 
 		const dupNameNumbers: number[] = []
 		let isNewNameExist = false
