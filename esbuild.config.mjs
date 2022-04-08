@@ -4,7 +4,7 @@ import esbuild from 'esbuild';
 import fs from 'fs';
 import process from 'process';
 
-const prod = (process.argv[2] === 'production');
+const prod = process.env.BUILD_ENV === 'production'
 
 let runScriptPlugin = {
 	name: 'run-script',
