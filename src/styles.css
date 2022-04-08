@@ -20,9 +20,18 @@
 	justify-content: center;
 }
 
-.image-rename-modal .origin-path {
+.image-rename-modal .info {
 	padding: 10px 0;
 	color: var(--text-muted);
+}
+.image-rename-modal .info li > span:nth-of-type(1) {
+	display: inline-block;
+	width: 6em;
+	margin-right: .5em;
+}
+.image-rename-modal .info li > span:nth-of-type(1):after {
+	content: ':';
+	float: right;
 }
 .image-rename-modal .image-container img {
 	display: block;

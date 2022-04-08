@@ -6,17 +6,19 @@
  */
 import {
   App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
-  Modal,
+  Modal, MarkdownView, Notice,
 } from 'obsidian';
+import * as path from 'path';
 
-import { DEBUG } from './utils';
+import { renderTemplate } from './template';
+import { createElementTree, debugLog } from './utils';
 
 interface PluginSettings {
 	// {{imageNameKey}}-{{DATE:YYYY-MM-DD}}
 	imageNamePattern: string
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
-	alwaysConfirmRename: boolean
+	autoRename: boolean
 }
 
 // TODO two functions: rename, autoRename
@@ -25,7 +27,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	imageNamePattern: '{{imageNameKey}}-',
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
-	alwaysConfirmRename: true,
+	autoRename: false,
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -33,7 +35,7 @@ const PASTED_IMAGE_PREFIX = 'Pasted image '
 
 export default class PasteImageRenamePlugin extends Plugin {
 	settings: PluginSettings
-	debugModal: ImageRenameModal|null
+	modals: ImageRenameModal[] = []
 
 	async onload() {
 		const pkg = require('../package.json')
@@ -50,8 +52,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 				// if the pasted image is created more than 1 second ago, ignore it
 				if (timeGapMs > 1000)
 					return
-				console.log('file created', file)
-				new ImageRenameModal(this.app, file as TFile).open();
+				debugLog('pasted image created', file)
+				this.renameImage(file, this.settings.autoRename)
 			})
 		)
 
@@ -59,6 +61,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 
 		// debug code
+		/*
 		if (DEBUG) {
 			var imageFile: TFile
 			for (const file of this.app.vault.getFiles()) {
@@ -68,14 +71,140 @@ export default class PasteImageRenamePlugin extends Plugin {
 				}
 			}
 			if (imageFile) {
-				this.debugModal = new ImageRenameModal(this.app, imageFile as TFile)
-				this.debugModal.open()
+				const modal = new ImageRenameModal(this.app, imageFile as TFile)
+				modal.open()
+				this.modals.push(modal)
+				this.renameImage(imageFile)
 			}
+		}
+		*/
+	}
+
+	async renameImage(file: TFile, autoRename: boolean = false) {
+		const { newName, isMeaningful }= this.generateNewName(file)
+		debugLog('generated newName:', newName, isMeaningful)
+
+		if (!isMeaningful || !autoRename) {
+			this.openRenameModal(file, newName)
+			return
+		}
+
+		const dedupedNewName = await this.deduplicateNewName(newName, file)
+		debugLog('deduplicated newName:', dedupedNewName)
+	}
+
+	async renameFile(file: TFile, newPath: string) {
+		const newName = path.basename(newPath)
+		try {
+			await this.app.fileManager.renameFile(file, newPath)
+		} catch (err) {
+			new Notice(`Failed to rename ${newName}: ${err}`)
+			throw err
+		}
+
+		// in case fileManager.renameFile may not update the internal link in the active file,
+		// we manually replace by manipulating the editor
+		const editor = this.getActiveEditor()
+		if (!editor) {
+			new Notice(`Failed to rename ${newName}: no active editor`)
+			return
+		}
+
+		const linkText = `[[${file.basename}]]`,
+			newLinkText = `[[${newName}]]`;
+		editor.setValue(
+			editor.getValue().replace(linkText, newLinkText)
+		)
+
+		new Notice(`Renamed ${file.name} to ${newName}`)
+	}
+
+	openRenameModal(file: TFile, newName: string) {
+		const modal = new ImageRenameModal(this.app, file as TFile, newName, (filepath: string) => {
+			this.renameFile(file, filepath)
+		})
+		this.modals.push(modal)
+		modal.open()
+	}
+
+	// returns a new name for the input file, with extension
+	generateNewName(file: TFile) {
+		let imageNameKey = ''
+		const activeFile = this.getActiveFile()
+		if (activeFile) {
+			debugLog('frontmatter', this.app.metadataCache.getFileCache(activeFile).frontmatter)
+			imageNameKey = this.app.metadataCache.getFileCache(activeFile).frontmatter?.imageNameKey || ''
+		}
+
+		const stem = renderTemplate(this.settings.imageNamePattern, { imageNameKey })
+		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
+
+		return {
+			newName: stem + path.extname(file.path),
+			isMeaningful: stem.replace(meaninglessRegex, '') !== '',
 		}
 	}
 
+	async deduplicateNewName(newName: string, file: TFile) {
+		// list files in dir
+		const dir = path.dirname(file.path)
+		const listed = await this.app.vault.adapter.list(dir)
+		debugLog('sibling files', listed)
+
+		const newNameObj = path.parse(newName)
+		const delimiter = this.settings.dupNumberDelimiter
+		let dupNameRegex
+		if (this.settings.dupNumberAtStart) {
+			dupNameRegex = new RegExp(
+				`^(?<number>\d+)${delimiter}(?<name>${newNameObj.name})${newNameObj.ext}$`)
+		} else {
+			dupNameRegex = new RegExp(
+				`^(?<name>${newNameObj.name})${delimiter}(?<number>\d+)${newNameObj.ext}$`)
+		}
+
+		const dupNameNumbers: number[] = []
+		let isNewNameExist = false
+		for (let sibling of listed.files) {
+			sibling = path.basename(sibling)
+			if (sibling == newName) {
+				isNewNameExist = true
+				continue
+			}
+
+			// match dupNames
+			const m = dupNameRegex.exec(sibling)
+			if (!m) continue
+			// parse int for m.groups.number
+			dupNameNumbers.push(parseInt(m.groups.number))
+		}
+
+		if (isNewNameExist) {
+			// get max number
+			const newNumber = dupNameNumbers.length > 0 ? Math.max(...dupNameNumbers) + 1 : 1
+			// change newName
+			if (this.settings.dupNumberAtStart) {
+				newName = `${newNumber}${delimiter}${newNameObj.name}${newNameObj.ext}`
+			} else {
+				newName = `${newNameObj.name}${delimiter}${newNumber}${newNameObj.ext}`
+			}
+		}
+
+		return newName
+	}
+
+	getActiveFile() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		const file = view?.file
+		debugLog('active file', file?.path)
+		return file
+	}
+	getActiveEditor() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		return view?.editor
+	}
+
 	onunload() {
-		this.debugModal?.close()
+		this.modals.map(modal => modal.close())
 	}
 
 	async loadSettings() {
@@ -98,10 +227,15 @@ function isPastedImage(file: TAbstractFile): boolean {
 
 class ImageRenameModal extends Modal {
 	src: TFile
+	newName: string
+	renameFunc: (path: string) => void
 
-	constructor(app: App, src: TFile) {
+	constructor(app: App, src: TFile, newName: string, renameFunc: (path: string) => void) {
 		super(app);
 		this.src = src
+		this.newName = newName
+		this.renameFunc = renameFunc
+		console.log('parsed', this.newName)
 	}
 
 	onOpen() {
@@ -117,26 +251,76 @@ class ImageRenameModal extends Modal {
 			}
 		})
 
-		contentEl.createEl('div', {
-			cls: 'origin-path',
-			text: `Image path: ${this.src.path}`,
+		const getNewPath = (name: string) => {
+			return path.join(path.dirname(this.src.path), name)
+		}
+		let newPath = getNewPath(this.newName)
+		const newNameParsed = path.parse(this.newName)
+
+		const infoET = createElementTree(contentEl, {
+			tag: 'ul',
+			cls: 'info',
+			children: [
+				{
+					tag: 'li',
+					children: [
+						{
+							tag: 'span',
+							text: 'Origin path',
+						},
+						{
+							tag: 'span',
+							text: this.src.path,
+						}
+					],
+				},
+				{
+					tag: 'li',
+					children: [
+						{
+							tag: 'span',
+							text: 'New path',
+						},
+						{
+							tag: 'span',
+							text: newPath,
+						}
+					],
+				}
+			]
 		})
 
-		new Setting(contentEl)
+		const doRename = async () => {
+			debugLog('doRename', newPath)
+			this.renameFunc(newPath)
+		}
+
+		const nameSetting = new Setting(contentEl)
 			.setName('New name')
 			.setDesc('templates: ')
 			.addText(text => text
-				.setValue('')
+				.setValue(newNameParsed.name)
 				.onChange(async (value) => {
-					console.log(value)
+					newPath = getNewPath(value + newNameParsed.ext)
+					infoET.children[1].children[1].el.innerText = newPath
 				}
 				))
+		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
+		nameInputEl.focus()
+		nameInputEl.addEventListener('keydown', async (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault()
+				doRename()
+				this.close()
+			}
+		})
 
 		new Setting(contentEl)
 			.addButton(button => {
 				button
 					.setButtonText('Rename')
 					.onClick(() => {
+						doRename()
 						this.close()
 					})
 			})
@@ -215,12 +399,12 @@ class SettingTab extends PluginSettingTab {
 
 
 		new Setting(containerEl)
-			.setName('Always confirm rename')
-			.setDesc(`If set, the rename modal will always be shown to confirm before renaming, otherwise the image will be auto renamed after pasting.`)
+			.setName('Auto rename')
+			.setDesc(`By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.`)
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.alwaysConfirmRename)
+				.setValue(this.plugin.settings.autoRename)
 				.onChange(async (value) => {
-					this.plugin.settings.alwaysConfirmRename = value;
+					this.plugin.settings.autoRename = value;
 					await this.plugin.saveSettings();
 				}
 			));
