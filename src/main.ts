@@ -1,7 +1,9 @@
 /* TODOs:
  * - [x] check name existence when saving
  * - [x] imageNameKey in frontmatter
+ * - [x] after renaming, cursor should be placed after the image file link
  * - [ ] add context menu for renaming the link/file
+ * - [ ] handle image insert from drag'n drop
  * - [ ] batch rename all pasted images in a file
  */
 import {
@@ -14,7 +16,7 @@ import { renderTemplate } from './template';
 import { createElementTree, debugLog } from './utils';
 
 interface PluginSettings {
-	// {{imageNameKey}}-{{DATE:YYYY-MM-DD}}
+	// {{imageNameKey}}-{{DATE:YYYYMMDD}}
 	imageNamePattern: string
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
@@ -112,12 +114,21 @@ export default class PasteImageRenamePlugin extends Plugin {
 			return
 		}
 
+		const cursor = editor.getCursor()
+		const line = editor.getLine(cursor.line)
+		// console.log('editor context', cursor, )
 		const linkText = `[[${originName}]]`,
 			newLinkText = `[[${newName}]]`;
 		debugLog('replace text', linkText, newLinkText)
-		editor.setValue(
-			editor.getValue().replace(linkText, newLinkText)
-		)
+		editor.transaction({
+			changes: [
+				{
+					from: {...cursor, ch: 0},
+					to: {...cursor, ch: line.length},
+					text: line.replace(linkText, newLinkText),
+				}
+			]
+		})
 
 		new Notice(`Renamed ${file.name} to ${newName}`)
 	}
