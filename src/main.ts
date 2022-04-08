@@ -1,5 +1,6 @@
 /* TODOs:
  * - [ ] check name existence when saving
+ * - [ ] imageNameKey in frontmatter
  * - [ ] add context menu for renaming the link/file
  * - [ ] batch rename all pasted images in a file
  */
@@ -11,16 +12,20 @@ import {
 import { DEBUG } from './utils';
 
 interface PluginSettings {
-	// ${imageNameKey}-${input}${numberSuffix('-')}
-	// if no ${number} in newNamePattern, the number will be automatically added.
-	newNamePattern: string
-	// if no ${input} in newNamePattern, the file will be automatically renamed.
-	autoRenameIfNoInputRequired: boolean
+	// {{imageNameKey}}-{{DATE:YYYY-MM-DD}}
+	imageNamePattern: string
+	dupNumberAtStart: boolean
+	dupNumberDelimiter: string
+	alwaysConfirmRename: boolean
 }
 
+// TODO two functions: rename, autoRename
+
 const DEFAULT_SETTINGS: PluginSettings = {
-	newNamePattern: '${imageNameKey}${numberSuffix("-")}',
-	autoRenameIfNoInputRequired: false,
+	imageNamePattern: '{{imageNameKey}}-',
+	dupNumberAtStart: false,
+	dupNumberDelimiter: '-',
+	alwaysConfirmRename: true,
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -148,15 +153,17 @@ class ImageRenameModal extends Modal {
 	}
 }
 
-const newNamePatternDesc = `
-A pattern indicating how the new name should be generated.
+const imageNamePatternDesc = `
+The pattern indicates how the new name should be generated.
 
 Available variables:
-- \${imageNameKey}: this variable is read from the markdown file's frontmatter, if not present, an empty string will be used.
-- \${numberSuffix(DELIMITER)}: pass DELIMITER to this function to generate the number suffix for duplicated names. e.g. \${numberSuffix("-")} will generate "-1", "-2", "-3", etc.
-- \${numberPrefix(DELIMITER)}: pass DELIMITER to this function to generate the number prefix for duplicated names. e.g. \${numberPrefix("_")} will generate "1_", "2_", "3_", etc.
-- \${input}: custom input, cursor will be put here for you to type in.
-if no \${number} in newNamePattern, the number will be automatically added.
+- {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
+- {{DATE:$FORMAT}}: use "$FORMAT" to format the current date, "$FORMAT" must be a Moment.js format string, e.g. {{DATE:YYYY-MM-DD}}
+
+Examples (imageNameKey = "foo"):
+- {{imageNameKey}}-: foo-
+- {{imageNameKey}}-{{DATE:YYYYMMDDHHmm}}: foo-202204081652
+- Pasted Image {{DATE:YYYYMMDDHHmm}}: Pasted Image 202204081652
 `
 
 class SettingTab extends PluginSettingTab {
@@ -172,25 +179,48 @@ class SettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('New name pattern')
-			.setDesc(newNamePatternDesc)
+			.setName('Image name pattern')
+			.setDesc(imageNamePatternDesc)
 			.setClass('long-description-setting-item')
 			.addText(text => text
-				.setPlaceholder('${imageNameKey}-${input}')
-				.setValue(this.plugin.settings.newNamePattern)
+				.setPlaceholder('{{imageNameKey}}')
+				.setValue(this.plugin.settings.imageNamePattern)
 				.onChange(async (value) => {
-					this.plugin.settings.newNamePattern = value;
+					this.plugin.settings.imageNamePattern = value;
 					await this.plugin.saveSettings();
 				}
 			));
 
 		new Setting(containerEl)
-			.setName('Auto rename if no input required')
-			.setDesc(`if no \${input} in newNamePattern, the file will be automatically renamed.`)
+			.setName('Duplicate number at start (or end)')
+			.setDesc(`If enabled, duplicate number will be added at the start as prefix for the image name, otherwise it will be added at the end as suffix for the image name.`)
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.autoRenameIfNoInputRequired)
+				.setValue(this.plugin.settings.dupNumberAtStart)
 				.onChange(async (value) => {
-					this.plugin.settings.autoRenameIfNoInputRequired = value;
+					this.plugin.settings.dupNumberAtStart = value
+					await this.plugin.saveSettings()
+				}
+				))
+
+		new Setting(containerEl)
+			.setName('Duplicate number delimiter')
+			.setDesc(`The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is "-", the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-".`)
+			.addText(text => text
+				.setValue(this.plugin.settings.dupNumberDelimiter)
+				.onChange(async (value) => {
+					this.plugin.settings.dupNumberDelimiter = value;
+					await this.plugin.saveSettings();
+				}
+			));
+
+
+		new Setting(containerEl)
+			.setName('Always confirm rename')
+			.setDesc(`If set, the rename modal will always be shown to confirm before renaming, otherwise the image will be auto renamed after pasting.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.alwaysConfirmRename)
+				.onChange(async (value) => {
+					this.plugin.settings.alwaysConfirmRename = value;
 					await this.plugin.saveSettings();
 				}
 			));
