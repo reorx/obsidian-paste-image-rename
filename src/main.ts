@@ -60,24 +60,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
 
-		// debug code
-		/*
-		if (DEBUG) {
-			var imageFile: TFile
-			for (const file of this.app.vault.getFiles()) {
-				if (isPastedImage(file)) {
-					imageFile = file
-					break
-				}
-			}
-			if (imageFile) {
-				const modal = new ImageRenameModal(this.app, imageFile as TFile)
-				modal.open()
-				this.modals.push(modal)
-				this.renameImage(imageFile)
-			}
-		}
-		*/
 	}
 
 	async renameImage(file: TFile, autoRename: boolean = false) {
