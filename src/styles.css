@@ -23,6 +23,7 @@
 .image-rename-modal .info {
 	padding: 10px 0;
 	color: var(--text-muted);
+	user-select: text;
 }
 .image-rename-modal .info li > span:nth-of-type(1) {
 	display: inline-block;

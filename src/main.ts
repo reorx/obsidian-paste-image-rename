@@ -21,6 +21,7 @@ interface PluginSettings {
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
 	autoRename: boolean
+	handleAllImages: boolean
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -28,6 +29,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
 	autoRename: false,
+	handleAllImages: false,
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -46,16 +48,32 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.app.vault.on('create', (file) => {
 				if (!(file instanceof TFile))
 					return
-				if (!isPastedImage(file))
-					return
 				const timeGapMs = (new Date().getTime()) - file.stat.ctime
 				// if the pasted image is created more than 1 second ago, ignore it
 				if (timeGapMs > 1000)
 					return
-				debugLog('pasted image created', file)
-				this.renameImage(file, this.settings.autoRename)
+				if (isPastedImage(file)) {
+					debugLog('pasted image created', file)
+					this.renameImage(file, this.settings.autoRename)
+				} else {
+					// handle drop images
+					if (isImage(file) && this.settings.handleAllImages) {
+						debugLog('image created', file)
+						this.renameImage(file, this.settings.autoRename)
+					}
+				}
 			})
 		)
+		// this.registerEvent(
+		// 	this.app.workspace.on('editor-drop', (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
+		// 		console.log('editor-drop', evt.defaultPrevented, evt, editor)
+		// 	})
+		// )
+		// this.registerEvent(
+		// 	this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
+		// 		console.log('metadata changed', file, data, cache)
+		// 	})
+		// )
 
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -222,6 +240,19 @@ export default class PasteImageRenamePlugin extends Plugin {
 function isPastedImage(file: TAbstractFile): boolean {
 	if (file instanceof TFile) {
 		if (file.name.startsWith(PASTED_IMAGE_PREFIX)) {
+			return true
+		}
+	}
+	return false
+}
+
+const IMAGE_EXTS = [
+	'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg',
+]
+
+function isImage(file: TAbstractFile): boolean {
+	if (file instanceof TFile) {
+		if (IMAGE_EXTS.contains(path.extname(file.name).toLowerCase())) {
 			return true
 		}
 	}
@@ -410,6 +441,17 @@ class SettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.autoRename)
 				.onChange(async (value) => {
 					this.plugin.settings.autoRename = value;
+					await this.plugin.saveSettings();
+				}
+			));
+
+		new Setting(containerEl)
+			.setName('Handle all images')
+			.setDesc(`By default, the plugin only handles images that matches the "Pasted Image" pattern, if this option is set, the plugin will handle all images. This includes drag'n drop image, or any other image that is created in the valut.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.handleAllImages)
+				.onChange(async (value) => {
+					this.plugin.settings.handleAllImages = value;
 					await this.plugin.saveSettings();
 				}
 			));
