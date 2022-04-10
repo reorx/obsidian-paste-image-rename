@@ -19,6 +19,10 @@ After installing the plugin, you can just paste an image to any document and the
 
 By typing the new name and click "Rename" (or just press enter), the image will be renamed and the internal link will be replaced to the new name.
 
+If you set "Image name pattern" to `{{fileName}}` (it's the default behavior after 1.2.0),
+"New name" will be generated as the name of the active file.
+![](images/modal-fileName.png)
+
 ### Set `imageNameKey` frontmatter
 
 While adding a lot of images to one document, people possibly want the images to be named in the same format, that's where `imageNameKey` is useful.
