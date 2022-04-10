@@ -8,6 +8,7 @@ const replaceDateVar = (s: string, date: moment.Moment): string => {
 
 interface TemplateData {
 	imageNameKey: string
+	fileName: string
 }
 
 export const renderTemplate = (tmpl: string, data: TemplateData) => {
@@ -18,6 +19,8 @@ export const renderTemplate = (tmpl: string, data: TemplateData) => {
 		text = newtext
 	}
 
-	text = text.replace(/{{imageNameKey}}/gm, data.imageNameKey)
+	text = text
+		.replace(/{{imageNameKey}}/gm, data.imageNameKey)
+		.replace(/{{fileName}}/gm, data.fileName)
 	return text
 }
