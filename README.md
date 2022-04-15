@@ -8,7 +8,7 @@ This plugin is inspired by Zettlr, Zettlr shows a prompt that allows the user to
   ![image](https://user-images.githubusercontent.com/405972/162478462-b5ff4fc9-ade2-4ace-adcb-c6436479a7d9.png)
 </details>
 
-Paste image rename plugin not only implements Zettlr's feature, but also allows you to customize how the image name would be generated, and eventually free you from the hassle by automatically rename the image according to the rules.
+Paste image rename plugin not only implements Zettlr's feature, but also allows you to customize how the image name would be generated, and eventually free you from the hassle by automatically renaming the image according to the rules.
 
 ## How to use
 
@@ -17,7 +17,7 @@ Paste image rename plugin not only implements Zettlr's feature, but also allows 
 After installing the plugin, you can just paste an image to any document and the rename prompt will display:
 ![](images/modal.png)
 
-By typing the new name and click "Rename" (or just press enter), the image will be renamed and the internal link will be replaced to the new name.
+By typing the new name and clicking "Rename" (or just press enter), the image will be renamed and the internal link will be replaced with the new name.
 
 If you set "Image name pattern" to `{{fileName}}` (it's the default behavior after 1.2.0),
 "New name" will be generated as the name of the active file.
@@ -40,7 +40,7 @@ Then paste an image, you will notice that the "New name" has already been genera
 
 You can change the pattern for new name generating by updating the "Image name pattern" value in settings.
 
-For detailed explanation, and other features such as auto renaming, please refer to [Settings](#settings).
+For a detailed explanation and other features such as auto renaming, please refer to [Settings](#settings).
 
 
 ### Add prefix/suffix to duplicated names
@@ -57,7 +57,7 @@ The `-1` suffix is generated according to the default settings:
 
 If we paste the third image without editing the "New name" input, its name will be "my-blog-2.png", the number is increased according to the largest number of "my-blog-?.png" in the attachment directory.
 
-This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequencially by the pattern and `imageNameKey` set.
+This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequentially by the pattern and `imageNameKey` set.
 
 ## Settings
 
@@ -76,7 +76,7 @@ This feature is especially powerful if you enable "Auto rename" in settings, you
     - `Pasted Image {{DATE:YYYYMMDDHHmm}}`: Pasted Image 202204081652
 - Duplicate number at start (or end)
 
-  If enabled, duplicate number will be added at the start as prefix for the image name, otherwise it will be added at the end as suffix for the image name.
+  If enabled, the duplicate number will be added at the start as prefix for the image name, otherwise, it will be added at the end as suffix for the image name.
 - Duplicate number delimiter
 
   The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is `-`, the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-".
