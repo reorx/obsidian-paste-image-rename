@@ -2,9 +2,11 @@
  * - [x] check name existence when saving
  * - [x] imageNameKey in frontmatter
  * - [x] after renaming, cursor should be placed after the image file link
- * - [ ] add context menu for renaming the link/file
- * - [ ] handle image insert from drag'n drop
+ * - [x] handle image insert from drag'n drop
+ * - [ ] add button for use the current file name, imageNameKey, last input name,
+ *       segments of last input name
  * - [ ] batch rename all pasted images in a file
+ * - [ ] add rules for moving matched images to destination folder
  */
 import {
   App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
