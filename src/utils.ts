@@ -64,3 +64,18 @@ export const path = {
 		return fullpath.slice(positions[positions.length - 1] + 1)
 	},
 }
+
+const filenameNotAllowedChars = /[^a-zA-Z0-9~`!@$&*()\-_=+{};'",<.>? ]/g
+
+export const sanitizer = {
+	filename(s: string): string {
+		return s.replace(filenameNotAllowedChars, '').trim()
+	},
+
+	delimiter(s: string): string {
+		s = this.filename(s)
+		// use default '-' if no valid chars found
+		if (!s) s = '-'
+		return s
+	}
+}

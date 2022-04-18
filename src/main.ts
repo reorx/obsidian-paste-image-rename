@@ -14,7 +14,7 @@ import {
 } from 'obsidian';
 
 import { renderTemplate } from './template';
-import { createElementTree, debugLog, path } from './utils';
+import { createElementTree, debugLog, path, sanitizer } from './utils';
 
 interface PluginSettings {
 	// {{imageNameKey}}-{{DATE:YYYYMMDD}}
@@ -157,6 +157,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (activeFile) {
 			const fileCache = this.app.metadataCache.getFileCache(activeFile)
 			if (fileCache) {
+				console.log('fileCache', fileCache)
 				debugLog('frontmatter', fileCache.frontmatter)
 				imageNameKey = fileCache.frontmatter?.imageNameKey || ''
 			} else {
@@ -349,24 +350,34 @@ class ImageRenameModal extends Modal {
 
 		const nameSetting = new Setting(contentEl)
 			.setName('New name')
-			.setDesc('templates: ')
+			.setDesc('Please input the new name for the image (without extension)')
 			.addText(text => text
 				.setValue(stem)
 				.onChange(async (value) => {
-					// TODO show input error
-					// if (!value) {
-					// }
-					stem = value
+					stem = sanitizer.filename(value)
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
 				}
 				))
+
 		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
 		nameInputEl.focus()
 		nameInputEl.addEventListener('keydown', async (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault()
+				if (!stem) {
+					errorEl.innerText = 'Error: "New name" could not be empty'
+					errorEl.style.display = 'block'
+					return
+				}
 				doRename()
 				this.close()
+			}
+		})
+
+		const errorEl = contentEl.createDiv({
+			cls: 'error',
+			attr: {
+				style: 'display: none;',
 			}
 		})
 
@@ -445,11 +456,11 @@ class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Duplicate number delimiter')
-			.setDesc(`The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is "-", the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-".`)
+			.setDesc(`The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is "-", the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-". Only characters that are valid in file names are allowed.`)
 			.addText(text => text
 				.setValue(this.plugin.settings.dupNumberDelimiter)
 				.onChange(async (value) => {
-					this.plugin.settings.dupNumberDelimiter = value;
+					this.plugin.settings.dupNumberDelimiter = sanitizer.delimiter(value);
 					await this.plugin.saveSettings();
 				}
 			));
