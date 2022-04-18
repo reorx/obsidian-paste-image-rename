@@ -85,21 +85,38 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	async renameImage(file: TFile, autoRename: boolean = false) {
-		const { stem, newName, isMeaningful }= this.generateNewName(file)
+		// get active file first
+		const activeFile = this.getActiveFile()
+		if (!activeFile) {
+			new Notice('Error: No active file found.')
+			return
+		}
+
+		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile)
 		debugLog('generated newName:', newName, isMeaningful)
 
 		if (!isMeaningful || !autoRename) {
-			this.openRenameModal(file, isMeaningful ? stem : '')
+			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
 			return
 		}
-		this.renameFile(file, newName)
+		this.renameFile(file, newName, activeFile.path)
 	}
 
-	async renameFile(file: TFile, newName: string) {
+	async renameFile(file: TFile, newName: string, sourcePath: string) {
 		// deduplicate name
 		newName = await this.deduplicateNewName(newName, file)
 		debugLog('deduplicated newName:', newName)
 		const originName = file.name
+
+		// get vault config, determine whether useMarkdownLinks is set
+		const vaultConfig = getVaultConfig(this.app)
+		let useMarkdownLinks = false
+		if (vaultConfig && vaultConfig.useMarkdownLinks) {
+			useMarkdownLinks = true
+		}
+
+		// get origin file link before renaming
+		const linkText = this.makeLinkText(originName, useMarkdownLinks, file, sourcePath)
 
 		// file system operation
 		const newPath = path.join(file.parent.path, newName)
@@ -109,6 +126,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 			new Notice(`Failed to rename ${newName}: ${err}`)
 			throw err
 		}
+		const newLinkText = this.makeLinkText(newName, useMarkdownLinks, this.app.vault.getAbstractFileByPath(newPath) as TFile, sourcePath)
+		debugLog('replace text', linkText, newLinkText)
 
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace by manipulating the editor
@@ -118,20 +137,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 			return
 		}
 
-		// get vault config, determine whether useMarkdownLinks is set
-		const vaultConfig = getVaultConfig(this.app)
-		let useMarkdownLinks = false
-		if (vaultConfig && vaultConfig.useMarkdownLinks) {
-			useMarkdownLinks = true
-		}
-
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
 		debugLog('current line', line)
 		// console.log('editor context', cursor, )
-		const linkText = this.makeLinkText(originName, useMarkdownLinks),
-			newLinkText = this.makeLinkText(newName, useMarkdownLinks);
-		debugLog('replace text', linkText, newLinkText)
 		editor.transaction({
 			changes: [
 				{
@@ -145,20 +154,20 @@ export default class PasteImageRenamePlugin extends Plugin {
 		new Notice(`Renamed ${originName} to ${newName}`)
 	}
 
-	makeLinkText(fileName: string, useMarkdownLinks: boolean): string {
+	makeLinkText(fileName: string, useMarkdownLinks: boolean, file: TFile, sourcePath: string): string {
 		if (useMarkdownLinks) {
-			return `[](${encodeURI(fileName)})`
+			return this.app.fileManager.generateMarkdownLink(file, sourcePath)
 		} else {
 			return `[[${fileName}]]`
 		}
 	}
 
-	openRenameModal(file: TFile, newName: string) {
+	openRenameModal(file: TFile, newName: string, sourcePath: string) {
 		const modal = new ImageRenameModal(
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.renameFile(file, confirmedName)
+				this.renameFile(file, confirmedName, sourcePath)
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
@@ -170,17 +179,14 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	// returns a new name for the input file, with extension
-	generateNewName(file: TFile) {
+	generateNewName(file: TFile, activeFile: TFile) {
 		let imageNameKey = ''
-		const activeFile = this.getActiveFile()
-		if (activeFile) {
-			const fileCache = this.app.metadataCache.getFileCache(activeFile)
-			if (fileCache) {
-				debugLog('frontmatter', fileCache.frontmatter)
-				imageNameKey = fileCache.frontmatter?.imageNameKey || ''
-			} else {
-				console.warn('could not get file cache from active file', activeFile.name)
-			}
+		const fileCache = this.app.metadataCache.getFileCache(activeFile)
+		if (fileCache) {
+			debugLog('frontmatter', fileCache.frontmatter)
+			imageNameKey = fileCache.frontmatter?.imageNameKey || ''
+		} else {
+			console.warn('could not get file cache from active file', activeFile.name)
 		}
 
 		const stem = renderTemplate(this.settings.imageNamePattern, {
