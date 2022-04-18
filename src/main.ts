@@ -176,7 +176,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (activeFile) {
 			const fileCache = this.app.metadataCache.getFileCache(activeFile)
 			if (fileCache) {
-				console.log('fileCache', fileCache)
 				debugLog('frontmatter', fileCache.frontmatter)
 				imageNameKey = fileCache.frontmatter?.imageNameKey || ''
 			} else {
@@ -189,7 +188,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 			fileName: activeFile.basename,
 		})
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
-		console.log('file', file)
 
 		return {
 			stem,
