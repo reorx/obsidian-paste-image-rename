@@ -79,3 +79,21 @@ export const sanitizer = {
 		return s
 	}
 }
+
+
+interface CompositionState {
+	lock: boolean
+}
+
+export function lockInputMethodComposition(el: HTMLInputElement): CompositionState {
+	const state: CompositionState = {
+		lock: false,
+	}
+	el.addEventListener('compositionstart', () => {
+		state.lock = true
+	})
+	el.addEventListener('compositionend', () => {
+		state.lock = false
+	})
+	return state
+}

@@ -14,7 +14,9 @@ import {
 } from 'obsidian';
 
 import { renderTemplate } from './template';
-import { createElementTree, debugLog, path, sanitizer } from './utils';
+import {
+  createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
+} from './utils';
 
 interface PluginSettings {
 	// {{imageNameKey}}-{{DATE:YYYYMMDD}}
@@ -361,8 +363,10 @@ class ImageRenameModal extends Modal {
 
 		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
 		nameInputEl.focus()
+		const nameInputState = lockInputMethodComposition(nameInputEl)
 		nameInputEl.addEventListener('keydown', async (e) => {
-			if (e.key === 'Enter') {
+			// console.log('keydown', e.key, `lock=${nameInputState.lock}`)
+			if (e.key === 'Enter' && !nameInputState.lock) {
 				e.preventDefault()
 				if (!stem) {
 					errorEl.innerText = 'Error: "New name" could not be empty'
