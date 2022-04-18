@@ -12,10 +12,9 @@ import {
   App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
   Modal, MarkdownView, Notice,
 } from 'obsidian';
-import * as path from 'path';
 
 import { renderTemplate } from './template';
-import { createElementTree, debugLog } from './utils';
+import { createElementTree, debugLog, path } from './utils';
 
 interface PluginSettings {
 	// {{imageNameKey}}-{{DATE:YYYYMMDD}}
@@ -97,10 +96,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// deduplicate name
 		newName = await this.deduplicateNewName(newName, file)
 		debugLog('deduplicated newName:', newName)
-		const originName = path.basename(file.path)
+		const originName = file.name
 
 		// file system operation
-		const newPath = path.join(path.dirname(file.path), newName)
+		const newPath = path.join(file.parent.path, newName)
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
@@ -139,6 +138,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const modal = new ImageRenameModal(
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
+				debugLog('confirmedName:', confirmedName)
 				this.renameFile(file, confirmedName)
 			},
 			() => {
@@ -147,7 +147,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		)
 		this.modals.push(modal)
 		modal.open()
-		debugLog('modals', this.modals.length)
+		debugLog('modals count', this.modals.length)
 	}
 
 	// returns a new name for the input file, with extension
@@ -169,29 +169,34 @@ export default class PasteImageRenamePlugin extends Plugin {
 			fileName: activeFile.basename,
 		})
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
+		console.log('file', file)
 
 		return {
 			stem,
-			newName: stem + path.extname(file.path),
+			newName: stem + '.' + file.extension,
 			isMeaningful: stem.replace(meaninglessRegex, '') !== '',
 		}
 	}
 
+	// newName: foo.ext
 	async deduplicateNewName(newName: string, file: TFile) {
 		// list files in dir
-		const dir = path.dirname(file.path)
+		const dir = file.parent.path
 		const listed = await this.app.vault.adapter.list(dir)
 		debugLog('sibling files', listed)
 
-		const newNameObj = path.parse(newName)
+		// parse newName
+		const newNameExt = path.extension(newName)
+		const newNameStem = newName.slice(0, newName.length - newNameExt.length - 1)
+
 		const delimiter = this.settings.dupNumberDelimiter
 		let dupNameRegex
 		if (this.settings.dupNumberAtStart) {
 			dupNameRegex = new RegExp(
-				`^(?<number>\\d+)${delimiter}(?<name>${newNameObj.name})${newNameObj.ext}$`)
+				`^(?<number>\\d+)${delimiter}(?<name>${newNameStem})\\.${newNameExt}$`)
 		} else {
 			dupNameRegex = new RegExp(
-				`^(?<name>${newNameObj.name})${delimiter}(?<number>\\d+)${newNameObj.ext}$`)
+				`^(?<name>${newNameStem})${delimiter}(?<number>\\d+)\\.${newNameExt}$`)
 		}
 		debugLog('dupNameRegex', dupNameRegex)
 
@@ -216,9 +221,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 			const newNumber = dupNameNumbers.length > 0 ? Math.max(...dupNameNumbers) + 1 : 1
 			// change newName
 			if (this.settings.dupNumberAtStart) {
-				newName = `${newNumber}${delimiter}${newNameObj.name}${newNameObj.ext}`
+				newName = `${newNumber}${delimiter}${newNameStem}.${newNameExt}`
 			} else {
-				newName = `${newNameObj.name}${delimiter}${newNumber}${newNameObj.ext}`
+				newName = `${newNameStem}${delimiter}${newNumber}.${newNameExt}`
 			}
 		}
 
@@ -259,12 +264,12 @@ function isPastedImage(file: TAbstractFile): boolean {
 }
 
 const IMAGE_EXTS = [
-	'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg',
+	'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg',
 ]
 
 function isImage(file: TAbstractFile): boolean {
 	if (file instanceof TFile) {
-		if (IMAGE_EXTS.contains(path.extname(file.name).toLowerCase())) {
+		if (IMAGE_EXTS.contains(file.extension.toLowerCase())) {
 			return true
 		}
 	}
@@ -300,9 +305,9 @@ class ImageRenameModal extends Modal {
 		})
 
 		let stem = this.stem
-		const ext = path.extname(this.src.path)
-		const getNewName = (stem: string) => stem + ext
-		const getNewPath = (stem: string) => path.join(path.dirname(this.src.path), getNewName(stem))
+		const ext = this.src.extension
+		const getNewName = (stem: string) => stem + '.' + ext
+		const getNewPath = (stem: string) => path.join(this.src.parent.path, getNewName(stem))
 
 		const infoET = createElementTree(contentEl, {
 			tag: 'ul',
@@ -338,7 +343,7 @@ class ImageRenameModal extends Modal {
 		})
 
 		const doRename = async () => {
-			debugLog('doRename', stem)
+			debugLog('doRename', `stem=${stem}`)
 			this.renameFunc(getNewName(stem))
 		}
 
