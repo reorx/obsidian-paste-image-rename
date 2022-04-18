@@ -136,11 +136,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	openRenameModal(file: TFile, newName: string) {
-		const modal = new ImageRenameModal(this.app, file as TFile, newName, (confirmedName: string) => {
-			this.renameFile(file, confirmedName)
-		})
+		const modal = new ImageRenameModal(
+			this.app, file as TFile, newName,
+			(confirmedName: string) => {
+				this.renameFile(file, confirmedName)
+			},
+			() => {
+				this.modals.splice(this.modals.indexOf(modal), 1)
+			}
+		)
 		this.modals.push(modal)
 		modal.open()
+		debugLog('modals', this.modals.length)
 	}
 
 	// returns a new name for the input file, with extension
@@ -268,12 +275,14 @@ class ImageRenameModal extends Modal {
 	src: TFile
 	stem: string
 	renameFunc: (path: string) => void
+	onCloseExtra: () => void
 
-	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => void) {
+	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => void, onClose: () => void) {
 		super(app);
 		this.src = src
 		this.stem = stem
 		this.renameFunc = renameFunc
+		this.onCloseExtra = onClose
 	}
 
 	onOpen() {
@@ -375,6 +384,7 @@ class ImageRenameModal extends Modal {
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
+		this.onCloseExtra()
 	}
 }
 
