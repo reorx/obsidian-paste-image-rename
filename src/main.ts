@@ -16,7 +16,7 @@ import {
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig,
+  getVaultConfig, escapeRegExp,
 } from './utils';
 
 interface PluginSettings {
@@ -204,17 +204,19 @@ export default class PasteImageRenamePlugin extends Plugin {
 		debugLog('sibling files', listed)
 
 		// parse newName
-		const newNameExt = path.extension(newName)
-		const newNameStem = newName.slice(0, newName.length - newNameExt.length - 1)
+		const newNameExt = path.extension(newName),
+			newNameStem = newName.slice(0, newName.length - newNameExt.length - 1),
+			newNameStemEscaped = escapeRegExp(newNameStem),
+			delimiter = this.settings.dupNumberDelimiter,
+			delimiterEscaped = escapeRegExp(delimiter)
 
-		const delimiter = this.settings.dupNumberDelimiter
 		let dupNameRegex
 		if (this.settings.dupNumberAtStart) {
 			dupNameRegex = new RegExp(
-				`^(?<number>\\d+)${delimiter}(?<name>${newNameStem})\\.${newNameExt}$`)
+				`^(?<number>\\d+)${delimiterEscaped}(?<name>${newNameStemEscaped})\\.${newNameExt}$`)
 		} else {
 			dupNameRegex = new RegExp(
-				`^(?<name>${newNameStem})${delimiter}(?<number>\\d+)\\.${newNameExt}$`)
+				`^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d+)\\.${newNameExt}$`)
 		}
 		debugLog('dupNameRegex', dupNameRegex)
 

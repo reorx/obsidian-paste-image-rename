@@ -82,6 +82,11 @@ export const sanitizer = {
 	}
 }
 
+// ref: https://stackoverflow.com/a/6969486/596206
+export function escapeRegExp(s: string) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 
 interface CompositionState {
 	lock: boolean
