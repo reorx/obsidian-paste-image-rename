@@ -16,6 +16,7 @@ import {
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
+  getVaultConfig,
 } from './utils';
 
 interface PluginSettings {
@@ -117,11 +118,19 @@ export default class PasteImageRenamePlugin extends Plugin {
 			return
 		}
 
+		// get vault config, determine whether useMarkdownLinks is set
+		const vaultConfig = getVaultConfig(this.app)
+		let useMarkdownLinks = false
+		if (vaultConfig && vaultConfig.useMarkdownLinks) {
+			useMarkdownLinks = true
+		}
+
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
+		debugLog('current line', line)
 		// console.log('editor context', cursor, )
-		const linkText = `[[${originName}]]`,
-			newLinkText = `[[${newName}]]`;
+		const linkText = this.makeLinkText(originName, useMarkdownLinks),
+			newLinkText = this.makeLinkText(newName, useMarkdownLinks);
 		debugLog('replace text', linkText, newLinkText)
 		editor.transaction({
 			changes: [
@@ -134,6 +143,14 @@ export default class PasteImageRenamePlugin extends Plugin {
 		})
 
 		new Notice(`Renamed ${originName} to ${newName}`)
+	}
+
+	makeLinkText(fileName: string, useMarkdownLinks: boolean): string {
+		if (useMarkdownLinks) {
+			return `[](${encodeURI(fileName)})`
+		} else {
+			return `[[${fileName}]]`
+		}
 	}
 
 	openRenameModal(file: TFile, newName: string) {

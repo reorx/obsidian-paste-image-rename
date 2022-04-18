@@ -1,3 +1,5 @@
+import { App, Vault } from 'obsidian';
+
 export const DEBUG = !(process.env.BUILD_ENV === 'production')
 
 export function debugLog(...args: any[]) {
@@ -96,4 +98,18 @@ export function lockInputMethodComposition(el: HTMLInputElement): CompositionSta
 		state.lock = false
 	})
 	return state
+}
+
+
+interface VaultConfig {
+	useMarkdownLinks?: boolean
+}
+
+interface VaultWithConfig extends Vault {
+	config?: VaultConfig,
+}
+
+export function getVaultConfig(app: App): VaultConfig|null {
+	const vault = app.vault as VaultWithConfig
+	return vault.config
 }
