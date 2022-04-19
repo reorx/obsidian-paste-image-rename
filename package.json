@@ -1,11 +1,12 @@
 {
 	"name": "obsidian-paste-image-rename",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && BUILD_ENV=production node esbuild.config.mjs && cp manifest.json build",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"release": "yarn build && gh release create ${npm_package_version} build/*"
 	},
 	"keywords": [],
 	"author": "Reorx",
