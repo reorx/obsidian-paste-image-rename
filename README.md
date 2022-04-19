@@ -49,7 +49,7 @@ The plugin will always try to add a prefix/suffix if there's a file of the same 
 
 Let's continue from the last section and paste the second image, the prompt will still show the new name as "my-blog", now if we just click "Rename", the file will be renamed as "my-blog-1.png", not "my-blog.png":
 
-![](images/document.png)
+<img src="images/document.png" width="400px">
 
 The `-1` suffix is generated according to the default settings:
 - Because "Duplicate number at start" is false, suffix is used rather than prefix
@@ -71,7 +71,7 @@ This feature is especially powerful if you enable "Auto rename" in settings, you
 
 ## Settings
 
-- Image name pattern
+- **Image name pattern**
 
   The pattern indicates how the new name should be generated.
 
@@ -84,12 +84,18 @@ This feature is especially powerful if you enable "Auto rename" in settings, you
     - `{{imageNameKey}}-`: foo-
     - `{{imageNameKey}}-{{DATE:YYYYMMDDHHmm}}`: foo-202204081652
     - `Pasted Image {{DATE:YYYYMMDDHHmm}}`: Pasted Image 202204081652
-- Duplicate number at start (or end)
+- **Duplicate number at start (or end)**
 
   If enabled, the duplicate number will be added at the start as prefix for the image name, otherwise, it will be added at the end as suffix for the image name.
-- Duplicate number delimiter
+- **Duplicate number delimiter**
 
   The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is `-`, the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-".
-- Auto rename
+- **Auto rename**
 
   By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.
+- **Handle all images**
+
+  By default, the plugin only handles images that starts with "Pasted image " in name,
+  which is the prefix Obsidian uses to create images from pasted content.
+  If this option is set, the plugin will handle all images. This includes drag'n drop image,
+  or any other image that is created in the valut.
