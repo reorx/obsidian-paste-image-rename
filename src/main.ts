@@ -506,7 +506,10 @@ class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Handle all images')
-			.setDesc(`By default, the plugin only handles images that matches the "Pasted Image" pattern, if this option is set, the plugin will handle all images. This includes drag'n drop image, or any other image that is created in the valut.`)
+			.setDesc(`By default, the plugin only handles images that starts with "Pasted image " in name,
+			which is the prefix Obsidian uses to create images from pasted content.
+			If this option is set, the plugin will handle all images. This includes drag'n drop image,
+			or any other image that is created in the valut.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.handleAllImages)
 				.onChange(async (value) => {

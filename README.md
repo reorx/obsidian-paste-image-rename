@@ -59,6 +59,16 @@ If we paste the third image without editing the "New name" input, its name will 
 
 This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequentially by the pattern and `imageNameKey` set.
 
+## FAQ
+
+- Q: I pasted an image but the rename prompt did not show up.
+
+    A: This is probabily because you are using Windows system and pasting from a file
+    (i.e. the image is copied from File Explorer not from a browser or image viewer).
+    In Windows, pasting from a file is like a regular file tranfer, the original file name
+    is kept rather than being created and named "Pasted image ..." by Obsidian.
+    You need to turn on "Handle all image" in settings to make it work in this situation.
+
 ## Settings
 
 - Image name pattern
