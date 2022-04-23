@@ -11,11 +11,9 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Environments (please complete the following information):**
- - OS: [e.g. Windows, MacOS, Linux]
- - Obsidian version: 
- - Plugin version: 
- - What editor mode are you using? (Live Preview or Source mode): 
- - Is "Use legacy editor" turned on in Editor settings?: 
+- OS: [e.g. Windows, MacOS, Linux]
+- Debug info:
+<!-- Paste your debug info below, which can be accessed by Ctrl/Cmd-P, enter "Show debug info", and click "Copy to clipboard". -->
 
 **To Reproduce**
 Steps to reproduce the behavior:
