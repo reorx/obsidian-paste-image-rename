@@ -150,6 +150,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 				}
 			]
 		})
+		editor.focus()
 
 		new Notice(`Renamed ${originName} to ${newName}`)
 	}
@@ -163,6 +164,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	openRenameModal(file: TFile, newName: string, sourcePath: string) {
+		const editor = this.getActiveEditor()
+		// save scroll position
+		const scrollInfo = editor.getScrollInfo()
+		debugLog('current scrollInfo', scrollInfo)
 		const modal = new ImageRenameModal(
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
@@ -171,6 +176,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
+				// this.getActiveEditor().focus()
+				let count = 1
+				setTimeout(() => {
+					editor.focus()
+				}, 1000)
+				/*
+				setInterval(() => {
+					const y = scrollInfo.top - count++ * 100
+					editor.scrollTo(scrollInfo.left, y)
+					debugLog('scroll to', scrollInfo.left, y)
+				}, 1000)
+				*/
 			}
 		)
 		this.modals.push(modal)
