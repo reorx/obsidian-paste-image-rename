@@ -1,13 +1,5 @@
-/* TODOs:
- * - [x] check name existence when saving
- * - [x] imageNameKey in frontmatter
- * - [x] after renaming, cursor should be placed after the image file link
- * - [x] handle image insert from drag'n drop
- * - [ ] add button for use the current file name, imageNameKey, last input name,
- *       segments of last input name
- * - [ ] batch rename all pasted images in a file
- * - [ ] add rules for moving matched images to destination folder
- */
+import { constants } from 'buffer';
+import { appendFile, read } from 'fs';
 import {
   App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
   Modal, MarkdownView, Notice,
@@ -16,7 +8,7 @@ import {
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp,
+  getVaultConfig, escapeRegExp, ConvertImage,ImageCompressor
 } from './utils';
 
 interface PluginSettings {
@@ -26,6 +18,8 @@ interface PluginSettings {
 	dupNumberDelimiter: string
 	autoRename: boolean
 	handleAllImages: boolean
+	pngToJpeg: boolean
+	quality: string
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -34,6 +28,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	dupNumberDelimiter: '-',
 	autoRename: false,
 	handleAllImages: false,
+	pngToJpeg:true,
+	quality:'0.6' 
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -102,11 +98,58 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.renameFile(file, newName, activeFile.path)
 	}
 
+	async saveImage(file:File|Blob)
+	{
+		return new Promise(function(resolve, reject) {
+
+			let reader = new FileReader();
+		
+			reader.readAsArrayBuffer(file);
+		
+			reader.onload = function() 
+			{
+				resolve(this.result);
+			}
+		});
+	}
+
 	async renameFile(file: TFile, newName: string, sourcePath: string) {
 		// deduplicate name
 		newName = await this.deduplicateNewName(newName, file)
 		debugLog('deduplicated newName:', newName)
-		const originName = file.name
+		const originName = file.name;
+
+		if( this.settings.pngToJpeg)
+		{
+			var binary:ArrayBuffer;
+			binary = await this.app.vault.readBinary(file);
+
+			let imgBlob:Blob = new Blob( [binary] );
+			let img:File;
+
+			const fileType = originName.substring(originName.indexOf('.') + 1);
+			const fileName = originName.substring(0,originName.indexOf('.') - 1);
+			//判断文件是不是jpeg 不是jpeg的都转成jpeg 
+			if (!['jpeg', 'jpg'].includes(fileType))
+			{
+				img = await ConvertImage(imgBlob, fileName);  //转jpeg格式的file
+			}
+			else
+			{
+				img = new File([imgBlob],originName,{type:imgBlob.type});
+			}
+	
+			// newName = img.name;
+			newName = newName.substring(0,newName.indexOf('.') - 1) + img.name.substring(img.name.indexOf('.'));
+
+			let newImg:File|Blob = await ImageCompressor(img, "file", Number(this.settings.quality) ); //图片压缩
+			const formData = new FormData();
+			formData.append('file', newImg );  
+
+			await this.saveImage(newImg).then((value:ArrayBuffer)=>{
+				this.app.vault.modifyBinary(file,value);
+			});
+		}
 
 		// get vault config, determine whether useMarkdownLinks is set
 		const vaultConfig = getVaultConfig(this.app)
@@ -330,7 +373,7 @@ class ImageRenameModal extends Modal {
 			}
 		})
 
-		let stem = this.stem
+		var stem = this.stem
 		const ext = this.src.extension
 		const getNewName = (stem: string) => stem + '.' + ext
 		const getNewPath = (stem: string) => path.join(this.src.parent.path, getNewName(stem))
@@ -381,6 +424,7 @@ class ImageRenameModal extends Modal {
 				.onChange(async (value) => {
 					stem = sanitizer.filename(value)
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
+					console.log("stem = " + stem);
 				}
 				))
 
@@ -517,5 +561,29 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}
 			));
+
+		new Setting(containerEl)
+			.setName('Png to Jpeg')
+			.setDesc(`Paste images from ClipBoard to notes by copying them through various screenshot software, 
+			turn on this feature will automatically convert png to jpeg, and more quality compression volume.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.pngToJpeg)
+				.onChange(async (value) => {
+					this.plugin.settings.pngToJpeg = value;
+					await this.plugin.saveSettings();
+				}
+			));	
+			
+		new Setting(containerEl)
+			.setName('Quality')
+			.setDesc(`The smaller the Quality, the greater the compression ratio.`)
+			.addDropdown(toggle => toggle
+				.addOptions({'0.1':'0.1','0.2':'0.2','0.3':'0.3','0.4':'0.4','0.5':'0.5','0.6':'0.6','0.7':'0.7','0.8':'0.8','0.9':'0.9','1.0':'1.0'})
+				.setValue(this.plugin.settings.quality)
+				.onChange(async (value) => {
+					this.plugin.settings.quality = value;
+					await this.plugin.saveSettings();
+				}
+			));				
 	}
 }

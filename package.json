@@ -22,6 +22,7 @@
 		"typescript": "4.4.4"
 	},
 	"dependencies": {
-		"cash-dom": "^8.1.1"
+		"cash-dom": "^8.1.1",
+		"compressorjs": "^1.1.1"
 	}
 }
