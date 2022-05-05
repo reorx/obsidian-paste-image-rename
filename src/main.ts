@@ -13,10 +13,11 @@ import {
   Modal, MarkdownView, Notice,
 } from 'obsidian';
 
+import { ImageBatchRenameModal } from './batch';
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp,
+  getVaultConfig, escapeRegExp, DEBUG,
 } from './utils';
 
 interface PluginSettings {
@@ -41,7 +42,7 @@ const PASTED_IMAGE_PREFIX = 'Pasted image '
 
 export default class PasteImageRenamePlugin extends Plugin {
 	settings: PluginSettings
-	modals: ImageRenameModal[] = []
+	modals: Modal[] = []
 
 	async onload() {
 		const pkg = require('../package.json')
@@ -78,6 +79,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// 		console.log('metadata changed', file, data, cache)
 		// 	})
 		// )
+
+		const batchRenameImages = () => {
+			this.openBatchRenameModal()
+		}
+		this.addCommand({
+			id: 'batch-rename-images',
+			name: 'Batch rename images in the current file',
+			callback: batchRenameImages,
+		})
+		if (DEBUG) {
+			this.addRibbonIcon('wand-glyph', 'Batch rename images in the current file', batchRenameImages)
+		}
 
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -176,6 +189,22 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.modals.push(modal)
 		modal.open()
 		debugLog('modals count', this.modals.length)
+	}
+
+	openBatchRenameModal() {
+		const activeFile = this.getActiveFile()
+		const modal = new ImageBatchRenameModal(
+			this.app,
+			activeFile,
+			(file: TFile, name: string) => {
+				this.renameFile(file, name, activeFile.path)
+			},
+			() => {
+				this.modals.splice(this.modals.indexOf(modal), 1)
+			}
+		)
+		this.modals.push(modal)
+		modal.open()
 	}
 
 	// returns a new name for the input file, with extension

@@ -46,9 +46,11 @@
 	min-width: 300px;
 }
 
+/*
 .image-rename-modal .setting-item {
 	flex-wrap: wrap;
 }
+*/
 
 .image-rename-modal .error {
 	border: 1px solid rgb(201, 90, 90);
