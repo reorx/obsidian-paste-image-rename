@@ -155,7 +155,10 @@ export class ImageBatchRenameModal extends Modal {
 	}
 
 	renameAll() {
-		console.log('rename all', this.state)
+		debugLog('renameAll', this.state)
+		for (const task of this.state.renameTasks) {
+			this.renameFunc(task.file, task.name)
+		}
 	}
 
 	matchImageNames(tbodyEl: HTMLElement) {

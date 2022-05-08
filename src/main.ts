@@ -59,12 +59,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 					return
 				if (isPastedImage(file)) {
 					debugLog('pasted image created', file)
-					this.renameImage(file, this.settings.autoRename)
+					this.startRenameProcess(file, this.settings.autoRename)
 				} else {
 					// handle drop images
 					if (isImage(file) && this.settings.handleAllImages) {
 						debugLog('image created', file)
-						this.renameImage(file, this.settings.autoRename)
+						this.startRenameProcess(file, this.settings.autoRename)
 					}
 				}
 			})
@@ -80,16 +80,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// 	})
 		// )
 
-		const batchRenameImages = () => {
+		const startBatchRenameProcess = () => {
 			this.openBatchRenameModal()
 		}
 		this.addCommand({
 			id: 'batch-rename-images',
 			name: 'Batch rename images in the current file',
-			callback: batchRenameImages,
+			callback: startBatchRenameProcess,
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('wand-glyph', 'Batch rename images in the current file', batchRenameImages)
+			this.addRibbonIcon('wand-glyph', 'Batch rename images in the current file', startBatchRenameProcess)
 		}
 
 		// add settings tab
@@ -97,7 +97,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	}
 
-	async renameImage(file: TFile, autoRename: boolean = false) {
+	async startRenameProcess(file: TFile, autoRename: boolean = false) {
 		// get active file first
 		const activeFile = this.getActiveFile()
 		if (!activeFile) {
@@ -112,10 +112,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
 			return
 		}
-		this.renameFile(file, newName, activeFile.path)
+		this.renameFile(file, newName, activeFile.path, true)
 	}
 
-	async renameFile(file: TFile, newName: string, sourcePath: string) {
+	async renameFile(file: TFile, newName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
 		newName = await this.deduplicateNewName(newName, file)
 		debugLog('deduplicated newName:', newName)
@@ -139,11 +139,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 			new Notice(`Failed to rename ${newName}: ${err}`)
 			throw err
 		}
+
+		if (!replaceCurrentLine) {
+			return
+		}
+		// in case fileManager.renameFile may not update the internal link in the active file,
+		// we manually replace the current line by manipulating the editor
+
 		const newLinkText = this.makeLinkText(newName, useMarkdownLinks, this.app.vault.getAbstractFileByPath(newPath) as TFile, sourcePath)
 		debugLog('replace text', linkText, newLinkText)
 
-		// in case fileManager.renameFile may not update the internal link in the active file,
-		// we manually replace by manipulating the editor
 		const editor = this.getActiveEditor()
 		if (!editor) {
 			new Notice(`Failed to rename ${newName}: no active editor`)
@@ -180,7 +185,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.renameFile(file, confirmedName, sourcePath)
+				this.renameFile(file, confirmedName, sourcePath, true)
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
