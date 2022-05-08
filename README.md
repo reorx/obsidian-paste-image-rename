@@ -69,6 +69,10 @@ to rename images and other attachments (even notes) in the current file.
 The image above demostrates how to rename all the `foo-1.png`, `foo-2.png`… png files
 to `bar-1-png`, `bar-2.png`… with this feature.
 
+You can also rename the images to the same name, let the plugin to handle
+the name deduplication for you.  See a video demostration here:
+https://i.imgur.com/6UICugX.mp4
+
 ## FAQ
 
 - Q: I pasted an image but the rename prompt did not show up.
