@@ -6,6 +6,7 @@ import {
 
 interface State {
 	namePattern: string
+	extPattern: string
 	nameReplace: string
 	renameTasks: RenameTask[]
 }
@@ -29,6 +30,7 @@ export class ImageBatchRenameModal extends Modal {
 
 		this.state = {
 			namePattern: '',
+			extPattern: '',
 			nameReplace: '',
 			renameTasks: [],
 		}
@@ -37,23 +39,21 @@ export class ImageBatchRenameModal extends Modal {
 	onOpen() {
 		this.containerEl.addClass('image-rename-modal')
 		const { contentEl, titleEl } = this;
-		titleEl.setText('Batch rename images')
+		titleEl.setText('Batch rename embeded files')
 
 		const namePatternSetting = new Setting(contentEl)
 			.setName('Name pattern')
-			.setDesc('Please input the name pattern to match images (regex)')
+			.setDesc('Please input the name pattern to match files (regex)')
 			.addText(text => text
 				.setValue(this.state.namePattern)
 				.onChange(async (value) => {
 					this.state.namePattern = value
 				}
 				))
-
 		const npInputEl = namePatternSetting.controlEl.children[0] as HTMLInputElement
 		npInputEl.focus()
 		const npInputState = lockInputMethodComposition(npInputEl)
 		npInputEl.addEventListener('keydown', async (e) => {
-			// console.log('keydown', e.key, `lock=${nameInputState.lock}`)
 			if (e.key === 'Enter' && !npInputState.lock) {
 				e.preventDefault()
 				if (!this.state.namePattern) {
@@ -61,13 +61,30 @@ export class ImageBatchRenameModal extends Modal {
 					errorEl.style.display = 'block'
 					return
 				}
-				this.matchImageNames(tableET.children[1].el)
+				this.matchImageNames(tbodyEl)
+			}
+		})
+
+		const extPatternSetting = new Setting(contentEl)
+			.setName('Extension pattern')
+			.setDesc('Please input the extension pattern to match files (regex)')
+			.addText(text => text
+				.setValue(this.state.extPattern)
+				.onChange(async (value) => {
+					this.state.extPattern = value
+				}
+				))
+		const extInputEl = extPatternSetting.controlEl.children[0] as HTMLInputElement
+		extInputEl.addEventListener('keydown', async (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault()
+				this.matchImageNames(tbodyEl)
 			}
 		})
 
 		const nameReplaceSetting = new Setting(contentEl)
 			.setName('Name replace')
-			.setDesc('Please input the string to replace the matched part (use $1, $2 for regex groups)')
+			.setDesc('Please input the string to replace the matched name (use $1, $2 for regex groups)')
 			.addText(text => text
 				.setValue(this.state.nameReplace)
 				.onChange(async (value) => {
@@ -76,13 +93,11 @@ export class ImageBatchRenameModal extends Modal {
 				))
 
 		const nrInputEl = nameReplaceSetting.controlEl.children[0] as HTMLInputElement
-		nrInputEl.focus()
 		const nrInputState = lockInputMethodComposition(nrInputEl)
 		nrInputEl.addEventListener('keydown', async (e) => {
-			// console.log('keydown', e.key, `lock=${nameInputState.lock}`)
 			if (e.key === 'Enter' && !nrInputState.lock) {
 				e.preventDefault()
-				this.matchImageNames(tableET.children[1].el)
+				this.matchImageNames(tbodyEl)
 			}
 		})
 
@@ -116,6 +131,7 @@ export class ImageBatchRenameModal extends Modal {
 				}
 			]
 		})
+		const tbodyEl = tableET.children[1].el
 
 		const errorEl = contentEl.createDiv({
 			cls: 'error',
@@ -167,17 +183,26 @@ export class ImageBatchRenameModal extends Modal {
 		tbodyEl.empty()
 		const fileCache = this.app.metadataCache.getFileCache(this.activeFile)
 		if (!fileCache || !fileCache.embeds) return
+
 		const namePatternRegex = new RegExp(state.namePattern, 'g')
+		const extPatternRegex = new RegExp(state.extPattern)
 		fileCache.embeds.forEach(embed => {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, this.activeFile.path)
 			if (!file) {
 				console.warn('file not found', embed.link)
 				return
 			}
+			// match ext (only if extPattern is not empty)
+			if (state.extPattern) {
+				const m0 = extPatternRegex.exec(file.extension)
+				if (!m0) return
+			}
+
+			// match stem
 			const stem = file.basename
 			namePatternRegex.lastIndex = 0
-			const m = namePatternRegex.exec(stem)
-			if (!m) return
+			const m1 = namePatternRegex.exec(stem)
+			if (!m1) return
 
 			let renamedName = file.name
 			if (state.nameReplace) {
