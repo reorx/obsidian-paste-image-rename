@@ -16,13 +16,15 @@ interface RenameTask {
 	name: string
 }
 
+type renameFuncType = (file: TFile, name: string) => Promise<void>
+
 export class ImageBatchRenameModal extends Modal {
 	activeFile: TFile
-	renameFunc: (file: TFile, name: string) => void
+	renameFunc: renameFuncType
 	onCloseExtra: () => void
 	state: State
 
-	constructor(app: App, activeFile: TFile, renameFunc: (file: TFile, name: string) => void, onClose: () => void) {
+	constructor(app: App, activeFile: TFile, renameFunc: renameFuncType, onClose: () => void) {
 		super(app);
 		this.activeFile = activeFile
 		this.renameFunc = renameFunc
@@ -170,10 +172,10 @@ export class ImageBatchRenameModal extends Modal {
 		this.onCloseExtra()
 	}
 
-	renameAll() {
+	async renameAll() {
 		debugLog('renameAll', this.state)
 		for (const task of this.state.renameTasks) {
-			this.renameFunc(task.file, task.name)
+			await this.renameFunc(task.file, task.name)
 		}
 	}
 

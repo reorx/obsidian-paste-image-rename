@@ -191,8 +191,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const modal = new ImageBatchRenameModal(
 			this.app,
 			activeFile,
-			(file: TFile, name: string) => {
-				this.renameFile(file, name, activeFile.path)
+			async (file: TFile, name: string) => {
+				await this.renameFile(file, name, activeFile.path)
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
