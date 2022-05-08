@@ -26,7 +26,8 @@ interface PluginSettings {
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
 	autoRename: boolean
-	handleAllImages: boolean
+	handleAllAttachments: boolean
+	excludeExtensionPattern: string
 	disableRenameNotice: boolean
 }
 
@@ -35,7 +36,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
 	autoRename: false,
-	handleAllImages: false,
+	handleAllAttachments: false,
+	excludeExtensionPattern: '',
 	disableRenameNotice: false,
 }
 
@@ -45,6 +47,7 @@ const PASTED_IMAGE_PREFIX = 'Pasted image '
 export default class PasteImageRenamePlugin extends Plugin {
 	settings: PluginSettings
 	modals: Modal[] = []
+	excludeExtensionRegex: RegExp
 
 	async onload() {
 		const pkg = require('../package.json')
@@ -63,9 +66,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 					debugLog('pasted image created', file)
 					this.startRenameProcess(file, this.settings.autoRename)
 				} else {
-					// handle drop images
-					if (isImage(file) && this.settings.handleAllImages) {
-						debugLog('image created', file)
+					if (this.settings.handleAllAttachments) {
+						debugLog('file created', file)
+						if (this.testExcludeExtensionRegex(file)) {
+							debugLog('excluded file by ext', file)
+							return
+						}
 						this.startRenameProcess(file, this.settings.autoRename)
 					}
 				}
@@ -297,6 +303,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	onunload() {
 		this.modals.map(modal => modal.close())
+	}
+
+	buildExcludeExtensionRegex() {
+		this.excludeExtensionRegex = new RegExp(this.settings.excludeExtensionPattern)
+	}
+	testExcludeExtensionRegex(file: TFile): boolean {
+		if (!this.excludeExtensionRegex) {
+			this.buildExcludeExtensionRegex()
+		}
+		return this.excludeExtensionRegex.test(file.extension)
 	}
 
 	async loadSettings() {
@@ -533,16 +549,30 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Handle all images')
+			.setName('Handle all attachments')
 			.setDesc(`By default, the plugin only handles images that starts with "Pasted image " in name,
 			which is the prefix Obsidian uses to create images from pasted content.
-			If this option is set, the plugin will handle all images. This includes drag'n drop image,
-			or any other image that is created in the valut.`)
+			If this option is set, the plugin will handle all attachments that are created in the valut.`)
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.handleAllImages)
+				.setValue(this.plugin.settings.handleAllAttachments)
 				.onChange(async (value) => {
-					this.plugin.settings.handleAllImages = value;
+					this.plugin.settings.handleAllAttachments = value;
 					await this.plugin.saveSettings();
+				}
+			));
+
+		new Setting(containerEl)
+			.setName('Exclude extension pattern')
+			.setDesc(`This option is only useful when "Handle all attachments" is enabled.
+			Write a Regex pattern to exclude certain extensions from being handled. Only the first line will be used.`)
+			.setClass('single-line-textarea')
+			.addTextArea(text => text
+				.setPlaceholder('docx?|xlsx?|pptx?|zip|rar')
+				.setValue(this.plugin.settings.excludeExtensionPattern)
+				.onChange(async (value) => {
+					this.plugin.settings.excludeExtensionPattern = value;
+					await this.plugin.saveSettings();
+					this.plugin.buildExcludeExtensionRegex()
 				}
 			));
 
