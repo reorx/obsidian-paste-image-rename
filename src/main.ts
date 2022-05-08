@@ -69,16 +69,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 				}
 			})
 		)
-		// this.registerEvent(
-		// 	this.app.workspace.on('editor-drop', (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
-		// 		console.log('editor-drop', evt.defaultPrevented, evt, editor)
-		// 	})
-		// )
-		// this.registerEvent(
-		// 	this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
-		// 		console.log('metadata changed', file, data, cache)
-		// 	})
-		// )
 
 		const startBatchRenameProcess = () => {
 			this.openBatchRenameModal()
