@@ -59,6 +59,16 @@ If we paste the third image without editing the "New name" input, its name will 
 
 This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequentially by the pattern and `imageNameKey` set.
 
+### Batch renaming
+
+You can use the command "Batch rename embeded files in the current file"
+to rename images and other attachments (even notes) in the current file.
+
+![](images/batch-renaming.png)
+
+The image above demostrates how to rename all the `foo-1.png`, `foo-2.png`… png files
+to `bar-1-png`, `bar-2.png`… with this feature.
+
 ## FAQ
 
 - Q: I pasted an image but the rename prompt did not show up.
