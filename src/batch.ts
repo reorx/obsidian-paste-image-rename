@@ -1,11 +1,18 @@
 import { Modal, TFile, App, Setting } from 'obsidian';
 
-import { createElementTree, lockInputMethodComposition } from './utils';
+import {
+  createElementTree, debugLog, lockInputMethodComposition,
+} from './utils';
 
 interface State {
 	namePattern: string
 	nameReplace: string
-	matchedFiles: TFile[]
+	renameTasks: RenameTask[]
+}
+
+interface RenameTask {
+	file: TFile
+	name: string
 }
 
 export class ImageBatchRenameModal extends Modal {
@@ -23,16 +30,14 @@ export class ImageBatchRenameModal extends Modal {
 		this.state = {
 			namePattern: '',
 			nameReplace: '',
-			matchedFiles: [],
+			renameTasks: [],
 		}
-		// getFirstLinkpathDest
 	}
 
 	onOpen() {
 		this.containerEl.addClass('image-rename-modal')
 		const { contentEl, titleEl } = this;
 		titleEl.setText('Batch rename images')
-
 
 		const namePatternSetting = new Setting(contentEl)
 			.setName('Name pattern')
@@ -128,7 +133,7 @@ export class ImageBatchRenameModal extends Modal {
 						new ConfirmModal(
 							this.app,
 							'Confirm rename all',
-							`Are you sure? This will rename all the ${this.state.matchedFiles.length} images matched the pattern.`,
+							`Are you sure? This will rename all the ${this.state.renameTasks.length} images matched the pattern.`,
 							() => {
 								this.renameAll()
 								this.close()
@@ -155,11 +160,11 @@ export class ImageBatchRenameModal extends Modal {
 
 	matchImageNames(tbodyEl: HTMLElement) {
 		const { state } = this
-		const matchedFiles: TFile[] = []
+		const renameTasks: RenameTask[] = []
 		tbodyEl.empty()
 		const fileCache = this.app.metadataCache.getFileCache(this.activeFile)
 		if (!fileCache || !fileCache.embeds) return
-		const namePatternRegex = new RegExp(state.namePattern, 'gm')
+		const namePatternRegex = new RegExp(state.namePattern, 'g')
 		fileCache.embeds.forEach(embed => {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, this.activeFile.path)
 			if (!file) {
@@ -167,15 +172,19 @@ export class ImageBatchRenameModal extends Modal {
 				return
 			}
 			const stem = file.basename
+			namePatternRegex.lastIndex = 0
 			const m = namePatternRegex.exec(stem)
 			if (!m) return
 
-			matchedFiles.push(file)
 			let renamedName = file.name
 			if (state.nameReplace) {
 				renamedName = stem.replace(namePatternRegex, state.nameReplace)
 				renamedName = `${renamedName}.${file.extension}`
 			}
+			renameTasks.push({
+				file,
+				name: renamedName,
+			})
 
 			createElementTree(tbodyEl, {
 				tag: 'tr',
@@ -191,9 +200,10 @@ export class ImageBatchRenameModal extends Modal {
 				]
 
 			})
-			// console.log('matched file', file)
 		})
-		state.matchedFiles = matchedFiles
+
+		debugLog('new renameTasks', renameTasks)
+		state.renameTasks = renameTasks
 	}
 }
 
