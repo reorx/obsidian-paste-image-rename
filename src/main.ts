@@ -27,6 +27,7 @@ interface PluginSettings {
 	dupNumberDelimiter: string
 	autoRename: boolean
 	handleAllImages: boolean
+	disableRenameNotice: boolean
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -35,6 +36,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	dupNumberDelimiter: '-',
 	autoRename: false,
 	handleAllImages: false,
+	disableRenameNotice: false,
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -159,7 +161,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 			]
 		})
 
-		new Notice(`Renamed ${originName} to ${newName}`)
+		if (!this.settings.disableRenameNotice) {
+			new Notice(`Renamed ${originName} to ${newName}`)
+		}
 	}
 
 	makeLinkText(fileName: string, useMarkdownLinks: boolean, file: TFile, sourcePath: string): string {
@@ -538,6 +542,18 @@ class SettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.handleAllImages)
 				.onChange(async (value) => {
 					this.plugin.settings.handleAllImages = value;
+					await this.plugin.saveSettings();
+				}
+			));
+
+		new Setting(containerEl)
+			.setName('Disable rename notice')
+			.setDesc(`Turn off this option if you don't want to see the notice when renaming images.
+			Note that Obsidian may display a notice when a link has changed, this option cannot disable that.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.disableRenameNotice)
+				.onChange(async (value) => {
+					this.plugin.settings.disableRenameNotice = value;
 					await this.plugin.saveSettings();
 				}
 			));
