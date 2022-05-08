@@ -1,7 +1,7 @@
 import { Modal, TFile, App, Setting } from 'obsidian';
 
 import {
-  createElementTree, debugLog, lockInputMethodComposition,
+  path, createElementTree, debugLog, lockInputMethodComposition,
 } from './utils';
 
 interface State {
@@ -116,7 +116,7 @@ export class ImageBatchRenameModal extends Modal {
 							children: [
 								{
 									tag: 'td',
-									text: 'Original Name',
+									text: 'Original path',
 								},
 								{
 									tag: 'td',
@@ -219,11 +219,35 @@ export class ImageBatchRenameModal extends Modal {
 				children: [
 					{
 						tag: 'td',
-						text: file.name,
+						children: [
+							{
+								tag: 'span',
+								text: file.name,
+							},
+							{
+								tag: 'div',
+								text: file.path,
+								attr: {
+									class: 'file-path',
+								}
+							}
+						]
 					},
 					{
 						tag: 'td',
-						text: renamedName,
+						children: [
+							{
+								tag: 'span',
+								text: renamedName,
+							},
+							{
+								tag: 'div',
+								text: path.join(file.parent.path, renamedName),
+								attr: {
+									class: 'file-path',
+								}
+							}
+						]
 					}
 				]
 

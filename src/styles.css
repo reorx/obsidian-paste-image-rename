@@ -58,6 +58,27 @@
 	padding: 10px;
 }
 
+.image-rename-modal table {
+	font-size: .9em;
+	line-height: 1.8;
+	margin-bottom: 1.5em;
+	user-select: text;
+}
+
+.image-rename-modal table td {
+	padding-right: 1em;
+}
+
+.image-rename-modal table thead td {
+	font-weight: 700;
+}
+
+.image-rename-modal table tbody td .file-path {
+	font-size: .8em;
+	color: var(--text-faint);
+	line-height: 1;
+}
+
 
 /* settings */
 

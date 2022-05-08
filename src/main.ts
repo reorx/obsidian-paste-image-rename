@@ -74,12 +74,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openBatchRenameModal()
 		}
 		this.addCommand({
-			id: 'batch-rename-images',
-			name: 'Batch rename images in the current file',
+			id: 'batch-rename-embeded-files',
+			name: 'Batch rename embeded files (in the current file)',
 			callback: startBatchRenameProcess,
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('wand-glyph', 'Batch rename images in the current file', startBatchRenameProcess)
+			this.addRibbonIcon('wand-glyph', 'Batch rename embeded files', startBatchRenameProcess)
 		}
 
 		// add settings tab
