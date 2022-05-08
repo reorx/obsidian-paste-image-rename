@@ -5,7 +5,7 @@
  * - [x] handle image insert from drag'n drop
  * - [ ] add button for use the current file name, imageNameKey, last input name,
  *       segments of last input name
- * - [ ] batch rename all pasted images in a file
+ * - [x] batch rename all pasted images in a file
  * - [ ] add rules for moving matched images to destination folder
  */
 import {
@@ -13,10 +13,11 @@ import {
   Modal, MarkdownView, Notice,
 } from 'obsidian';
 
+import { ImageBatchRenameModal } from './batch';
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp,
+  getVaultConfig, escapeRegExp, DEBUG,
 } from './utils';
 
 interface PluginSettings {
@@ -41,7 +42,7 @@ const PASTED_IMAGE_PREFIX = 'Pasted image '
 
 export default class PasteImageRenamePlugin extends Plugin {
 	settings: PluginSettings
-	modals: ImageRenameModal[] = []
+	modals: Modal[] = []
 
 	async onload() {
 		const pkg = require('../package.json')
@@ -58,33 +59,35 @@ export default class PasteImageRenamePlugin extends Plugin {
 					return
 				if (isPastedImage(file)) {
 					debugLog('pasted image created', file)
-					this.renameImage(file, this.settings.autoRename)
+					this.startRenameProcess(file, this.settings.autoRename)
 				} else {
 					// handle drop images
 					if (isImage(file) && this.settings.handleAllImages) {
 						debugLog('image created', file)
-						this.renameImage(file, this.settings.autoRename)
+						this.startRenameProcess(file, this.settings.autoRename)
 					}
 				}
 			})
 		)
-		// this.registerEvent(
-		// 	this.app.workspace.on('editor-drop', (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
-		// 		console.log('editor-drop', evt.defaultPrevented, evt, editor)
-		// 	})
-		// )
-		// this.registerEvent(
-		// 	this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
-		// 		console.log('metadata changed', file, data, cache)
-		// 	})
-		// )
+
+		const startBatchRenameProcess = () => {
+			this.openBatchRenameModal()
+		}
+		this.addCommand({
+			id: 'batch-rename-embeded-files',
+			name: 'Batch rename embeded files (in the current file)',
+			callback: startBatchRenameProcess,
+		})
+		if (DEBUG) {
+			this.addRibbonIcon('wand-glyph', 'Batch rename embeded files', startBatchRenameProcess)
+		}
 
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
 
 	}
 
-	async renameImage(file: TFile, autoRename: boolean = false) {
+	async startRenameProcess(file: TFile, autoRename: boolean = false) {
 		// get active file first
 		const activeFile = this.getActiveFile()
 		if (!activeFile) {
@@ -99,10 +102,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
 			return
 		}
-		this.renameFile(file, newName, activeFile.path)
+		this.renameFile(file, newName, activeFile.path, true)
 	}
 
-	async renameFile(file: TFile, newName: string, sourcePath: string) {
+	async renameFile(file: TFile, newName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
 		newName = await this.deduplicateNewName(newName, file)
 		debugLog('deduplicated newName:', newName)
@@ -126,11 +129,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 			new Notice(`Failed to rename ${newName}: ${err}`)
 			throw err
 		}
+
+		if (!replaceCurrentLine) {
+			return
+		}
+		// in case fileManager.renameFile may not update the internal link in the active file,
+		// we manually replace the current line by manipulating the editor
+
 		const newLinkText = this.makeLinkText(newName, useMarkdownLinks, this.app.vault.getAbstractFileByPath(newPath) as TFile, sourcePath)
 		debugLog('replace text', linkText, newLinkText)
 
-		// in case fileManager.renameFile may not update the internal link in the active file,
-		// we manually replace by manipulating the editor
 		const editor = this.getActiveEditor()
 		if (!editor) {
 			new Notice(`Failed to rename ${newName}: no active editor`)
@@ -167,7 +175,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.renameFile(file, confirmedName, sourcePath)
+				this.renameFile(file, confirmedName, sourcePath, true)
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
@@ -176,6 +184,22 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.modals.push(modal)
 		modal.open()
 		debugLog('modals count', this.modals.length)
+	}
+
+	openBatchRenameModal() {
+		const activeFile = this.getActiveFile()
+		const modal = new ImageBatchRenameModal(
+			this.app,
+			activeFile,
+			async (file: TFile, name: string) => {
+				await this.renameFile(file, name, activeFile.path)
+			},
+			() => {
+				this.modals.splice(this.modals.indexOf(modal), 1)
+			}
+		)
+		this.modals.push(modal)
+		modal.open()
 	}
 
 	// returns a new name for the input file, with extension
