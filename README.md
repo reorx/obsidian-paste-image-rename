@@ -1,5 +1,8 @@
 # Obsidian paste image rename
 
+> :loudspeaker: Starting from 1.4.0, Paste image rename becomes a general-purpose renaming plugin
+> that can handle all attachments added to the vault.
+
 This plugin is inspired by Zettlr, Zettlr shows a prompt that allows the user to rename the image, this is a great help if you want your images to be named and organized clearly.
 
 <details>
@@ -79,11 +82,11 @@ to rename images and other attachments (even notes) in the current file.
 
 ![](images/batch-renaming.png)
 
-The image above demostrates how to rename all the `foo-1.png`, `foo-2.png`… png files
+The image above demonstrates how to rename all the `foo-1.png`, `foo-2.png`… png files
 to `bar-1-png`, `bar-2.png`… with this feature.
 
-You can also rename the images to the same name, let the plugin to handle
-the name deduplication for you.  See a video demostration here:
+You can also rename the images to the same name, and let the plugin handle
+the name deduplication for you.  See a video demonstration here:
 https://i.imgur.com/6UICugX.mp4
 
 
@@ -92,7 +95,7 @@ https://i.imgur.com/6UICugX.mp4
 > New in 1.4.0
 
 Paste image rename is not just a plugin for pasted images, it has the potential
-to handle all attachments that are added to the vault, no matter they are pasted
+to handle all attachments that are added to the vault, no matter whether they are pasted
 or dragged.
 
 To use this feature, you need to enable the "Handle all attachments" option in settings.
@@ -100,7 +103,7 @@ To use this feature, you need to enable the "Handle all attachments" option in s
 ![](images/handle-all-attachments-settings.png)
 
 Additionally, you can configure the "Exclude extension pattern" to ignore files
-that matches the given extension pattern.
+that match the given extension pattern.
 
 
 ## FAQ

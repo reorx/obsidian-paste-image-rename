@@ -3,7 +3,7 @@
 	"name": "Paste image rename",
 	"version": "1.4.0",
 	"minAppVersion": "0.12.0",
-	"description": "Rename image after pasting",
+	"description": "Rename pasted images and all the other attchments added to the vault",
 	"author": "Reorx",
 	"authorUrl": "https://github.com/reorx",
 	"isDesktopOnly": false
