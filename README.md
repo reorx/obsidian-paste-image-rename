@@ -10,6 +10,17 @@ This plugin is inspired by Zettlr, Zettlr shows a prompt that allows the user to
 
 Paste image rename plugin not only implements Zettlr's feature, but also allows you to customize how the image name would be generated, and eventually free you from the hassle by automatically renaming the image according to the rules.
 
+**Table of Contents**
+- [Obsidian paste image rename](#obsidian-paste-image-rename)
+  - [How to use](#how-to-use)
+    - [Basic usage](#basic-usage)
+    - [Set `imageNameKey` frontmatter](#set-imagenamekey-frontmatter)
+    - [Add prefix/suffix to duplicated names](#add-prefixsuffix-to-duplicated-names)
+    - [Batch renaming](#batch-renaming)
+    - [Handle all attachments](#handle-all-attachments)
+  - [FAQ](#faq)
+  - [Settings](#settings)
+
 ## How to use
 
 ### Basic usage
@@ -61,6 +72,8 @@ This feature is especially powerful if you enable "Auto rename" in settings, you
 
 ### Batch renaming
 
+> New in 1.3.0
+
 You can use the command "Batch rename embeded files in the current file"
 to rename images and other attachments (even notes) in the current file.
 
@@ -72,6 +85,23 @@ to `bar-1-png`, `bar-2.png`… with this feature.
 You can also rename the images to the same name, let the plugin to handle
 the name deduplication for you.  See a video demostration here:
 https://i.imgur.com/6UICugX.mp4
+
+
+### Handle all attachments
+
+> New in 1.4.0
+
+Paste image rename is not just a plugin for pasted images, it has the potential
+to handle all attachments that are added to the vault, no matter they are pasted
+or dragged.
+
+To use this feature, you need to enable the "Handle all attachments" option in settings.
+
+![](images/handle-all-attachments-settings.png)
+
+Additionally, you can configure the "Exclude extension pattern" to ignore files
+that matches the given extension pattern.
+
 
 ## FAQ
 
@@ -90,14 +120,16 @@ https://i.imgur.com/6UICugX.mp4
   The pattern indicates how the new name should be generated.
 
   - Available variables:
+    - `{{fileName}}`: name of the active file, without ".md" extension.
     - `{{imageNameKey}}`: this variable is read from the markdown file's frontmatter, from the same key `imageNameKey`.
-    - `{{DATE:$FORMAT}}`: use `$FORMAT` to format the current date, `$FORMAT` must be a Moment.js format string, e.g. `{{DATE:YYYY-MM-DD}}`
+    - `{{DATE:$FORMAT}}`: use `$FORMAT` to format the current date, `$FORMAT` must be a Moment.js format string, e.g. `{{DATE:YYYY-MM-DD}}`.
 
-  - Examples of pattern to results :
-    > (imageNameKey = "foo")
-    - `{{imageNameKey}}-`: foo-
-    - `{{imageNameKey}}-{{DATE:YYYYMMDDHHmm}}`: foo-202204081652
-    - `Pasted Image {{DATE:YYYYMMDDHHmm}}`: Pasted Image 202204081652
+  - Examples
+
+    Here are some examples from pattern to image names (repeat in sequence), variables: `fileName = "My note", imageNameKey = "foo"`:
+    - `{{fileName}}`: My note, My note-1, My note-2
+    - `{{imageNameKey}}`: foo, foo-1, foo-2
+    - `{{imageNameKey}}-{{DATE:YYYYMMDD}}`: foo-20220408, foo-20220408-1, foo-20220408-2
 - **Duplicate number at start (or end)**
 
   If enabled, the duplicate number will be added at the start as prefix for the image name, otherwise, it will be added at the end as suffix for the image name.
@@ -107,9 +139,15 @@ https://i.imgur.com/6UICugX.mp4
 - **Auto rename**
 
   By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.
-- **Handle all images**
+- **Handle all attachments**
 
-  By default, the plugin only handles images that starts with "Pasted image " in name,
-  which is the prefix Obsidian uses to create images from pasted content.
-  If this option is set, the plugin will handle all images. This includes drag'n drop image,
-  or any other image that is created in the valut.
+  By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.
+
+- **Exclude extension pattern**
+
+  This option is only useful when "Handle all attachments" is enabled.
+	Write a Regex pattern to exclude certain extensions from being handled. Only the first line will be used.
+- **Disable rename notice**
+
+  Turn off this option if you don't want to see the notice when renaming images.
+	Note that Obsidian may display a notice when a link has changed, this option cannot disable that.

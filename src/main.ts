@@ -479,14 +479,14 @@ const imageNamePatternDesc = `
 The pattern indicates how the new name should be generated.
 
 Available variables:
-- {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
 - {{fileName}}: name of the active file, without ".md" extension.
+- {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
 - {{DATE:$FORMAT}}: use "$FORMAT" to format the current date, "$FORMAT" must be a Moment.js format string, e.g. {{DATE:YYYY-MM-DD}}.
 
-Here are some examples from pattern to image names (repeat in sequence), variables: imageNameKey = "foo", fileName = "My note":
+Here are some examples from pattern to image names (repeat in sequence), variables: fileName = "My note", imageNameKey = "foo":
+- {{fileName}}: My note, My note-1, My note-2
 - {{imageNameKey}}: foo, foo-1, foo-2
 - {{imageNameKey}}-{{DATE:YYYYMMDD}}: foo-20220408, foo-20220408-1, foo-20220408-2
-- {{fileName}}: My note, My note-1, My note-2
 `
 
 class SettingTab extends PluginSettingTab {
