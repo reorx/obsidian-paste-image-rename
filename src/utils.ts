@@ -118,3 +118,9 @@ export function getVaultConfig(app: App): VaultConfig|null {
 	const vault = app.vault as VaultWithConfig
 	return vault.config
 }
+
+export interface NameObj {
+	name: string
+	stem: string
+	extension: string
+}

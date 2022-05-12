@@ -17,7 +17,7 @@ import { ImageBatchRenameModal } from './batch';
 import { renderTemplate } from './template';
 import {
   createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp, DEBUG,
+  getVaultConfig, escapeRegExp, DEBUG, NameObj,
 } from './utils';
 
 interface PluginSettings {
@@ -116,11 +116,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.renameFile(file, newName, activeFile.path, true)
 	}
 
-	async renameFile(file: TFile, newName: string, sourcePath: string, replaceCurrentLine?: boolean) {
+	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
-		newName = await this.deduplicateNewName(newName, file)
+		const { name:newName, stem:newNameStem } = await this.deduplicateNewName(inputNewName, file)
 		debugLog('deduplicated newName:', newName)
 		const originName = file.name
+		const originStem = file.basename
+		const ext = file.extension
 
 		// get vault config, determine whether useMarkdownLinks is set
 		const vaultConfig = getVaultConfig(this.app)
@@ -128,9 +130,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (vaultConfig && vaultConfig.useMarkdownLinks) {
 			useMarkdownLinks = true
 		}
-
-		// get origin file link before renaming
-		const linkText = this.makeLinkText(originName, useMarkdownLinks, file, sourcePath)
 
 		// file system operation
 		const newPath = path.join(file.parent.path, newName)
@@ -147,8 +146,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
 
-		const newLinkText = this.makeLinkText(newName, useMarkdownLinks, this.app.vault.getAbstractFileByPath(newPath) as TFile, sourcePath)
-		debugLog('replace text', linkText, newLinkText)
+		let linkTextRegex, newLinkText
+		if (useMarkdownLinks) {
+			// NOTE should use this.app.fileManager.generateMarkdownLink(file, sourcePath) to get the encoded newNameStem, right now we just ignore this problem
+			linkTextRegex = new RegExp('!\\[\\]\\(([^[\\]]*\\/)?${originStem}\\.${ext}\\)')
+			newLinkText = `![]($1${newNameStem}.${ext}])`
+		} else {
+			// ![[xxxx.png]] -> ![[attachments/xxxx.png]]
+			linkTextRegex = new RegExp(`!\\[\\[([^[\\]]*\\/)?${originStem}\\.${ext}\\]\\]`)
+			newLinkText = `![[$1${newNameStem}.${ext}]]`
+		}
+		debugLog('replace text', linkTextRegex, newLinkText)
 
 		const editor = this.getActiveEditor()
 		if (!editor) {
@@ -158,28 +166,21 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
-		debugLog('current line', line)
+		const replacedLine = line.replace(linkTextRegex, newLinkText)
+		debugLog('current line -> replaced line', line, replacedLine)
 		// console.log('editor context', cursor, )
 		editor.transaction({
 			changes: [
 				{
 					from: {...cursor, ch: 0},
 					to: {...cursor, ch: line.length},
-					text: line.replace(linkText, newLinkText),
+					text: replacedLine,
 				}
 			]
 		})
 
 		if (!this.settings.disableRenameNotice) {
 			new Notice(`Renamed ${originName} to ${newName}`)
-		}
-	}
-
-	makeLinkText(fileName: string, useMarkdownLinks: boolean, file: TFile, sourcePath: string): string {
-		if (useMarkdownLinks) {
-			return this.app.fileManager.generateMarkdownLink(file, sourcePath)
-		} else {
-			return `[[${fileName}]]`
 		}
 	}
 
@@ -240,7 +241,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	// newName: foo.ext
-	async deduplicateNewName(newName: string, file: TFile) {
+	async deduplicateNewName(newName: string, file: TFile): Promise<NameObj> {
 		// list files in dir
 		const dir = file.parent.path
 		const listed = await this.app.vault.adapter.list(dir)
@@ -290,7 +291,11 @@ export default class PasteImageRenamePlugin extends Plugin {
 			}
 		}
 
-		return newName
+		return {
+			name: newName,
+			stem: newName.slice(0, newName.length - newNameExt.length - 1),
+			extension: newNameExt,
+		}
 	}
 
 	getActiveFile() {
