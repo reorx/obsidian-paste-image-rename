@@ -19,7 +19,8 @@ Paste image rename plugin not only implements Zettlr's feature, but also allows 
     - [Basic usage](#basic-usage)
     - [Set `imageNameKey` frontmatter](#set-imagenamekey-frontmatter)
     - [Add prefix/suffix to duplicated names](#add-prefixsuffix-to-duplicated-names)
-    - [Batch renaming](#batch-renaming)
+    - [Batch renaming process](#batch-renaming-process)
+    - [Batch rename all images instantly](#batch-rename-all-images-instantly)
     - [Handle all attachments](#handle-all-attachments)
   - [FAQ](#faq)
   - [Settings](#settings)
@@ -73,7 +74,7 @@ If we paste the third image without editing the "New name" input, its name will 
 
 This feature is especially powerful if you enable "Auto rename" in settings, you can just add new images without thinking, and they will be renamed sequentially by the pattern and `imageNameKey` set.
 
-### Batch renaming
+### Batch renaming process
 
 > New in 1.3.0
 
@@ -89,6 +90,19 @@ You can also rename the images to the same name, and let the plugin handle
 the name deduplication for you.  See a video demonstration here:
 https://i.imgur.com/6UICugX.mp4
 
+
+### Batch rename all images instantly
+
+> New in 1.5.0
+
+The command "Batch rename all images instantly (in the current file)" will
+rename all the images in the current file according to
+"Image name pattern" in settings.
+
+This is a shortcut for using [Batch renaming process](#batch-renaming-process) with certain arguments,
+makes everyday image renaming much easier.
+
+Note that this command has no confirmation, please use it with caution!
 
 ### Handle all attachments
 
