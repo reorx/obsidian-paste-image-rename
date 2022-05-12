@@ -62,6 +62,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 				// if the pasted image is created more than 1 second ago, ignore it
 				if (timeGapMs > 1000)
 					return
+				// always ignore markdown file creation
+				if (isMarkdownFile(file))
+					return
 				if (isPastedImage(file)) {
 					debugLog('pasted image created', file)
 					this.startRenameProcess(file, this.settings.autoRename)
@@ -327,6 +330,15 @@ export default class PasteImageRenamePlugin extends Plugin {
 function isPastedImage(file: TAbstractFile): boolean {
 	if (file instanceof TFile) {
 		if (file.name.startsWith(PASTED_IMAGE_PREFIX)) {
+			return true
+		}
+	}
+	return false
+}
+
+function isMarkdownFile(file: TAbstractFile): boolean {
+	if (file instanceof TFile) {
+		if (file.extension === 'md') {
 			return true
 		}
 	}
