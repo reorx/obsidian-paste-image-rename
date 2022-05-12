@@ -93,6 +93,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.addRibbonIcon('wand-glyph', 'Batch rename embeded files', startBatchRenameProcess)
 		}
 
+		const batchRenameAllImages = () => {
+			this.batchRenameAllImages()
+		}
+		this.addCommand({
+			id: 'batch-rename-all-images',
+			name: 'Batch rename all images instantly (in the current file)',
+			callback: batchRenameAllImages,
+		})
+		if (DEBUG) {
+			this.addRibbonIcon('wand-glyph', 'Batch rename all images instantly (in the current file)', batchRenameAllImages)
+		}
+
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
 
@@ -214,6 +226,34 @@ export default class PasteImageRenamePlugin extends Plugin {
 		)
 		this.modals.push(modal)
 		modal.open()
+	}
+
+	async batchRenameAllImages() {
+		const activeFile = this.getActiveFile()
+		const fileCache = this.app.metadataCache.getFileCache(activeFile)
+		if (!fileCache || !fileCache.embeds) return
+		const extPatternRegex = /jpe?g|png|gif|tiff|webp/i
+
+		for (const embed of fileCache.embeds) {
+			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, activeFile.path)
+			if (!file) {
+				console.warn('file not found', embed.link)
+				return
+			}
+			// match ext
+			const m0 = extPatternRegex.exec(file.extension)
+			if (!m0) return
+
+			// rename
+			const { newName, isMeaningful }= this.generateNewName(file, activeFile)
+			debugLog('generated newName:', newName, isMeaningful)
+			if (!isMeaningful) {
+				new Notice('Failed to batch rename images: the generated name is not meaningful')
+				break;
+			}
+
+			await this.renameFile(file, newName, activeFile.path, false)
+		}
 	}
 
 	// returns a new name for the input file, with extension
