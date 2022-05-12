@@ -208,6 +208,7 @@ export class ImageBatchRenameModal extends Modal {
 
 			let renamedName = file.name
 			if (state.nameReplace) {
+				namePatternRegex.lastIndex = 0
 				renamedName = stem.replace(namePatternRegex, state.nameReplace)
 				renamedName = `${renamedName}.${file.extension}`
 			}
