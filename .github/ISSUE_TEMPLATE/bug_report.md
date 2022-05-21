@@ -12,6 +12,7 @@ A clear and concise description of what the bug is.
 
 **Environments (please complete the following information):**
 - OS: [e.g. Windows, MacOS, Linux]
+- Use `[[Wikilinks]]`: [true or false, this option locates at `Settings > Files & Links > Use [[Wikilinks]]`]
 - Debug info:
 <!-- Paste your debug info below, which can be accessed by Ctrl/Cmd-P, enter "Show debug info", and click "Copy to clipboard". -->
 
