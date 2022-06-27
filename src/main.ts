@@ -609,7 +609,7 @@ class SettingTab extends PluginSettingTab {
 			.setName('Handle all attachments')
 			.setDesc(`By default, the plugin only handles images that starts with "Pasted image " in name,
 			which is the prefix Obsidian uses to create images from pasted content.
-			If this option is set, the plugin will handle all attachments that are created in the valut.`)
+			If this option is set, the plugin will handle all attachments that are created in the vault.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.handleAllAttachments)
 				.onChange(async (value) => {
