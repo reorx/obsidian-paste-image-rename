@@ -1,4 +1,4 @@
-const dateTmplRegex = /{{DATE:(.+)}}/gm
+const dateTmplRegex = /{{DATE:([^}]+)}}/gm
 
 const replaceDateVar = (s: string, date: moment.Moment): string => {
 	const m = dateTmplRegex.exec(s)
