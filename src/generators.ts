@@ -1,7 +1,7 @@
 export const getRandomHex = (length: number, uppercased: boolean): string => {
 	const hex = crypto.getRandomValues(new Uint8Array(length));
 	const value = Array.from(hex, (byte) => {
-		return "0" + (byte & 0xff).toString(16);
+		return (byte & 0xff).toString(16);
 	})
 		.join("")
 		.substring(0, length);
