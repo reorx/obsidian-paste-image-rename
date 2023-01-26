@@ -67,7 +67,7 @@ export const path = {
 	},
 }
 
-const filenameNotAllowedChars = /[^a-zA-Z0-9~`!@$&*()\-_=+{};'",<.>? ]/g
+const filenameNotAllowedChars = /[^\p{L}0-9~`!@$&*()\-_=+{};'",<.>? ]/ug
 
 export const sanitizer = {
 	filename(s: string): string {
