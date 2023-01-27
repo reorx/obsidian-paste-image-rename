@@ -9,15 +9,29 @@
  * - [ ] add rules for moving matched images to destination folder
  */
 import {
-  App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
-  Modal, MarkdownView, Notice,
+  App,
+  MarkdownView,
+  Modal,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+  TFile,
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
 import { renderTemplate } from './template';
 import {
-  createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp, DEBUG, NameObj,
+  createElementTree,
+  DEBUG,
+  debugLog,
+  escapeRegExp,
+  getVaultConfig,
+  lockInputMethodComposition,
+  NameObj,
+  path,
+  sanitizer,
 } from './utils';
 
 interface PluginSettings {
@@ -51,7 +65,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	async onload() {
 		const pkg = require('../package.json')
-		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
+		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
 
 		this.registerEvent(
@@ -110,7 +124,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	}
 
-	async startRenameProcess(file: TFile, autoRename: boolean = false) {
+	async startRenameProcess(file: TFile, autoRename = false) {
 		// get active file first
 		const activeFile = this.getActiveFile()
 		if (!activeFile) {
