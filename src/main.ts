@@ -64,16 +64,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 	excludeExtensionRegex: RegExp
 
 	async onload() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
 
 		this.registerEvent(
 			this.app.vault.on('create', (file) => {
+				// debugLog('file created', file)
 				if (!(file instanceof TFile))
 					return
 				const timeGapMs = (new Date().getTime()) - file.stat.ctime
-				// if the pasted image is created more than 1 second ago, ignore it
+				// if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
 				if (timeGapMs > 1000)
 					return
 				// always ignore markdown file creation
@@ -84,8 +86,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 					this.startRenameProcess(file, this.settings.autoRename)
 				} else {
 					if (this.settings.handleAllAttachments) {
-						debugLog('file created', file)
-						if (this.testExcludeExtensionRegex(file)) {
+						debugLog('handleAllAttachments for file', file)
+						if (this.testExcludeExtension(file)) {
 							debugLog('excluded file by ext', file)
 							return
 						}
@@ -285,7 +287,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			imageNameKey,
 			fileName: activeFile.basename,
 		})
-		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
+		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
 
 		return {
 			stem,
@@ -367,14 +369,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.modals.map(modal => modal.close())
 	}
 
-	buildExcludeExtensionRegex() {
-		this.excludeExtensionRegex = new RegExp(this.settings.excludeExtensionPattern)
-	}
-	testExcludeExtensionRegex(file: TFile): boolean {
-		if (!this.excludeExtensionRegex) {
-			this.buildExcludeExtensionRegex()
-		}
-		return this.excludeExtensionRegex.test(file.extension)
+	testExcludeExtension(file: TFile): boolean {
+		const pattern = this.settings.excludeExtensionPattern
+		if (!pattern) return false
+		return new RegExp(pattern).test(file.extension)
 	}
 
 	async loadSettings() {
@@ -643,7 +641,6 @@ class SettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.excludeExtensionPattern = value;
 					await this.plugin.saveSettings();
-					this.plugin.buildExcludeExtensionRegex()
 				}
 			));
 
