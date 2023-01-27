@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-paste-image-rename",
-	"version": "1.5.1",
+	"version": "1.5.2",
 	"main": "main.js",
 	"scripts": {
 		"start": "node esbuild.config.mjs",
