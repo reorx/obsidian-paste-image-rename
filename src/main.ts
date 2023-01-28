@@ -181,8 +181,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		let linkTextRegex, newLinkText
 		if (useMarkdownLinks) {
 			// NOTE should use this.app.fileManager.generateMarkdownLink(file, sourcePath) to get the encoded newNameStem, right now we just ignore this problem
-			linkTextRegex = new RegExp('!\\[\\]\\(([^[\\]]*\\/)?${originStem}\\.${ext}\\)')
-			newLinkText = `![]($1${newNameStem}.${ext}])`
+			linkTextRegex = new RegExp(`!\\[\\]\\(([^[\\]]*\\/)?${originStem}\\.${ext}\\)`)
+			newLinkText = `![]($1${newNameStem}.${ext})`
 		} else {
 			// ![[xxxx.png]] -> ![[attachments/xxxx.png]]
 			linkTextRegex = new RegExp(`!\\[\\[([^[\\]]*\\/)?${originStem}\\.${ext}\\]\\]`)
