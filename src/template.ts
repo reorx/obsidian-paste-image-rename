@@ -10,6 +10,7 @@ interface TemplateData {
 	imageNameKey: string
 	fileName: string
 	dirName: string
+	firstHeading: string
 }
 
 export const renderTemplate = (tmpl: string, data: TemplateData) => {
@@ -24,5 +25,6 @@ export const renderTemplate = (tmpl: string, data: TemplateData) => {
 		.replace(/{{imageNameKey}}/gm, data.imageNameKey)
 		.replace(/{{fileName}}/gm, data.fileName)
 		.replace(/{{dirName}}/gm, data.dirName)
+		.replace(/{{firstHeading}}/gm, data.firstHeading)
 	return text
 }

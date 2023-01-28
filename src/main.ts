@@ -11,6 +11,7 @@
  */
 import {
   App,
+  HeadingCache,
   MarkdownView,
   Modal,
   Notice,
@@ -278,10 +279,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 	// returns a new name for the input file, with extension
 	generateNewName(file: TFile, activeFile: TFile) {
 		let imageNameKey = ''
+		let firstHeading = ''
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
 			debugLog('frontmatter', fileCache.frontmatter)
 			imageNameKey = fileCache.frontmatter?.imageNameKey || ''
+			firstHeading = getFirstHeading(fileCache.headings)
 		} else {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
@@ -290,6 +293,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			imageNameKey,
 			fileName: activeFile.basename,
 			dirName: activeFile.parent.name,
+			firstHeading,
 		})
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
 
@@ -386,6 +390,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+}
+
+function getFirstHeading(headings?: HeadingCache[]) {
+	if (headings && headings.length > 0) {
+		for (const heading of headings) {
+			if (heading.level === 1) {
+				return heading.heading
+			}
+		}
+	}
+	return ''
 }
 
 function isPastedImage(file: TAbstractFile): boolean {
