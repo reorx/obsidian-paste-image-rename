@@ -3,6 +3,7 @@
  * - [x] imageNameKey in frontmatter
  * - [x] after renaming, cursor should be placed after the image file link
  * - [x] handle image insert from drag'n drop
+ * - [ ] select text when opening the renaming modal, make this an option
  * - [ ] add button for use the current file name, imageNameKey, last input name,
  *       segments of last input name
  * - [x] batch rename all pasted images in a file
@@ -39,6 +40,7 @@ interface PluginSettings {
 	imageNamePattern: string
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
+	dupNumberAlways: boolean
 	autoRename: boolean
 	handleAllAttachments: boolean
 	excludeExtensionPattern: string
@@ -49,6 +51,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	imageNamePattern: '{{fileName}}',
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
+	dupNumberAlways: false,
 	autoRename: false,
 	handleAllAttachments: false,
 	excludeExtensionPattern: '',
@@ -606,6 +609,16 @@ class SettingTab extends PluginSettingTab {
 				}
 			));
 
+		new Setting(containerEl)
+			.setName('Alwasy add duplicate number')
+			.setDesc(`If enabled, duplicate number will always be added to the image name, otherwise it will only be added when the name is duplicated.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.dupNumberAlways)
+				.onChange(async (value) => {
+					this.plugin.settings.dupNumberAlways = value
+					await this.plugin.saveSettings()
+				}
+				))
 
 		new Setting(containerEl)
 			.setName('Auto rename')
