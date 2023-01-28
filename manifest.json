@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-paste-image-rename",
 	"name": "Paste image rename",
-	"version": "1.5.0",
+	"version": "1.5.2",
 	"minAppVersion": "0.12.0",
 	"description": "Rename pasted images and all the other attchments added to the vault",
 	"author": "Reorx",

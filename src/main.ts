@@ -3,21 +3,37 @@
  * - [x] imageNameKey in frontmatter
  * - [x] after renaming, cursor should be placed after the image file link
  * - [x] handle image insert from drag'n drop
+ * - [ ] select text when opening the renaming modal, make this an option
  * - [ ] add button for use the current file name, imageNameKey, last input name,
  *       segments of last input name
  * - [x] batch rename all pasted images in a file
  * - [ ] add rules for moving matched images to destination folder
  */
 import {
-  App, Plugin, PluginSettingTab, Setting, TFile, TAbstractFile,
-  Modal, MarkdownView, Notice,
+  App,
+  HeadingCache,
+  MarkdownView,
+  Modal,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+  TFile,
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
 import { renderTemplate } from './template';
 import {
-  createElementTree, debugLog, path, sanitizer, lockInputMethodComposition,
-  getVaultConfig, escapeRegExp, DEBUG, NameObj,
+  createElementTree,
+  DEBUG,
+  debugLog,
+  escapeRegExp,
+  getVaultConfig,
+  lockInputMethodComposition,
+  NameObj,
+  path,
+  sanitizer,
 } from './utils';
 
 interface PluginSettings {
@@ -25,6 +41,7 @@ interface PluginSettings {
 	imageNamePattern: string
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
+	dupNumberAlways: boolean
 	autoRename: boolean
 	handleAllAttachments: boolean
 	excludeExtensionPattern: string
@@ -35,6 +52,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	imageNamePattern: '{{fileName}}',
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
+	dupNumberAlways: false,
 	autoRename: false,
 	handleAllAttachments: false,
 	excludeExtensionPattern: '',
@@ -50,16 +68,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 	excludeExtensionRegex: RegExp
 
 	async onload() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const pkg = require('../package.json')
-		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
+		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
 
 		this.registerEvent(
 			this.app.vault.on('create', (file) => {
+				// debugLog('file created', file)
 				if (!(file instanceof TFile))
 					return
 				const timeGapMs = (new Date().getTime()) - file.stat.ctime
-				// if the pasted image is created more than 1 second ago, ignore it
+				// if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
 				if (timeGapMs > 1000)
 					return
 				// always ignore markdown file creation
@@ -70,8 +90,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 					this.startRenameProcess(file, this.settings.autoRename)
 				} else {
 					if (this.settings.handleAllAttachments) {
-						debugLog('file created', file)
-						if (this.testExcludeExtensionRegex(file)) {
+						debugLog('handleAllAttachments for file', file)
+						if (this.testExcludeExtension(file)) {
 							debugLog('excluded file by ext', file)
 							return
 						}
@@ -110,7 +130,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	}
 
-	async startRenameProcess(file: TFile, autoRename: boolean = false) {
+	async startRenameProcess(file: TFile, autoRename = false) {
 		// get active file first
 		const activeFile = this.getActiveFile()
 		if (!activeFile) {
@@ -259,19 +279,28 @@ export default class PasteImageRenamePlugin extends Plugin {
 	// returns a new name for the input file, with extension
 	generateNewName(file: TFile, activeFile: TFile) {
 		let imageNameKey = ''
+		let firstHeading = ''
+		let frontmatter
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
 			debugLog('frontmatter', fileCache.frontmatter)
-			imageNameKey = fileCache.frontmatter?.imageNameKey || ''
+			frontmatter = fileCache.frontmatter
+			imageNameKey = frontmatter?.imageNameKey || ''
+			firstHeading = getFirstHeading(fileCache.headings)
 		} else {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
 
-		const stem = renderTemplate(this.settings.imageNamePattern, {
-			imageNameKey,
-			fileName: activeFile.basename,
-		})
-		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\s]`, 'gm')
+		const stem = renderTemplate(
+			this.settings.imageNamePattern,
+			{
+				imageNameKey,
+				fileName: activeFile.basename,
+				dirName: activeFile.parent.name,
+				firstHeading,
+			},
+			frontmatter)
+		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
 
 		return {
 			stem,
@@ -353,14 +382,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.modals.map(modal => modal.close())
 	}
 
-	buildExcludeExtensionRegex() {
-		this.excludeExtensionRegex = new RegExp(this.settings.excludeExtensionPattern)
-	}
-	testExcludeExtensionRegex(file: TFile): boolean {
-		if (!this.excludeExtensionRegex) {
-			this.buildExcludeExtensionRegex()
-		}
-		return this.excludeExtensionRegex.test(file.extension)
+	testExcludeExtension(file: TFile): boolean {
+		const pattern = this.settings.excludeExtensionPattern
+		if (!pattern) return false
+		return new RegExp(pattern).test(file.extension)
 	}
 
 	async loadSettings() {
@@ -370,6 +395,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+}
+
+function getFirstHeading(headings?: HeadingCache[]) {
+	if (headings && headings.length > 0) {
+		for (const heading of headings) {
+			if (heading.level === 1) {
+				return heading.heading
+			}
+		}
+	}
+	return ''
 }
 
 function isPastedImage(file: TAbstractFile): boolean {
@@ -593,6 +629,16 @@ class SettingTab extends PluginSettingTab {
 				}
 			));
 
+		new Setting(containerEl)
+			.setName('Alwasy add duplicate number')
+			.setDesc(`If enabled, duplicate number will always be added to the image name, otherwise it will only be added when the name is duplicated.`)
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.dupNumberAlways)
+				.onChange(async (value) => {
+					this.plugin.settings.dupNumberAlways = value
+					await this.plugin.saveSettings()
+				}
+				))
 
 		new Setting(containerEl)
 			.setName('Auto rename')
@@ -609,7 +655,7 @@ class SettingTab extends PluginSettingTab {
 			.setName('Handle all attachments')
 			.setDesc(`By default, the plugin only handles images that starts with "Pasted image " in name,
 			which is the prefix Obsidian uses to create images from pasted content.
-			If this option is set, the plugin will handle all attachments that are created in the valut.`)
+			If this option is set, the plugin will handle all attachments that are created in the vault.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.handleAllAttachments)
 				.onChange(async (value) => {
@@ -629,7 +675,6 @@ class SettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.excludeExtensionPattern = value;
 					await this.plugin.saveSettings();
-					this.plugin.buildExcludeExtensionRegex()
 				}
 			));
 

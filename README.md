@@ -124,11 +124,7 @@ that match the given extension pattern.
 
 - Q: I pasted an image but the rename prompt did not show up.
 
-    A: This is probabily because you are using Windows system and pasting from a file
-    (i.e. the image is copied from File Explorer not from a browser or image viewer).
-    In Windows, pasting from a file is like a regular file tranfer, the original file name
-    is kept rather than being created and named "Pasted image ..." by Obsidian.
-    You need to turn on "Handle all image" in settings to make it work in this situation.
+    A: This is probably because you are using the Windows system and pasting from a file (i.e. the image is copied from File Explorer, not from a browser or image viewer). In Windows, pasting from a file is like a regular file transfer, the original filename is kept rather than being created and named "Pasted image ..." by Obsidian. You need to turn on "Handle all attachments" in settings to make it work in this situation.
 
 ## Settings
 

@@ -1,6 +1,8 @@
 import {getRandomHex, getRandomUuid} from './generators'
+import { FrontMatterCache } from 'obsidian';
 
-const dateTmplRegex = /{{DATE:(.+)}}/gm
+const dateTmplRegex = /{{DATE:([^}]+)}}/gm
+const frontmatterTmplRegex = /{{frontmatter:([^}]+)}}/gm
 
 const replaceDateVar = (s: string, date: moment.Moment): string => {
 	const m = dateTmplRegex.exec(s)
@@ -8,16 +10,28 @@ const replaceDateVar = (s: string, date: moment.Moment): string => {
 	return s.replace(m[0], date.format(m[1]))
 }
 
+const replaceFrontmatterVar = (s: string, frontmatter?: FrontMatterCache): string => {
+	if (!frontmatter) return s
+	const m = frontmatterTmplRegex.exec(s)
+	if (!m) return s
+	return s.replace(m[0], frontmatter[m[1]] || '')
+}
+
 interface TemplateData {
 	imageNameKey: string
 	fileName: string
+	dirName: string
+	firstHeading: string
 }
 
-export const renderTemplate = (tmpl: string, data: TemplateData) => {
+export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache) => {
 	const now = window.moment()
 	let text = tmpl
 	let newtext
 	while ((newtext = replaceDateVar(text, now)) != text) {
+		text = newtext
+	}
+	while ((newtext = replaceFrontmatterVar(text, frontmatter)) != text) {
 		text = newtext
 	}
 
@@ -29,5 +43,7 @@ export const renderTemplate = (tmpl: string, data: TemplateData) => {
 		.replace(/{{hex4}}/gm, getRandomHex(4, true))
 		.replace(/{{hex12}}/gm, getRandomHex(12, true))
 		.replace(/{{hex}}/gm, getRandomHex(6, true))		
+		.replace(/{{dirName}}/gm, data.dirName)
+		.replace(/{{firstHeading}}/gm, data.firstHeading)
 	return text
 }

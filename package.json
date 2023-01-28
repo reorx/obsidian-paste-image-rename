@@ -1,27 +1,27 @@
 {
 	"name": "obsidian-paste-image-rename",
-	"version": "1.5.0",
+	"version": "1.5.2",
 	"main": "main.js",
 	"scripts": {
 		"start": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && BUILD_ENV=production node esbuild.config.mjs && cp manifest.json build",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"release": "yarn build && gh release create ${npm_package_version} build/*"
+		"release": "npm run build && gh release create ${npm_package_version} build/*"
 	},
 	"keywords": [],
 	"author": "Reorx",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "^5.2.0",
-		"@typescript-eslint/parser": "^5.2.0",
-		"builtin-modules": "^3.2.0",
-		"esbuild": "0.13.12",
-		"obsidian": "^0.13.26",
-		"tslib": "2.3.1",
-		"typescript": "4.4.4"
+		"@types/node": "^18.11.18",
+		"@typescript-eslint/eslint-plugin": "^5.49.0",
+		"@typescript-eslint/parser": "^5.49.0",
+		"builtin-modules": "^3.3.0",
+		"esbuild": "0.16.17",
+		"obsidian": "^1.1.1",
+		"tslib": "2.5.0",
+		"typescript": "4.9.4"
 	},
 	"dependencies": {
-		"cash-dom": "^8.1.1"
+		"cash-dom": "^8.1.2"
 	}
 }
