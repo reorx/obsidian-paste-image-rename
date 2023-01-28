@@ -29,7 +29,6 @@ import {
   DEBUG,
   debugLog,
   escapeRegExp,
-  getVaultConfig,
   lockInputMethodComposition,
   NameObj,
   path,
@@ -150,20 +149,14 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
-		const { name:newName, stem:newNameStem } = await this.deduplicateNewName(inputNewName, file)
+		const { name:newName } = await this.deduplicateNewName(inputNewName, file)
 		debugLog('deduplicated newName:', newName)
 		const originName = file.name
-		const originStem = file.basename
-		const ext = file.extension
 
-		// get vault config, determine whether useMarkdownLinks is set
-		const vaultConfig = getVaultConfig(this.app)
-		let useMarkdownLinks = false
-		if (vaultConfig && vaultConfig.useMarkdownLinks) {
-			useMarkdownLinks = true
-		}
+		// generate linkText using Obsidian API, linkText is either  ![](filename.png) or ![[filename.png]] according to the "Use [[Wikilinks]]" setting.
+		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 
-		// file system operation
+		// file system operation: rename the file
 		const newPath = path.join(file.parent.path, newName)
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
@@ -175,20 +168,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (!replaceCurrentLine) {
 			return
 		}
+
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
 
-		let linkTextRegex, newLinkText
-		if (useMarkdownLinks) {
-			// NOTE should use this.app.fileManager.generateMarkdownLink(file, sourcePath) to get the encoded newNameStem, right now we just ignore this problem
-			linkTextRegex = new RegExp(`!\\[\\]\\(([^[\\]]*\\/)?${originStem}\\.${ext}\\)`)
-			newLinkText = `![]($1${newNameStem}.${ext})`
-		} else {
-			// ![[xxxx.png]] -> ![[attachments/xxxx.png]]
-			linkTextRegex = new RegExp(`!\\[\\[([^[\\]]*\\/)?${originStem}\\.${ext}\\]\\]`)
-			newLinkText = `![[$1${newNameStem}.${ext}]]`
-		}
-		debugLog('replace text', linkTextRegex, newLinkText)
+		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
+		debugLog('replace text', linkText, newLinkText)
 
 		const editor = this.getActiveEditor()
 		if (!editor) {
@@ -198,7 +183,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
-		const replacedLine = line.replace(linkTextRegex, newLinkText)
+		const replacedLine = line.replace(linkText, newLinkText)
 		debugLog('current line -> replaced line', line, replacedLine)
 		// console.log('editor context', cursor, )
 		editor.transaction({
