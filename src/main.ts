@@ -286,6 +286,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const stem = renderTemplate(this.settings.imageNamePattern, {
 			imageNameKey,
 			fileName: activeFile.basename,
+			dirName: activeFile.parent.name,
 		})
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
 
