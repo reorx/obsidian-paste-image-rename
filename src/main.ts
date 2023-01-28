@@ -280,21 +280,26 @@ export default class PasteImageRenamePlugin extends Plugin {
 	generateNewName(file: TFile, activeFile: TFile) {
 		let imageNameKey = ''
 		let firstHeading = ''
+		let frontmatter
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
 			debugLog('frontmatter', fileCache.frontmatter)
-			imageNameKey = fileCache.frontmatter?.imageNameKey || ''
+			frontmatter = fileCache.frontmatter
+			imageNameKey = frontmatter?.imageNameKey || ''
 			firstHeading = getFirstHeading(fileCache.headings)
 		} else {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
 
-		const stem = renderTemplate(this.settings.imageNamePattern, {
-			imageNameKey,
-			fileName: activeFile.basename,
-			dirName: activeFile.parent.name,
-			firstHeading,
-		})
+		const stem = renderTemplate(
+			this.settings.imageNamePattern,
+			{
+				imageNameKey,
+				fileName: activeFile.basename,
+				dirName: activeFile.parent.name,
+				firstHeading,
+			},
+			frontmatter)
 		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
 
 		return {
