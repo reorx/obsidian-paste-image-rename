@@ -615,7 +615,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Alwasy add duplicate number')
+			.setName('Always add duplicate number')
 			.setDesc(`If enabled, duplicate number will always be added to the image name, otherwise it will only be added when the name is duplicated.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.dupNumberAlways)
