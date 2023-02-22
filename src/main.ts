@@ -558,6 +558,7 @@ The pattern indicates how the new name should be generated.
 
 Available variables:
 - {{fileName}}: name of the active file, without ".md" extension.
+- {{dirName}}: name of the directory which contains the document (the root directory of vault results in an empty variable).
 - {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
 - {{DATE:$FORMAT}}: use "$FORMAT" to format the current date, "$FORMAT" must be a Moment.js format string, e.g. {{DATE:YYYY-MM-DD}}.
 
