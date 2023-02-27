@@ -20,6 +20,7 @@ import {
   Setting,
   TAbstractFile,
   TFile,
+  CachedMetadata,
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
@@ -137,7 +138,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			return
 		}
 
-		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile)
+		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile, null)
 		debugLog('generated newName:', newName, isMeaningful)
 
 		if (!isMeaningful || !autoRename) {
@@ -153,9 +154,6 @@ export default class PasteImageRenamePlugin extends Plugin {
 		debugLog('deduplicated newName:', newName)
 		const originName = file.name
 
-		// generate linkText using Obsidian API, linkText is either  ![](filename.png) or ![[filename.png]] according to the "Use [[Wikilinks]]" setting.
-		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
-
 		// file system operation: rename the file
 		const newPath = path.join(file.parent.path, newName)
 		try {
@@ -168,6 +166,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (!replaceCurrentLine) {
 			return
 		}
+
+		// generate linkText using Obsidian API, linkText is either  ![](filename.png) or ![[filename.png]] according to the "Use [[Wikilinks]]" setting.
+		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
@@ -250,7 +251,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			if (!m0) return
 
 			// rename
-			const { newName, isMeaningful }= this.generateNewName(file, activeFile)
+			const { newName, isMeaningful }= this.generateNewName(file, activeFile, fileCache)
 			debugLog('generated newName:', newName, isMeaningful)
 			if (!isMeaningful) {
 				new Notice('Failed to batch rename images: the generated name is not meaningful')
@@ -262,11 +263,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	// returns a new name for the input file, with extension
-	generateNewName(file: TFile, activeFile: TFile) {
+	generateNewName(file: TFile, activeFile: TFile, fileCache: CachedMetadata) {
 		let imageNameKey = ''
 		let firstHeading = ''
 		let frontmatter
-		const fileCache = this.app.metadataCache.getFileCache(activeFile)
+		if (!fileCache)
+			fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
 			debugLog('frontmatter', fileCache.frontmatter)
 			frontmatter = fileCache.frontmatter
