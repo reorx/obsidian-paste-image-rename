@@ -237,7 +237,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const activeFile = this.getActiveFile()
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (!fileCache || !fileCache.embeds) return
-		const extPatternRegex = /jpe?g|png|gif|tiff|webp/i
+		const extPatternRegex = /jpe?g|png|gif|tiff|webp|svg/i
 
 		for (const embed of fileCache.embeds) {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, activeFile.path)
