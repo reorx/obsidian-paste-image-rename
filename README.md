@@ -1,5 +1,9 @@
 # Obsidian paste image rename
 
+> Forked from `reorx/obsidian-paste-image-rename`. Fixed a bug, which may throw an error when target folder does not exist.
+
+---------
+
 > :loudspeaker: Starting from 1.4.0, Paste image rename becomes a general-purpose renaming plugin
 > that can handle all attachments added to the vault.
 

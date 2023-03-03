@@ -69,6 +69,12 @@ export const path = {
 		const positions = [...fullpath.matchAll(new RegExp('\\.', 'gi'))].map(a => a.index)
 		return fullpath.slice(positions[positions.length - 1] + 1)
 	},
+
+	// return directory name of the path
+	dirname(fullpath: string): string {
+		const index = fullpath.lastIndexOf('/')
+		return fullpath.substring(0, index + 1)
+	}
 }
 
 const filenameNotAllowedChars = /[^\p{L}0-9~`!@$&*()\-_=+{};'",<.>? ]/ug

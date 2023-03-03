@@ -158,6 +158,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		// file system operation: rename the file
 		const newPath = path.join(file.parent.path, newName)
+		const dirPath = path.dirname(newPath)
+
+		if (dirPath && !await this.app.vault.adapter.exists(dirPath)) {
+			await this.app.vault.createFolder(dirPath)
+		}
+
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
