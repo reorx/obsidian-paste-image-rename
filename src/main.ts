@@ -77,7 +77,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 				// debugLog('file created', file)
 				if (!(file instanceof TFile))
 					return
-				const timeGapMs = (new Date().getTime()) - file.stat.ctime
+				const timeGapMs = (new Date().getTime()) - (file.stat.ctime ? file.stat.ctime : file.stat.mtime)
 				// if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
 				if (timeGapMs > 1000)
 					return
