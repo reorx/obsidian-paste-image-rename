@@ -45,6 +45,7 @@ interface PluginSettings {
 	handleAllAttachments: boolean
 	excludeExtensionPattern: string
 	disableRenameNotice: boolean
+	templateSuffix: string
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -56,6 +57,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	handleAllAttachments: false,
 	excludeExtensionPattern: '',
 	disableRenameNotice: false,
+	templateSuffix: '',
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -172,13 +174,20 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
 
-		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
+		var newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 		debugLog('replace text', linkText, newLinkText)
 
 		const editor = this.getActiveEditor()
 		if (!editor) {
 			new Notice(`Failed to rename ${newName}: no active editor`)
 			return
+		}
+
+		// insert a template Suffix into the new link text if settings.templateSuffix is populated
+		// example output: [[image.png|some suffix]]
+		if(this.settings.templateSuffix){
+			var position = newLinkText.length - 2
+			newLinkText = [newLinkText.slice(0,position), "|", this.settings.templateSuffix, newLinkText.slice(position)].join('')
 		}
 
 		const cursor = editor.getCursor()
@@ -672,6 +681,19 @@ class SettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.disableRenameNotice)
 				.onChange(async (value) => {
 					this.plugin.settings.disableRenameNotice = value;
+					await this.plugin.saveSettings();
+				}
+			));
+
+		new Setting(containerEl)
+			.setName('Template Suffix')
+			.setDesc(`This option provides the opportunity to add a suffix to the new link text.
+			This can be used for defining the width of an image. It provides an output like ![[image.png|300]]`)
+			.addText(text => text
+				.setPlaceholder('300')
+				.setValue(this.plugin.settings.templateSuffix)
+				.onChange(async (value) => {
+					this.plugin.settings.templateSuffix = value;
 					await this.plugin.saveSettings();
 				}
 			));
