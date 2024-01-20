@@ -10,16 +10,17 @@
  * - [ ] add rules for moving matched images to destination folder
  */
 import {
-	App,
-	HeadingCache, ListedFiles,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	TAbstractFile,
-	TFile,
+  App,
+  HeadingCache,
+  ListedFiles,
+  MarkdownView,
+  Modal,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TAbstractFile,
+  TFile,
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
