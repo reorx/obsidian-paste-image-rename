@@ -10,16 +10,16 @@
  * - [ ] add rules for moving matched images to destination folder
  */
 import {
-  App,
-  HeadingCache,
-  MarkdownView,
-  Modal,
-  Notice,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-  TAbstractFile,
-  TFile,
+	App,
+	HeadingCache, ListedFiles,
+	MarkdownView,
+	Modal,
+	Notice,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	TAbstractFile,
+	TFile,
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
@@ -311,7 +311,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const newFilePath = path.join(getDirectoryPath(file.parent), newName);
 		// list files in dir
 		const dir = path.directory(newFilePath) // file.parent.path
-		const listed = await this.app.vault.adapter.list(dir)
+		const dirExists = await this.app.vault.adapter.exists(dir)
+		const listed: false | ListedFiles = dirExists && await this.app.vault.adapter.list(dir)
 		debugLog('sibling files', listed)
 
 		// parse newName
@@ -333,18 +334,20 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		const dupNameNumbers: number[] = []
 		let isNewNameExist = false
-		for (let sibling of listed.files) {
-			let siblingBasename = path.basename(sibling)
-			if (siblingBasename == newName) {
-				isNewNameExist = true
-				continue
-			}
+		if (listed) {
+			for (let sibling of listed.files) {
+				let siblingBasename = path.basename(sibling)
+				if (siblingBasename == newName) {
+					isNewNameExist = true
+					continue
+				}
 
-			// match dupNames
-			const m = dupNameRegex.exec(sibling)
-			if (!m) continue
-			// parse int for m.groups.number
-			dupNameNumbers.push(parseInt(m.groups.number))
+				// match dupNames
+				const m = dupNameRegex.exec(sibling)
+				if (!m) continue
+				// parse int for m.groups.number
+				dupNameNumbers.push(parseInt(m.groups.number))
+			}
 		}
 
 		if (isNewNameExist || this.settings.dupNumberAlways) {
