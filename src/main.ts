@@ -33,6 +33,7 @@ import {
   NameObj,
   path,
   sanitizer,
+  getDirectoryPath,
 } from './utils';
 
 interface PluginSettings {
@@ -157,9 +158,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 
 		// file system operation: rename the file
-		const newPath = path.join(file.parent.path, newName)
+		// const newPath = path.join(file.parent.path, newName)
 		try {
-			await this.app.fileManager.renameFile(file, newPath)
+			// get directory part of new path
+			const newPathDirectory = path.directory(newName)
+			// check if directory exists
+			const newPathDirectoryExists = await this.app.vault.adapter.exists(newPathDirectory)
+			// create directory
+			if (!newPathDirectoryExists) await this.app.vault.createFolder(newPathDirectory)
+			// execute rename
+			await this.app.fileManager.renameFile(file, newName)
 		} catch (err) {
 			new Notice(`Failed to rename ${newName}: ${err}`)
 			throw err
@@ -276,12 +284,15 @@ export default class PasteImageRenamePlugin extends Plugin {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
 
+		const dirPath = getDirectoryPath(activeFile.parent)
+
 		const stem = renderTemplate(
 			this.settings.imageNamePattern,
 			{
 				imageNameKey,
 				fileName: activeFile.basename,
 				dirName: activeFile.parent.name,
+				dirPath,
 				firstHeading,
 			},
 			frontmatter)
@@ -296,14 +307,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	// newName: foo.ext
 	async deduplicateNewName(newName: string, file: TFile): Promise<NameObj> {
+		// confirmed new file path
+		const newFilePath = path.join(getDirectoryPath(file.parent), newName);
 		// list files in dir
-		const dir = file.parent.path
+		const dir = path.directory(newFilePath) // file.parent.path
 		const listed = await this.app.vault.adapter.list(dir)
 		debugLog('sibling files', listed)
 
 		// parse newName
 		const newNameExt = path.extension(newName),
-			newNameStem = newName.slice(0, newName.length - newNameExt.length - 1),
+			newNameStem = newFilePath.slice(0, newFilePath.length - newNameExt.length - 1),
 			newNameStemEscaped = escapeRegExp(newNameStem),
 			delimiter = this.settings.dupNumberDelimiter,
 			delimiterEscaped = escapeRegExp(delimiter)
@@ -321,8 +334,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const dupNameNumbers: number[] = []
 		let isNewNameExist = false
 		for (let sibling of listed.files) {
-			sibling = path.basename(sibling)
-			if (sibling == newName) {
+			let siblingBasename = path.basename(sibling)
+			if (siblingBasename == newName) {
 				isNewNameExist = true
 				continue
 			}
@@ -559,6 +572,7 @@ The pattern indicates how the new name should be generated.
 Available variables:
 - {{fileName}}: name of the active file, without ".md" extension.
 - {{dirName}}: name of the directory which contains the document (the root directory of vault results in an empty variable).
+- {{dirPath}}: full path of the directory which contains the document
 - {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
 - {{DATE:$FORMAT}}: use "$FORMAT" to format the current date, "$FORMAT" must be a Moment.js format string, e.g. {{DATE:YYYY-MM-DD}}.
 

@@ -1,6 +1,7 @@
 import {
   App,
   Vault,
+  TFolder,
 } from 'obsidian';
 
 export const DEBUG = !(process.env.BUILD_ENV === 'production')
@@ -64,11 +65,32 @@ export const path = {
 		return sp[sp.length - 1]
 	},
 
+	/**
+	 * get the parent directory part of a file or directory
+	 * @param fullpath - full path of a file or directory
+	 * @returns the directory part of a path,
+	 * @example
+	 */
+	directory(fullpath: string): string {
+		const sp = fullpath.split('/')
+		return sp.slice(0, sp.length - 1).join('/')
+	},
+
 	// return extension without dot, e.g. 'jpg'
 	extension(fullpath: string): string {
 		const positions = [...fullpath.matchAll(new RegExp('\\.', 'gi'))].map(a => a.index)
 		return fullpath.slice(positions[positions.length - 1] + 1)
 	},
+}
+
+/**
+ * get the full path of given folder object
+ * @param tFolder - a folder object
+ * @returns the full path of directory
+ */
+export const getDirectoryPath = (tFolder: TFolder): string => {
+	if (tFolder.parent.name === '') return tFolder.name
+	return `${getDirectoryPath(tFolder.parent)}/${tFolder.name}`
 }
 
 const filenameNotAllowedChars = /[^\p{L}0-9~`!@$&*()\-_=+{};'",<.>? ]/ug
