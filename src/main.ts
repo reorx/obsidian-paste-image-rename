@@ -144,10 +144,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
 			return
 		}
-		this.renameFile(file, newName, activeFile.path, true)
+
+		const editor = this.getActiveEditor()
+		const cursor = editor?.getCursor()
+		await this.renameFile(file, newName, activeFile.path, editor, cursor)
 	}
 
-	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
+	async renameFile(file: TFile, inputNewName: string, sourcePath: string, editor?: any, cursor?: any) {
 		// deduplicate name
 		const { name:newName } = await this.deduplicateNewName(inputNewName, file)
 		debugLog('deduplicated newName:', newName)
@@ -165,27 +168,19 @@ export default class PasteImageRenamePlugin extends Plugin {
 			throw err
 		}
 
-		if (!replaceCurrentLine) {
+		if (!editor || !cursor) {
+			debugLog('editor or cursor was not given, wont attempt manual link replacement', newName, editor, cursor)
 			return
 		}
 
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
-
 		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 		debugLog('replace text', linkText, newLinkText)
 
-		const editor = this.getActiveEditor()
-		if (!editor) {
-			new Notice(`Failed to rename ${newName}: no active editor`)
-			return
-		}
-
-		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
 		const replacedLine = line.replace(linkText, newLinkText)
-		debugLog('current line -> replaced line', line, replacedLine)
-		// console.log('editor context', cursor, )
+		debugLog('[cursor position] current line -> replaced line:', `[${cursor.line}, ${cursor.ch}] ${line} -> ${replacedLine}`)
 		editor.transaction({
 			changes: [
 				{
@@ -206,7 +201,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.renameFile(file, confirmedName, sourcePath, true)
+				const editor = this.getActiveEditor()
+				const cursor = editor?.getCursor()
+				this.renameFile(file, confirmedName, sourcePath, editor, cursor)
 			},
 			() => {
 				this.modals.splice(this.modals.indexOf(modal), 1)
@@ -257,7 +254,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 				break;
 			}
 
-			await this.renameFile(file, newName, activeFile.path, false)
+			await this.renameFile(file, newName, activeFile.path)
 		}
 	}
 
