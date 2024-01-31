@@ -149,6 +149,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.renameFile(file, newName, activeFile.path, true)
 	}
 
+	applySuffix(input: string){
+		let result = '';
+
+		if(this.settings.templateSuffix){
+			var position = input.length - 2
+			result = [input.slice(0,position), "|", this.settings.templateSuffix, input.slice(position)].join('')
+		}
+
+		return result;
+	}
+
 	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
 		const { name:newName } = await this.deduplicateNewName(inputNewName, file)
@@ -173,8 +184,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
-
-		var newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
+		const newLinkText = this.applySuffix(linkText);
 		debugLog('replace text', linkText, newLinkText)
 
 		const editor = this.getActiveEditor()
@@ -185,10 +195,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 		// insert a template Suffix into the new link text if settings.templateSuffix is populated
 		// example output: [[image.png|some suffix]]
-		if(this.settings.templateSuffix){
-			var position = newLinkText.length - 2
-			newLinkText = [newLinkText.slice(0,position), "|", this.settings.templateSuffix, newLinkText.slice(position)].join('')
-		}
+		
 
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
