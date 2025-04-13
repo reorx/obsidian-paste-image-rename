@@ -19,6 +19,7 @@ import {
   PluginSettingTab,
   Setting,
   TAbstractFile,
+  TextFileView,
   TFile,
 } from 'obsidian';
 
@@ -172,14 +173,24 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// in case fileManager.renameFile may not update the internal link in the active file,
 		// we manually replace the current line by manipulating the editor
 
-		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
-		debugLog('replace text', linkText, newLinkText)
-
 		const editor = this.getActiveEditor()
 		if (!editor) {
+			const view = this.app.workspace.getActiveViewOfType(TextFileView)
+			if (view && view.file.extension === "canvas") {
+				debugLog('Canvas file view detected', view.file.path)
+				if (!this.settings.disableRenameNotice) {
+					new Notice(`Renamed ${originName} to ${newName}`)
+				}
+				return
+			}
+			debugLog('No active editor found')
 			new Notice(`Failed to rename ${newName}: no active editor`)
 			return
 		}
+
+		debugLog('Active editor found, replacing link text')
+		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
+		debugLog('replace text', {old: linkText, new: newLinkText})
 
 		const cursor = editor.getCursor()
 		const line = editor.getLine(cursor.line)
@@ -353,7 +364,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	getActiveFile() {
-		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView) ?? this.app.workspace.getActiveViewOfType(TextFileView)
 		const file = view?.file
 		debugLog('active file', file?.path)
 		return file
