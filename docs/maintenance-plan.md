@@ -1,18 +1,18 @@
 # Maintenance plan and progress
 
 Updated: 2026-10-13. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
-Branch: `maintenance/issue-backlog-20261013`. Changes remain local; no release, push, or issue closure is implied.
+Branch: `maintenance/issue-backlog-20261013`. Published maintenance branch; 25 verified issue closures. No release or default-branch merge.
 
-## Current result — completed local maintenance preview
+## Current result — accepted preview published; 25 issues closed
 
-Updated 2026-10-13 17:26 UTC. Latest tested source commit:
+Updated 2026-10-13 23:58 UTC. Publication commit: [`7e7a70d`](https://github.com/reorx/obsidian-paste-image-rename/commit/7e7a70dce910f9c716f10ad698555143624cb8f1), exactly matching accepted snapshot `19c50908`. Latest tested source commit:
 `ffd813ec49de8c5172ea2792d9aae467a9e839d2`.
 Final plugin `main.js` SHA256:
 `652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51`.
 
-- Six local code checkpoints completed. No remote publication, tag, release, version bump, issue closure or ownership change.
+- Six code checkpoints completed and accepted. Published to the maintenance branch; 25 issues closed after individual scope/evidence review (23 code requests and 2 existing-capability documentation cases). 48 of the original 73 issues remain open. No default-branch merge, tag, release, version bump or ownership change.
 - 73/73 automated tests, production build/typecheck, lint and whitespace checks passed; independent review reran the checks.
-- All 73 issues classified exactly once: 27 candidate implementations, 16 partial/reproduction/platform cases, 5 existing-capability documentation, 24 broader design/integration decisions, and 1 governance item. Test count is not an assertion that all issues are fixed.
+- Original inventory: 27 candidate implementations, 16 partial/reproduction/platform cases, 5 existing-capability documentation, 24 broader design/integration decisions, and 1 governance item. Closure review retained 4 prior candidates (#25, #38, #81, #111) and 3 documentation cases (#98, #103, #109). The publication audit below supersedes candidate counts as a resolution claim. Test count is not an assertion that all issues are fixed.
 - Native Obsidian 1.14.4 testing verified mixed batches/shared references/aliases, idempotence, unchanged image bytes, actual multi-file clipboard paste, synthetic Docxer-style ordered mapping, and controlled delayed source-note switching on the exact builds in [the report](real-app-test-report.md). The final artifact also passed manual original-name fill/confirm and Unicode-slug/three-digit native pair-paste checks; the filesystem-move stale-preflight regression passed on the preceding feature snapshot.
 - Original Docxer DOCX and iOS/macOS-specific reports remain unverified. No blanket all-issues-fixed or release-ready claim.
 
@@ -654,3 +654,46 @@ remain tied to exact snapshots in the test report.
 - Full evidence and exact-build mapping are in the updated real-app report. Earlier versions' checks are not claimed as wholesale final-version reruns.
 - Still not native-certified: cancellation during an in-flight batch; every UUID/HEX/nearest-heading/attachment-name alias and cursor mode; ordinary ZIP insertion, folder exclusions, missing-first embed; minimum app versions, iOS/macOS-specific conditions and original Docxer DOCX. Automated coverage for relevant local logic is distinguished from these gaps.
 - Code is frozen. The final following commit is documentation/evidence only. The preview archive contains tracked source, exactly three tested plugin files, cumulative patch and Chinese instructions; no remote actions, official release or version bump.
+
+## Publication and issue-closure audit — 2026-10-13
+
+After acceptance, the maintainer authorized publication and closure of resolved related issues. The accepted snapshot was published to `maintenance/issue-backlog-20261013` at [7e7a70d](https://github.com/reorx/obsidian-paste-image-rename/commit/7e7a70dce910f9c716f10ad698555143624cb8f1).
+
+HTTPS push lacked credentials, so the GitHub Git Data API created a single commit based on baseline `3801513`. Its tree `5887a4a75c9a754dbfe8bed036e1fc913eadd146` exactly matches accepted local snapshot `19c50908`; fetching the branch and comparing with the accepted snapshot produced no differences. Original local checkpoint history remains preserved. Master is unchanged, and no release, version bump, tag or ownership transfer was performed.
+
+The closure review distinguished implemented requests from partial implementations. It retained #25 (Arch/Spectacle and network-drive reproduction), #38 (different imported-file versus pasted-image behavior), #81 (folder-producing DATE pattern), and #111 (requested separator/casing variants) despite their earlier candidate classification. Documentation issues #98, #103 and #109 also remain open because existing alternatives do not completely establish the requested behavior. All 16 original partial/reproduction/platform cases, 24 broader design/integration cases, and governance #122 remain open.
+
+CI observation: the published source contains no GitHub Actions workflows. No check runs, commit statuses or Actions runs were present after publication. Six installed-app check-suite shells were queued with zero runs (Vercel, Railway, Render, Cloudflare, Docker and Claude); the baseline has the same five older app shells queued with zero runs since December 2025. This is not a CI pass. The verified local 73-test, build/typecheck/lint and native Obsidian results remain the acceptance evidence.
+
+Verified at 2026-10-13 23:58 UTC: **25 of 25 closures succeeded, zero failures; 48 issues remain open.** Each received an individualized explanation linking the published implementation and disclosing that the build is not released. Each comment and `closed` / `completed` state was read back. No issue labels, bodies, assignees or milestones were changed.
+
+Closed code requests (23): #22, #37, #41, #46, #47, #48, #54, #56, #58, #71, #80, #84, #87, #92, #93, #97, #99, #105, #113, #115, #116, #120, #121. Documentation closures (2): #59 and #65.
+
+Closure receipts:
+
+- [#22](https://github.com/reorx/obsidian-paste-image-rename/issues/22#issuecomment-6157680878) — comment and completed closure verified.
+- [#37](https://github.com/reorx/obsidian-paste-image-rename/issues/37#issuecomment-6157688381) — comment and completed closure verified.
+- [#41](https://github.com/reorx/obsidian-paste-image-rename/issues/41#issuecomment-6157688924) — comment and completed closure verified.
+- [#46](https://github.com/reorx/obsidian-paste-image-rename/issues/46#issuecomment-6157689431) — comment and completed closure verified.
+- [#47](https://github.com/reorx/obsidian-paste-image-rename/issues/47#issuecomment-6157689996) — comment and completed closure verified.
+- [#48](https://github.com/reorx/obsidian-paste-image-rename/issues/48#issuecomment-6157690635) — comment and completed closure verified.
+- [#54](https://github.com/reorx/obsidian-paste-image-rename/issues/54#issuecomment-6157691224) — comment and completed closure verified.
+- [#56](https://github.com/reorx/obsidian-paste-image-rename/issues/56#issuecomment-6157699502) — comment and completed closure verified.
+- [#58](https://github.com/reorx/obsidian-paste-image-rename/issues/58#issuecomment-6157700114) — comment and completed closure verified.
+- [#59](https://github.com/reorx/obsidian-paste-image-rename/issues/59#issuecomment-6157700702) — comment and completed closure verified.
+- [#65](https://github.com/reorx/obsidian-paste-image-rename/issues/65#issuecomment-6157701283) — comment and completed closure verified.
+- [#71](https://github.com/reorx/obsidian-paste-image-rename/issues/71#issuecomment-6157701815) — comment and completed closure verified.
+- [#80](https://github.com/reorx/obsidian-paste-image-rename/issues/80#issuecomment-6157702427) — comment and completed closure verified.
+- [#84](https://github.com/reorx/obsidian-paste-image-rename/issues/84#issuecomment-6157712270) — comment and completed closure verified.
+- [#87](https://github.com/reorx/obsidian-paste-image-rename/issues/87#issuecomment-6157712877) — comment and completed closure verified.
+- [#92](https://github.com/reorx/obsidian-paste-image-rename/issues/92#issuecomment-6157713896) — comment and completed closure verified.
+- [#93](https://github.com/reorx/obsidian-paste-image-rename/issues/93#issuecomment-6157715274) — comment and completed closure verified.
+- [#97](https://github.com/reorx/obsidian-paste-image-rename/issues/97#issuecomment-6157714614) — comment and completed closure verified.
+- [#99](https://github.com/reorx/obsidian-paste-image-rename/issues/99#issuecomment-6157715977) — comment and completed closure verified.
+- [#105](https://github.com/reorx/obsidian-paste-image-rename/issues/105#issuecomment-6157723121) — comment and completed closure verified.
+- [#113](https://github.com/reorx/obsidian-paste-image-rename/issues/113#issuecomment-6157724934) — comment and completed closure verified.
+- [#115](https://github.com/reorx/obsidian-paste-image-rename/issues/115#issuecomment-6157723733) — comment and completed closure verified.
+- [#116](https://github.com/reorx/obsidian-paste-image-rename/issues/116#issuecomment-6157724381) — comment and completed closure verified.
+- [#120](https://github.com/reorx/obsidian-paste-image-rename/issues/120#issuecomment-6157726373) — comment and completed closure verified.
+- [#121](https://github.com/reorx/obsidian-paste-image-rename/issues/121#issuecomment-6157725504) — comment and completed closure verified.
+
