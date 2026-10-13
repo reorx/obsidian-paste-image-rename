@@ -1,0 +1,4 @@
+939dd4608df2442e8707c9328a200450c0abaddb538f9402de70efec42a326e7  /workspace/shared/obsidian-ui-test/vault/Batch integrity-1.png
+178303aa7a5ec550d5fd07c84b59eb6425cc49f446d7a3cc32548301ef2e711d  /workspace/shared/obsidian-ui-test/vault/Batch integrity-2.png
+b17933300c0fd37f0d81302843f1174581689aa238dcab30c64c3e396a580d11  /workspace/shared/obsidian-ui-test/vault/Batch integrity.png
+0442be9b3913378490aed24fdc189ffd77784963c8399b5c6bd9915760b8b441  /workspace/shared/obsidian-ui-test/vault/Nonimage first.png

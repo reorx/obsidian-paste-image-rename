@@ -23,9 +23,11 @@ import {
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
-import { renderTemplate } from './template';
+import { renderTemplate, TemplateDate } from './template';
+import { headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
 import {
   createElementTree,
+  getVaultConfig,
   DEBUG,
   debugLog,
   escapeRegExp,
@@ -41,9 +43,12 @@ interface PluginSettings {
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
 	dupNumberAlways: boolean
+	dupNumberWidth: number
+	nameInputPosition: NameInputPosition
 	autoRename: boolean
 	handleAllAttachments: boolean
 	excludeExtensionPattern: string
+	excludedFolders: string
 	disableRenameNotice: boolean
 }
 
@@ -52,9 +57,12 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
 	dupNumberAlways: false,
+	dupNumberWidth: 1,
+	nameInputPosition: 'end',
 	autoRename: false,
 	handleAllAttachments: false,
 	excludeExtensionPattern: '',
+	excludedFolders: '',
 	disableRenameNotice: false,
 }
 
@@ -65,6 +73,9 @@ export default class PasteImageRenamePlugin extends Plugin {
 	settings: PluginSettings
 	modals: Modal[] = []
 	excludeExtensionRegex: RegExp
+	private renameQueue: Promise<void> = Promise.resolve()
+	private pendingAttachments = new Map<TFile, {source: TFile, autoRename: boolean, timer: number}>()
+	private unloaded = false
 
 	async onload() {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -72,33 +83,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
 
-		this.registerEvent(
-			this.app.vault.on('create', (file) => {
-				// debugLog('file created', file)
-				if (!(file instanceof TFile))
-					return
-				const timeGapMs = (new Date().getTime()) - file.stat.ctime
-				// if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
-				if (timeGapMs > 1000)
-					return
-				// always ignore markdown file creation
-				if (isMarkdownFile(file))
-					return
-				if (isPastedImage(file)) {
-					debugLog('pasted image created', file)
-					this.startRenameProcess(file, this.settings.autoRename)
-				} else {
-					if (this.settings.handleAllAttachments) {
-						debugLog('handleAllAttachments for file', file)
-						if (this.testExcludeExtension(file)) {
-							debugLog('excluded file by ext', file)
-							return
-						}
-						this.startRenameProcess(file, this.settings.autoRename)
-					}
+		// The official Vault API recommends registering here to exclude startup
+		// scans. Creation timestamps are unreliable for copied/large/mobile files.
+		this.app.workspace.onLayoutReady(() => {
+			if (this.unloaded) return
+			this.registerEvent(this.app.vault.on('create', file => this.trackAttachment(file)))
+			this.registerEvent(this.app.vault.on('delete', file => {
+				for (const [attachment, pending] of this.pendingAttachments) {
+					if (attachment === file || pending.source === file) this.cancelPendingAttachment(attachment)
 				}
-			})
-		)
+			}))
+			this.registerEvent(this.app.metadataCache.on('changed', source => this.processPendingAttachments(source)))
+		})
 
 		const startBatchRenameProcess = () => {
 			this.openBatchRenameModal()
@@ -113,7 +109,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		}
 
 		const batchRenameAllImages = () => {
-			this.batchRenameAllImages()
+			void this.batchRenameAllImages().catch(error => new Notice(String(error)))
 		}
 		this.addCommand({
 			id: 'batch-rename-all-images',
@@ -129,13 +125,47 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	}
 
-	async startRenameProcess(file: TFile, autoRename = false) {
-		// get active file first
-		const activeFile = this.getActiveFile()
-		if (!activeFile) {
-			new Notice('Error: No active file found.')
-			return
+	private sourceReferencesAttachment(source: TFile, attachment: TFile): boolean {
+		const cache = this.app.metadataCache.getFileCache(source)
+		return [...(cache?.embeds || []), ...(cache?.links || [])].some(embed =>
+			this.app.metadataCache.getFirstLinkpathDest(embed.link, source.path) === attachment)
+	}
+
+	trackAttachment(file: TAbstractFile) {
+		if (this.unloaded || !(file instanceof TFile) || isMarkdownFile(file)) return
+		if (!isPastedImage(file) && !this.settings.handleAllAttachments) return
+		const source = this.getActiveFile()
+		if (!source || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
+		// A restored/synced file resolving an existing embed is not a new insertion.
+		if (this.sourceReferencesAttachment(source, file) || this.pendingAttachments.has(file)) return
+		const timer = window.setTimeout(() => {
+			this.cancelPendingAttachment(file)
+			debugLog('Attachment left unchanged: no new source embed within 30 seconds', file.path)
+		}, 30_000)
+		this.pendingAttachments.set(file, {source, autoRename: this.settings.autoRename, timer})
+	}
+
+	private cancelPendingAttachment(file: TFile) {
+		const pending = this.pendingAttachments.get(file)
+		if (pending) window.clearTimeout(pending.timer)
+		this.pendingAttachments.delete(file)
+	}
+
+	processPendingAttachments(source: TFile) {
+		if (this.unloaded) return
+		for (const [file, pending] of this.pendingAttachments) {
+			if (pending.source !== source || !this.sourceReferencesAttachment(source, file)) continue
+			this.cancelPendingAttachment(file)
+			// Keep the source captured at creation, even after the user changes tabs.
+			void this.startRenameProcess(file, pending.autoRename, source).catch(error => {
+				console.error('Attachment rename failed', error)
+				new Notice(`Attachment left unchanged or rename incomplete: ${error}`)
+			})
 		}
+	}
+
+	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile()) {
+		if (!activeFile || this.isExcluded(file, activeFile)) return
 
 		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile)
 		debugLog('generated newName:', newName, isMeaningful)
@@ -144,20 +174,46 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
 			return
 		}
-		this.renameFile(file, newName, activeFile.path, true)
+		await this.renameFile(file, newName, activeFile.path, true)
 	}
 
-	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
-		// deduplicate name
-		const { name:newName } = await this.deduplicateNewName(inputNewName, file)
-		debugLog('deduplicated newName:', newName)
+	// Allocation and rename must be one serialized operation: concurrent paste events
+	// otherwise choose the same free destination before either rename completes.
+	renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine = false): Promise<void> {
+		const expectedPath = file.path
+		const operation = (this.renameQueue || Promise.resolve()).then(() =>
+			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath))
+		// A failed rename must not poison subsequent requests.
+		this.renameQueue = operation.catch(() => {})
+		return operation
+	}
+
+	private async performRename(file: TFile, inputNewName: string, sourcePath: string, replaceSourceLinks: boolean, expectedPath: string) {
+		if (this.unloaded) return
+		if (this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment was replaced or deleted before this rename.')
+		if (getVaultConfig(this.app)?.alwaysUpdateLinks === false) {
+			throw new Error('Enable Obsidian’s Automatically update internal links setting before renaming attachments, so shared references remain valid.')
+		}
+		const target = splitRelativeFilename(inputNewName)
+		if (target.directory) throw new Error('Folder paths in names are not supported safely yet. Use a filename; configure the attachment folder in Obsidian.')
+		const { name: newName } = await this.deduplicateNewName(inputNewName, file)
+		if (this.unloaded) return
+		if (file.path !== expectedPath || this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment moved while this rename was waiting. Try again from its current location.')
 		const originName = file.name
-
-		// generate linkText using Obsidian API, linkText is either  ![](filename.png) or ![[filename.png]] according to the "Use [[Wikilinks]]" setting.
-		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
-
-		// file system operation: rename the file
 		const newPath = path.join(file.parent.path, newName)
+		if (newPath === file.path) return
+		const sourceView = this.app.workspace.getActiveViewOfType(MarkdownView)
+		const sourceFile = sourceView?.file?.path === sourcePath ? sourceView.file : null
+		const embeds = replaceSourceLinks && sourceFile && sourceView.editor ? (this.app.metadataCache.getFileCache(sourceFile)?.embeds || [])
+			.filter(embed => {
+				if (this.app.metadataCache.getFirstLinkpathDest(embed.link, sourcePath) !== file || !embed.position) return false
+				const {start, end} = embed.position
+				const line = sourceView.editor.getLine(start.line)
+				return start.line === end.line && typeof line === 'string' && line.slice(start.col, end.col) === embed.original
+			})
+			.map(embed => ({...embed, position: embed.position && {start: {...embed.position.start}, end: {...embed.position.end}}})) : []
+
+
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
@@ -165,40 +221,31 @@ export default class PasteImageRenamePlugin extends Plugin {
 			throw err
 		}
 
-		if (!replaceCurrentLine) {
-			return
-		}
-
-		// in case fileManager.renameFile may not update the internal link in the active file,
-		// we manually replace the current line by manipulating the editor
-
-		const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
-		debugLog('replace text', linkText, newLinkText)
-
-		const editor = this.getActiveEditor()
-		if (!editor) {
-			new Notice(`Failed to rename ${newName}: no active editor`)
-			return
-		}
-
-		const cursor = editor.getCursor()
-		const line = editor.getLine(cursor.line)
-		const replacedLine = line.replace(linkText, newLinkText)
-		debugLog('current line -> replaced line', line, replacedLine)
-		// console.log('editor context', cursor, )
-		editor.transaction({
-			changes: [
-				{
-					from: {...cursor, ch: 0},
-					to: {...cursor, ch: line.length},
-					text: replacedLine,
+		// Obsidian owns link updates. Only repair a still-present exact old link in
+		// the original source note; never overwrite a cursor line in another note.
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		if (replaceSourceLinks && view?.file === sourceFile && view.editor) {
+			const editor = view.editor
+			const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
+			const changes = []
+			for (const embed of embeds) {
+				if (!embed.position) continue
+				const {start, end} = embed.position
+				if (start.line !== end.line) continue
+				const line = editor.getLine(start.line)
+				if (typeof line !== 'string') continue
+				const current = line.slice(start.col, end.col)
+				// Metadata positions may lag editor changes. Only replace an exact
+				// live embed, and never touch arbitrary text or code examples.
+				const replacement = updateEmbedDestination(embed.original, newLinkText)
+				if (current === embed.original && replacement && replacement !== current) {
+					changes.push({from: {line: start.line, ch: start.col}, to: {line: end.line, ch: end.col}, text: replacement})
 				}
-			]
-		})
+			}
 
-		if (!this.settings.disableRenameNotice) {
-			new Notice(`Renamed ${originName} to ${newName}`)
+			if (changes.length) editor.transaction({changes})
 		}
+		if (!this.settings.disableRenameNotice) new Notice(`Renamed ${originName} to ${newName}`)
 	}
 
 	openRenameModal(file: TFile, newName: string, sourcePath: string) {
@@ -206,11 +253,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.renameFile(file, confirmedName, sourcePath, true)
+				return this.renameFile(file, confirmedName, sourcePath, true)
 			},
 			() => {
-				this.modals.splice(this.modals.indexOf(modal), 1)
-			}
+				const index = this.modals.indexOf(modal)
+				if (index >= 0) this.modals.splice(index, 1)
+			},
+			this.settings.nameInputPosition
 		)
 		this.modals.push(modal)
 		modal.open()
@@ -219,6 +268,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	openBatchRenameModal() {
 		const activeFile = this.getActiveFile()
+		if (!activeFile) {
+			new Notice('No active Markdown file found.')
+			return
+		}
 		const modal = new ImageBatchRenameModal(
 			this.app,
 			activeFile,
@@ -226,7 +279,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 				await this.renameFile(file, name, activeFile.path)
 			},
 			() => {
-				this.modals.splice(this.modals.indexOf(modal), 1)
+				const index = this.modals.indexOf(modal)
+				if (index >= 0) this.modals.splice(index, 1)
 			}
 		)
 		this.modals.push(modal)
@@ -235,36 +289,34 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	async batchRenameAllImages() {
 		const activeFile = this.getActiveFile()
+		if (!activeFile) {
+			new Notice('No active Markdown file found.')
+			return
+		}
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
-		if (!fileCache || !fileCache.embeds) return
-		const extPatternRegex = /jpe?g|png|gif|tiff|webp/i
-
+		if (!fileCache?.embeds) return
+		// Resolve and de-duplicate before renaming changes cache paths.
+		const files = new Set<TFile>()
 		for (const embed of fileCache.embeds) {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, activeFile.path)
-			if (!file) {
-				console.warn('file not found', embed.link)
-				return
-			}
-			// match ext
-			const m0 = extPatternRegex.exec(file.extension)
-			if (!m0) return
-
-			// rename
-			const { newName, isMeaningful }= this.generateNewName(file, activeFile)
-			debugLog('generated newName:', newName, isMeaningful)
+			if (file && isImage(file)) files.add(file)
+		}
+		const now = window.moment()
+		for (const file of files) {
+			const { newName, isMeaningful } = this.generateNewName(file, activeFile, now)
 			if (!isMeaningful) {
 				new Notice('Failed to batch rename images: the generated name is not meaningful')
-				break;
+				break
 			}
-
 			await this.renameFile(file, newName, activeFile.path, false)
 		}
 	}
 
 	// returns a new name for the input file, with extension
-	generateNewName(file: TFile, activeFile: TFile) {
+	generateNewName(file: TFile, activeFile: TFile, now?: TemplateDate) {
 		let imageNameKey = ''
 		let firstHeading = ''
+		let nearestHeading = ''
 		let frontmatter
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
@@ -272,6 +324,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 			frontmatter = fileCache.frontmatter
 			imageNameKey = frontmatter?.imageNameKey || ''
 			firstHeading = getFirstHeading(fileCache.headings)
+			if (/{{(?:nearestHeading|headerName)}}/.test(this.settings.imageNamePattern)) {
+				const referenceLines = [...(fileCache.embeds || []), ...(fileCache.links || [])]
+					.filter(reference => this.app.metadataCache.getFirstLinkpathDest(reference.link, activeFile.path) === file)
+					.map(reference => reference.position?.start.line)
+					.filter(line => typeof line === 'number')
+				nearestHeading = headingBeforeReference(fileCache.headings || [], referenceLines.length ? Math.min(...referenceLines) : undefined)
+			}
 		} else {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
@@ -283,73 +342,30 @@ export default class PasteImageRenamePlugin extends Plugin {
 				fileName: activeFile.basename,
 				dirName: activeFile.parent.name,
 				firstHeading,
+				attachmentName: file.basename,
+				nearestHeading,
 			},
-			frontmatter)
-		const meaninglessRegex = new RegExp(`[${this.settings.dupNumberDelimiter}\\s]`, 'gm')
+			frontmatter, now)
+		const safeStem = stem.split('/').map(segment => sanitizer.filename(segment)).join('/')
+		const meaninglessRegex = new RegExp(`[${escapeRegExp(this.settings.dupNumberDelimiter)}\\s]`, 'g')
 
 		return {
-			stem,
-			newName: stem + '.' + file.extension,
-			isMeaningful: stem.replace(meaninglessRegex, '') !== '',
+			stem: safeStem,
+			newName: safeStem + '.' + file.extension,
+			isMeaningful: safeStem.replace(meaninglessRegex, '') !== '',
 		}
 	}
 
 	// newName: foo.ext
 	async deduplicateNewName(newName: string, file: TFile): Promise<NameObj> {
-		// list files in dir
-		const dir = file.parent.path
-		const listed = await this.app.vault.adapter.list(dir)
-		debugLog('sibling files', listed)
-
-		// parse newName
-		const newNameExt = path.extension(newName),
-			newNameStem = newName.slice(0, newName.length - newNameExt.length - 1),
-			newNameStemEscaped = escapeRegExp(newNameStem),
-			delimiter = this.settings.dupNumberDelimiter,
-			delimiterEscaped = escapeRegExp(delimiter)
-
-		let dupNameRegex
-		if (this.settings.dupNumberAtStart) {
-			dupNameRegex = new RegExp(
-				`^(?<number>\\d+)${delimiterEscaped}(?<name>${newNameStemEscaped})\\.${newNameExt}$`)
-		} else {
-			dupNameRegex = new RegExp(
-				`^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d+)\\.${newNameExt}$`)
-		}
-		debugLog('dupNameRegex', dupNameRegex)
-
-		const dupNameNumbers: number[] = []
-		let isNewNameExist = false
-		for (let sibling of listed.files) {
-			sibling = path.basename(sibling)
-			if (sibling == newName) {
-				isNewNameExist = true
-				continue
-			}
-
-			// match dupNames
-			const m = dupNameRegex.exec(sibling)
-			if (!m) continue
-			// parse int for m.groups.number
-			dupNameNumbers.push(parseInt(m.groups.number))
-		}
-
-		if (isNewNameExist || this.settings.dupNumberAlways) {
-			// get max number
-			const newNumber = dupNameNumbers.length > 0 ? Math.max(...dupNameNumbers) + 1 : 1
-			// change newName
-			if (this.settings.dupNumberAtStart) {
-				newName = `${newNumber}${delimiter}${newNameStem}.${newNameExt}`
-			} else {
-				newName = `${newNameStem}${delimiter}${newNumber}.${newNameExt}`
-			}
-		}
-
-		return {
-			name: newName,
-			stem: newName.slice(0, newName.length - newNameExt.length - 1),
-			extension: newNameExt,
-		}
+		const {directory, filename} = splitRelativeFilename(newName)
+		const destinationDirectory = path.join(file.parent.path, directory)
+		if (directory) throw new Error('Folder paths require a separate destination policy. Use a filename only.')
+		const listed = await this.app.vault.adapter.list(destinationDirectory)
+		const currentName = destinationDirectory === path.join(file.parent.path) ? file.name : undefined
+		const name = allocateName(filename, [...listed.files, ...(listed.folders || [])].map(sibling => path.basename(sibling)), currentName, this.settings)
+		const extension = path.extension(name)
+		return {name: path.join(directory, name), stem: name.slice(0, -extension.length - 1), extension}
 	}
 
 	getActiveFile() {
@@ -364,13 +380,25 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	onunload() {
-		this.modals.map(modal => modal.close())
+		this.unloaded = true
+		for (const file of this.pendingAttachments.keys()) this.cancelPendingAttachment(file)
+		const modals = [...this.modals]
+		modals.forEach(modal => modal.close())
+	}
+
+	isExcluded(file: TFile, sourceFile?: TFile): boolean {
+		const folders = this.settings.excludedFolders || ''
+		return isExcludedPath(file.path, folders) || !!sourceFile && isExcludedPath(sourceFile.path, folders)
 	}
 
 	testExcludeExtension(file: TFile): boolean {
-		const pattern = this.settings.excludeExtensionPattern
-		if (!pattern) return false
-		return new RegExp(pattern).test(file.extension)
+		try {
+			return compileExtensionPattern(this.settings.excludeExtensionPattern)?.test(file.extension) ?? false
+		} catch {
+			// Fail closed: an invalid exclusion must not rename protected files.
+			new Notice('Invalid exclude extension pattern. Automatic attachment renaming is paused until it is corrected.')
+			return true
+		}
 	}
 
 	async loadSettings() {
@@ -411,26 +439,17 @@ function isMarkdownFile(file: TAbstractFile): boolean {
 	return false
 }
 
-const IMAGE_EXTS = [
-	'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg',
-]
-
 function isImage(file: TAbstractFile): boolean {
-	if (file instanceof TFile) {
-		if (IMAGE_EXTS.contains(file.extension.toLowerCase())) {
-			return true
-		}
-	}
-	return false
+	return file instanceof TFile && IMAGE_EXTENSIONS.has(file.extension.toLowerCase())
 }
 
 class ImageRenameModal extends Modal {
 	src: TFile
 	stem: string
-	renameFunc: (path: string) => void
+	renameFunc: (path: string) => Promise<void>
 	onCloseExtra: () => void
 
-	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => void, onClose: () => void) {
+	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => Promise<void>, onClose: () => void, private inputPosition: NameInputPosition = 'end') {
 		super(app);
 		this.src = src
 		this.stem = stem
@@ -490,9 +509,24 @@ class ImageRenameModal extends Modal {
 			]
 		})
 
+		let renaming = false
 		const doRename = async () => {
-			debugLog('doRename', `stem=${stem}`)
-			this.renameFunc(getNewName(stem))
+			if (renaming) return
+			if (!stem.trim()) {
+				errorEl.innerText = 'Error: "New name" could not be empty'
+				errorEl.style.display = 'block'
+				return
+			}
+			renaming = true
+			try {
+				await this.renameFunc(getNewName(stem))
+				this.close()
+			} catch (error) {
+				errorEl.innerText = String(error)
+				errorEl.style.display = 'block'
+			} finally {
+				renaming = false
+			}
 		}
 
 		const nameSetting = new Setting(contentEl)
@@ -507,7 +541,20 @@ class ImageRenameModal extends Modal {
 				))
 
 		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
-		nameInputEl.focus()
+		const focusNameInput = () => {
+			nameInputEl.focus()
+			nameInputEl.setSelectionRange(...nameInputSelection(this.inputPosition, nameInputEl.value.length))
+		}
+		focusNameInput()
+		new Setting(contentEl)
+			.addButton(button => button
+				.setButtonText('Use original name')
+				.onClick(() => {
+					stem = sanitizer.filename(this.src.basename)
+					nameInputEl.value = stem
+					infoET.children[1].children[1].el.innerText = getNewPath(stem)
+					focusNameInput()
+				}))
 		const nameInputState = lockInputMethodComposition(nameInputEl)
 		nameInputEl.addEventListener('keydown', async (e) => {
 			// console.log('keydown', e.key, `lock=${nameInputState.lock}`)
@@ -518,8 +565,7 @@ class ImageRenameModal extends Modal {
 					errorEl.style.display = 'block'
 					return
 				}
-				doRename()
-				this.close()
+				void doRename()
 			}
 		})
 
@@ -535,8 +581,7 @@ class ImageRenameModal extends Modal {
 				button
 					.setButtonText('Rename')
 					.onClick(() => {
-						doRename()
-						this.close()
+						void doRename()
 					})
 			})
 			.addButton(button => {
@@ -558,6 +603,10 @@ The pattern indicates how the new name should be generated.
 
 Available variables:
 - {{fileName}}: name of the active file, without ".md" extension.
+- {{fileNameSlug}} (or {{FileNameSlug}}): lowercase note name with whitespace replaced by hyphens; Unicode is preserved.
+- {{attachmentName}} (or {{originalAttachmentFileName}}): attachment stem before this operation, without its extension.
+- {{nearestHeading}} (or {{headerName}}): nearest heading before the first reference to this attachment in the source note; empty if none.
+- {{UUID}}: a new UUID per attachment operation; {{HEX}} is the same UUID without hyphens.
 - {{dirName}}: name of the directory which contains the document (the root directory of vault results in an empty variable).
 - {{imageNameKey}}: this variable is read from the markdown file's frontmatter, from the same key "imageNameKey".
 - {{DATE:$FORMAT}}: use "$FORMAT" to format the current date, "$FORMAT" must be a Moment.js format string, e.g. {{DATE:YYYY-MM-DD}}.
@@ -627,6 +676,31 @@ class SettingTab extends PluginSettingTab {
 				))
 
 		new Setting(containerEl)
+			.setName('Duplicate number minimum digits')
+			.setDesc('Minimum digits for new duplicate numbers (1–12). Existing numbered filenames stay unchanged.')
+			.addText(text => text
+				.setValue(String(this.plugin.settings.dupNumberWidth))
+				.onChange(async value => {
+					const width = Number(value)
+					if (!Number.isInteger(width) || width < 1 || width > 12) return
+					this.plugin.settings.dupNumberWidth = width
+					await this.plugin.saveSettings()
+				}))
+
+		new Setting(containerEl)
+			.setName('Rename input selection')
+			.setDesc('Initial cursor or selection in the rename prompt. Also applies after Use original name.')
+			.addDropdown(dropdown => dropdown
+				.addOption('end', 'Cursor at end')
+				.addOption('start', 'Cursor at start')
+				.addOption('select', 'Select all')
+				.setValue(this.plugin.settings.nameInputPosition)
+				.onChange(async value => {
+					this.plugin.settings.nameInputPosition = value as NameInputPosition
+					await this.plugin.saveSettings()
+				}))
+
+		new Setting(containerEl)
 			.setName('Auto rename')
 			.setDesc(`By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.`)
 			.addToggle(toggle => toggle
@@ -663,6 +737,17 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}
 			));
+
+		new Setting(containerEl)
+			.setName('Excluded folders')
+			.setDesc('Skip automatic renaming when the attachment or its source note is in one of these vault-relative folders. One folder per line; subfolders are included. Manual batch commands are unaffected.')
+			.addTextArea(text => text
+				.setPlaceholder('Telegram\nZotero')
+				.setValue(this.plugin.settings.excludedFolders)
+				.onChange(async value => {
+					this.plugin.settings.excludedFolders = value
+					await this.plugin.saveSettings()
+				}))
 
 		new Setting(containerEl)
 			.setName('Disable rename notice')

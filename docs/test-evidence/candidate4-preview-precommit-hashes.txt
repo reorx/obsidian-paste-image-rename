@@ -1,0 +1,2 @@
+5d962e5cc8c695b94be627e23b1fc9a3314fb0477688aba238fbcf5b9c7550ab  /workspace/shared/obsidian-ui-test/vault/qa-moved.png
+c72381dabdb51ced473183369bc068d93ca4c87335108467405a4381eb6ad5ed  /workspace/shared/obsidian-ui-test/vault/qa-one.png

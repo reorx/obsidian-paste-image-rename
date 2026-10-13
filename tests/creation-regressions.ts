@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import Plugin from '../src/main';
+import { TFile } from 'obsidian';
+function fixture() {
+    const timers = new Map<number, () => void>();
+    let next = 0;
+    (globalThis as any).window = { moment: () => ({ format: () => '2026' }), setTimeout: (fn: () => void) => { timers.set(++next, fn); return next; }, clearTimeout: (id: number) => timers.delete(id) };
+    const plugin = new Plugin(null as any, null as any);
+    plugin.settings = { imageNamePattern: '{{fileName}}', dupNumberAtStart: false, dupNumberDelimiter: '-', dupNumberAlways: false, autoRename: true, handleAllAttachments: true, excludeExtensionPattern: '', excludedFolders: '', disableRenameNotice: true };
+    const source = Object.assign(new TFile(), { path: 'Note.md' });
+    let active = source;
+    const file = Object.assign(new TFile(), { path: 'assets/image.png', name: 'image.png', extension: 'png', stat: { ctime: 0, mtime: 0 } });
+    const files = [file];
+    let links: string[] = [];
+    let ordinaryLinks: string[] = [];
+    const calls: any[] = [];
+    plugin.app = { workspace: { getActiveViewOfType: () => ({ file: active }) }, metadataCache: { getFileCache: () => ({ embeds: links.map(link => ({ link })), links: ordinaryLinks.map(link => ({ link })) }), getFirstLinkpathDest: (link: string) => files.find(f => f.path === link) || null } } as any;
+    plugin.startRenameProcess = async (...args: any[]) => { calls.push(args); };
+    return { plugin, source, file, files, calls, timers, setLinks: (v: string[]) => { links = v; }, setOrdinaryLinks: (v: string[]) => { ordinaryLinks = v; }, switchNote: () => { active = Object.assign(new TFile(), { path: 'Other.md' }); } };
+}
+test('delayed embed waits before rename, without file timestamp assumptions', () => { const f = fixture(); f.plugin.trackAttachment(f.file); assert.equal(f.calls.length, 0); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 1); assert.equal(f.timers.size, 0); });
+test('captured source identity survives note switching', () => { const f = fixture(); f.plugin.trackAttachment(f.file); f.switchNote(); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls[0][2], f.source); });
+test('already referenced sync restoration and unreferenced background creation stay untouched', () => { const f = fixture(); f.setLinks([f.file.path]); f.plugin.trackAttachment(f.file); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); f.setLinks([]); f.plugin.trackAttachment(f.file); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); });
+test('timeout leaves file alone and later metadata cannot rename it', () => { const f = fixture(); f.plugin.trackAttachment(f.file); for (const timer of f.timers.values())
+    timer(); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); });
+test('unload cancels pending references', () => { const f = fixture(); f.plugin.trackAttachment(f.file); f.plugin.onunload(); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0); });
+test('repeated create/change notifications rename one identity once', () => { const f = fixture(); f.plugin.trackAttachment(f.file); f.plugin.trackAttachment(f.file); f.setLinks([f.file.path, f.file.path]); f.plugin.processPendingAttachments(f.source); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 1); });
+test('startup registration waits for layout and deletion cancels pending source or attachment', async () => {
+    const f = fixture();
+    let ready: () => void;
+    const vaultEvents: Record<string, (file: any) => void> = {};
+    const metadataEvents: Record<string, (file: any) => void> = {};
+    Object.assign(f.plugin, { loadData: async () => f.plugin.settings, registerEvent: () => { }, addCommand: () => { }, addSettingTab: () => { } });
+    Object.assign(f.plugin.app, { vault: { on: (event: string, fn: any) => { vaultEvents[event] = fn; } } });
+    Object.assign(f.plugin.app.workspace, { onLayoutReady: (fn: () => void) => { ready = fn; } });
+    Object.assign(f.plugin.app.metadataCache, { on: (event: string, fn: any) => { metadataEvents[event] = fn; } });
+    await f.plugin.onload();
+    assert.equal(vaultEvents.create, undefined);
+    ready!();
+    assert.equal(typeof vaultEvents.create, 'function');
+    vaultEvents.create(f.file);
+    vaultEvents.delete(f.source);
+    f.setLinks([f.file.path]);
+    metadataEvents.changed(f.source);
+    assert.equal(f.calls.length, 0);
+    assert.equal(f.timers.size, 0);
+});
+test('multi-image insertion waits and renames each exact identity once', () => { const f = fixture(); const second = Object.assign(new TFile(), { path: 'assets/second.png', name: 'second.png', extension: 'png' }); f.files.push(second); f.plugin.trackAttachment(f.file); f.plugin.trackAttachment(second); f.setLinks([f.file.path, second.path, f.file.path]); f.plugin.processPendingAttachments(f.source); assert.deepEqual(f.calls.map(call => call[0]), [f.file, second]); assert.equal(f.timers.size, 0); });
+test('metadata change for a different source cannot release pending rename', () => { const f = fixture(); f.plugin.trackAttachment(f.file); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(Object.assign(new TFile(), { path: 'Other.md' })); assert.equal(f.calls.length, 0); f.plugin.onunload(); });
+test('exclusions are evaluated before tracking a new attachment', () => { const f = fixture(); f.plugin.settings.excludedFolders = 'assets'; f.plugin.trackAttachment(f.file); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0); });
+test('ordinary non-embedded attachment links release pending rename', () => { const f = fixture(); f.file.path = 'assets/archive.zip'; f.file.name = 'archive.zip'; f.file.extension = 'zip'; f.plugin.trackAttachment(f.file); f.setOrdinaryLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 1); });
+test('already-linked non-embedded sync restoration stays unchanged', () => { const f = fixture(); f.setOrdinaryLinks([f.file.path]); f.plugin.trackAttachment(f.file); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0); });

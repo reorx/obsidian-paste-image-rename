@@ -1,0 +1,30 @@
+[
+  {
+    "ordinal": 1,
+    "link": "Docxer%20imported%20fixture.png",
+    "resolved_path": "Attachments/Docxer imported fixture.png",
+    "sha256": "bf02d5e37dc24012de4bc265745100ffdb7856d90eb3ed0867a64b37a3a49650",
+    "passed": true
+  },
+  {
+    "ordinal": 2,
+    "link": "<Docxer imported fixture-1.png>",
+    "resolved_path": "Attachments/Docxer imported fixture-1.png",
+    "sha256": "b1a732d02cc6f982d98cf842b8e6923dabe3d45981000f11b6e1d9015c0c4834",
+    "passed": true
+  },
+  {
+    "ordinal": 3,
+    "link": "<Docxer imported fixture-2.png>",
+    "resolved_path": "Attachments/Docxer imported fixture-2.png",
+    "sha256": "bad3076b0cf68247422fc0c86b6836ef87fc8d3c2b1cfc23d35b2b4443b05745",
+    "passed": true
+  },
+  {
+    "ordinal": 4,
+    "link": "<Docxer imported fixture-3.png>",
+    "resolved_path": "Attachments/Docxer imported fixture-3.png",
+    "sha256": "8bb03faf661e8406203df4c75af8f8fd0f58124770d616e5bd1ff2a47c8dbd0b",
+    "passed": true
+  }
+]

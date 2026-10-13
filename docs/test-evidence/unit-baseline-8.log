@@ -1,0 +1,173 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> obsidian-paste-image-rename@1.6.1 test
+> node tests/run.mjs
+
+file not found missing.png
+file not found old.png
+✖ batch skips missing and non-image embeds and renames later images (39.776473ms)
+✖ batch processes repeated references only once (24.54548ms)
+✖ same filename is not its own duplicate (9.265384ms)
+✖ concurrent renames allocate unique destinations (6.384275ms)
+✔ rename failure leaves editor text untouched (11.502187ms)
+✖ switching notes while renaming never edits the newly active note (4.571006ms)
+✖ date and frontmatter tokens render repeatedly without shared regex state (3.061235ms)
+✖ frontmatter zero and false are retained as text (3.480561ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 1
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3083.140724
+
+✖ failing tests:
+
+test at build/regressions.cjs:919:30
+✖ batch skips missing and non-image embeds and renames later images (39.776473ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + []
+  - [
+  -   'Note.png'
+  - ]
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:923:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'Note.png' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:925:30
+✖ batch processes repeated references only once (24.54548ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  +   '/Note.png'
+  -   'Note.png'
+    ]
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:929:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '/Note.png' ],
+    expected: [ 'Note.png' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:931:30
+✖ same filename is not its own duplicate (9.265384ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'Note-1.png'
+  - 'Note.png'
+         ^
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:933:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Note-1.png',
+    expected: 'Note.png',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:935:30
+✖ concurrent renames allocate unique destinations (6.384275ms)
+  AssertionError [ERR_ASSERTION]: collision
+      at Object.renameFile (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:910:27)
+      at PasteImageRenamePlugin.renameFile (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:505:34)
+      at async Promise.all (index 1)
+      at async TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:937:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:950:30
+✖ switching notes while renaming never edits the newly active note (4.571006ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:962:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:964:30
+✖ date and frontmatter tokens render repeatedly without shared regex state (3.061235ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '2026-{{DATE:MM}}-A-{{frontmatter:b}}'
+  - '2026-10-A-B'
+          ^
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:967:53)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '2026-{{DATE:MM}}-A-{{frontmatter:b}}',
+    expected: '2026-10-A-B',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at build/regressions.cjs:969:30
+✖ frontmatter zero and false are retained as text (3.480561ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/{{frontmatter:b}}'
+  - '0/false'
+
+      at TestContext.<anonymous> (/workspace/shared/obsidian-paste-image-rename/build/regressions.cjs:971:25)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/{{frontmatter:b}}',
+    expected: '0/false',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

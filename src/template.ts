@@ -1,19 +1,8 @@
 import { FrontMatterCache } from 'obsidian';
+import { uuidV4 } from './rename-core';
 
-const dateTmplRegex = /{{DATE:([^}]+)}}/gm
-const frontmatterTmplRegex = /{{frontmatter:([^}]+)}}/gm
-
-const replaceDateVar = (s: string, date: moment.Moment): string => {
-	const m = dateTmplRegex.exec(s)
-	if (!m) return s
-	return s.replace(m[0], date.format(m[1]))
-}
-
-const replaceFrontmatterVar = (s: string, frontmatter?: FrontMatterCache): string => {
-	if (!frontmatter) return s
-	const m = frontmatterTmplRegex.exec(s)
-	if (!m) return s
-	return s.replace(m[0], frontmatter[m[1]] || '')
+export interface TemplateDate {
+	format(pattern: string): string
 }
 
 interface TemplateData {
@@ -21,23 +10,40 @@ interface TemplateData {
 	fileName: string
 	dirName: string
 	firstHeading: string
+	attachmentName?: string
+	nearestHeading?: string
+	uuid?: string
 }
 
-export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache) => {
-	const now = window.moment()
-	let text = tmpl
-	let newtext
-	while ((newtext = replaceDateVar(text, now)) != text) {
-		text = newtext
-	}
-	while ((newtext = replaceFrontmatterVar(text, frontmatter)) != text) {
-		text = newtext
-	}
+export const filenameSlug = (name: string): string => name.trim().toLowerCase().replace(/\s+/gu, '-')
 
-	text = text
-		.replace(/{{imageNameKey}}/gm, data.imageNameKey)
-		.replace(/{{fileName}}/gm, data.fileName)
-		.replace(/{{dirName}}/gm, data.dirName)
-		.replace(/{{firstHeading}}/gm, data.firstHeading)
-	return text
+export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
+	let uuid: string | undefined
+	// Interpret only tokens present in the pattern. Replacement values are data,
+	// not additional template source (filenames can legitimately contain braces).
+	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
+		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
+		if (token.startsWith('frontmatter:') && token.length > 12) {
+			return frontmatter ? String(frontmatter[token.slice(12)] ?? '') : match
+		}
+		switch (token) {
+			case 'imageNameKey': return String(data.imageNameKey)
+			case 'fileName': return data.fileName
+			case 'dirName': return data.dirName
+			case 'firstHeading': return data.firstHeading
+			case 'nearestHeading':
+			case 'headerName': return data.nearestHeading || ''
+			case 'UUID':
+				uuid = uuid || data.uuid || uuidV4()
+				return uuid
+			case 'HEX':
+				uuid = uuid || data.uuid || uuidV4()
+				return uuid.replace(/-/g, '')
+			case 'attachmentName':
+			case 'originalAttachmentFileName': return data.attachmentName || ''
+			case 'fileNameSlug':
+			case 'FileNameSlug': return filenameSlug(data.fileName)
+			default: return match
+		}
+	})
 }

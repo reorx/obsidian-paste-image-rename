@@ -1,4 +1,5 @@
-import { Modal, TFile, App, Setting } from 'obsidian';
+import { Modal, TFile, App, Setting, Notice } from 'obsidian';
+import { splitRelativeFilename } from './rename-core';
 
 import {
   path, createElementTree, debugLog, lockInputMethodComposition,
@@ -14,6 +15,7 @@ interface State {
 interface RenameTask {
 	file: TFile
 	name: string
+	originalPath: string
 }
 
 type renameFuncType = (file: TFile, name: string) => Promise<void>
@@ -50,6 +52,7 @@ export class ImageBatchRenameModal extends Modal {
 				.setValue(this.state.namePattern)
 				.onChange(async (value) => {
 					this.state.namePattern = value
+					this.state.renameTasks = []
 				}
 				))
 		const npInputEl = namePatternSetting.controlEl.children[0] as HTMLInputElement
@@ -74,6 +77,7 @@ export class ImageBatchRenameModal extends Modal {
 				.setValue(this.state.extPattern)
 				.onChange(async (value) => {
 					this.state.extPattern = value
+					this.state.renameTasks = []
 				}
 				))
 		const extInputEl = extPatternSetting.controlEl.children[0] as HTMLInputElement
@@ -91,6 +95,7 @@ export class ImageBatchRenameModal extends Modal {
 				.setValue(this.state.nameReplace)
 				.onChange(async (value) => {
 					this.state.nameReplace = value
+					this.state.renameTasks = []
 				}
 				))
 
@@ -143,18 +148,20 @@ export class ImageBatchRenameModal extends Modal {
 		})
 
 		new Setting(contentEl)
+			.addButton(button => button.setButtonText('Preview').onClick(() => this.matchImageNames(tbodyEl)))
 			.addButton(button => {
 				button
 					.setButtonText('Rename all')
 					.setClass('mod-cta')
 					.onClick(() => {
+						if (!this.state.renameTasks.length) { new Notice('Preview matching files before renaming.'); return }
+						const tasks = [...this.state.renameTasks]
 						new ConfirmModal(
 							this.app,
 							'Confirm rename all',
 							`Are you sure? This will rename all the ${this.state.renameTasks.length} images matched the pattern.`,
 							() => {
-								this.renameAll()
-								this.close()
+								void this.renameAll(tasks).then(() => this.close()).catch(error => new Notice(String(error)))
 							}
 						).open()
 					})
@@ -167,33 +174,67 @@ export class ImageBatchRenameModal extends Modal {
 	}
 
 	onClose() {
+		this.closed = true
 		const { contentEl } = this;
 		contentEl.empty();
 		this.onCloseExtra()
 	}
 
-	async renameAll() {
-		debugLog('renameAll', this.state)
-		for (const task of this.state.renameTasks) {
-			await this.renameFunc(task.file, task.name)
+	private renaming = false
+	private closed = false
+
+	async renameAll(tasks = [...this.state.renameTasks]) {
+		if (this.renaming || this.closed) return
+		this.renaming = true
+		try {
+			// Validate the entire preview before the first mutation, rather than
+			// discovering a known invalid or stale target halfway through a batch.
+			for (const task of tasks) {
+				if (task.file.path !== task.originalPath || this.app.vault.getAbstractFileByPath(task.originalPath) !== task.file) throw new Error('A previewed file moved or was replaced/deleted. Preview matching files again.')
+				if (splitRelativeFilename(task.name).directory) throw new Error('Folder paths are not supported; preview filenames only.')
+			}
+			let completed = 0
+			for (const task of tasks) {
+				if (this.closed) {
+					new Notice(`Batch canceled after ${completed} of ${tasks.length} files. Completed renames were kept.`)
+					return
+				}
+				try {
+					if (task.file.path !== task.originalPath || this.app.vault.getAbstractFileByPath(task.originalPath) !== task.file) throw new Error('A previewed file moved or was replaced/deleted. Preview matching files again.')
+					await this.renameFunc(task.file, task.name)
+					completed++
+				} catch (error) {
+					throw new Error(`Renamed ${completed} of ${tasks.length} files; stopped at ${task.originalPath}: ${error}`)
+				}
+			}
+		} finally {
+			this.renaming = false
+			this.state.renameTasks = []
 		}
 	}
 
 	matchImageNames(tbodyEl: HTMLElement) {
 		const { state } = this
+		state.renameTasks = []
 		const renameTasks: RenameTask[] = []
 		tbodyEl.empty()
 		const fileCache = this.app.metadataCache.getFileCache(this.activeFile)
 		if (!fileCache || !fileCache.embeds) return
 
-		const namePatternRegex = new RegExp(state.namePattern, 'g')
-		const extPatternRegex = new RegExp(state.extPattern)
+		let namePatternRegex: RegExp, extPatternRegex: RegExp
+		try {
+			namePatternRegex = new RegExp(state.namePattern, 'g')
+			extPatternRegex = new RegExp(state.extPattern)
+		} catch (error) { new Notice(`Invalid preview pattern: ${error}`); return }
+		const seen = new Set<TFile>()
 		fileCache.embeds.forEach(embed => {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, this.activeFile.path)
 			if (!file) {
 				console.warn('file not found', embed.link)
 				return
 			}
+			if (seen.has(file)) return
+			seen.add(file)
 			// match ext (only if extPattern is not empty)
 			if (state.extPattern) {
 				const m0 = extPatternRegex.exec(file.extension)
@@ -215,6 +256,7 @@ export class ImageBatchRenameModal extends Modal {
 			renameTasks.push({
 				file,
 				name: renamedName,
+				originalPath: file.path,
 			})
 
 			createElementTree(tbodyEl, {

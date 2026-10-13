@@ -21,3 +21,6 @@ data.json
 # project
 build
 sync-plugin.sh
+
+# Isolated regression bundles (never release these)
+.test-build

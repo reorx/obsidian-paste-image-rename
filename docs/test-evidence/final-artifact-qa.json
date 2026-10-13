@@ -1,0 +1,15 @@
+{
+  "commit": "ffd813ec49de8c5172ea2792d9aae467a9e839d2",
+  "bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51",
+  "images": [
+    {
+      "name": "aaa-slug-测试-001.png",
+      "sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098"
+    },
+    {
+      "name": "aaa-slug-测试-002.png",
+      "sha256": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971"
+    }
+  ],
+  "saved_note": "# AAA Slug 测试\n\nFinal auto paste.\n\n![[aaa-slug-测试-001.png]]\n\n![[aaa-slug-测试-002.png]]"
+}

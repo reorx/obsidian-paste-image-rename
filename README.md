@@ -164,3 +164,85 @@ that match the given extension pattern.
 
   Turn off this option if you don't want to see the notice when renaming images.
 	Note that Obsidian may display a notice when a link has changed, this option cannot disable that.
+
+
+## Maintenance and verification
+
+The current backlog, priorities, acceptance criteria, and verified progress are tracked in
+[docs/maintenance-plan.md](docs/maintenance-plan.md).
+
+Run `npm ci`, `npm test`, and `npm run build` to execute the isolated regression suite
+and produce the plugin bundle in `build/`. Tests mock only the Obsidian runtime boundary;
+actual Obsidian testing should use a disposable vault and preserve a baseline copy.
+
+### Safety behavior in the maintenance candidate
+
+- Enable Obsidian's **Automatically update internal links** before renaming so references
+  from other notes remain valid. Renaming is blocked if that option is explicitly disabled.
+- **Excluded folders** takes one literal vault-relative folder per line. Automatic renaming
+  skips attachments or source notes in those folders and descendants; `Telegram` does not
+  match `Telegram2`. Manual batch commands remain intentional operations and are unaffected.
+- Temporary/hidden files are ignored automatically. An invalid extension exclusion pauses
+  automatic renaming until corrected; only its first line is used.
+- In batch rename, click **Preview** after changing an input, then **Rename all**.
+- Naming patterns must currently produce a filename, without folder separators. The plugin
+  preserves the attachment's existing folder. Configure attachment placement in Obsidian;
+  custom destination paths need a separately tested migration policy.
+
+### Automatic insertion timing
+
+Automatic handling starts after the workspace finishes loading and waits until the
+new attachment is linked or embedded in the Markdown note that was active when it was created.
+Old copied timestamps and slow imports are accepted. Files already referenced before
+creation (such as sync restores), unrelated unreferenced files, and insertions with no
+new parsed reference within 30 seconds are left unchanged. You can still use manual batch
+rename afterward. This protects insertion order but cannot identify every external
+plugin's intent; use folder exclusions for managed importer/sync folders.
+
+### Pattern examples and compatibility
+
+Patterns describe the filename stem; the original attachment extension is appended.
+Do not append `.png` or another extension to the pattern itself.
+
+- `{{fileName}}-{{DATE:YYYY-MM-DD-HHmmss}}` includes both date and time. `DATE`
+  already supports Moment time tokens; use one colon after `DATE` and avoid literal
+  colons in a filename. All images within one instant batch share a timestamp snapshot.
+- `{{frontmatter:permalink}}` reads the `permalink` frontmatter field. Its value must
+  be a filename-safe stem rather than a URL or folder path.
+- Multiple DATE/frontmatter variables are supported, including numeric zero and false.
+- Markdown link destinations may contain `%20` for spaces. This is normal URL encoding;
+  changing it to a literal space can make a Markdown link invalid. Renaming preserves
+  the chosen link syntax and existing width/alias text where Obsidian provides it.
+- Generated and manually entered stems are sanitized for forbidden filename/link
+  characters while preserving valid Unicode. Raw batch replacements with forbidden
+  characters and reserved Windows device names are rejected before filesystem mutation.
+
+### Original names and slugs
+
+- **Use original name** in the rename prompt copies the attachment's current stem into
+  the editable field, sanitizing forbidden characters. It does not submit the rename.
+- `{{attachmentName}}` and `{{originalAttachmentFileName}}` mean the attachment stem
+  immediately before the current operation, without its extension. For example,
+  `{{fileName}}-{{attachmentName}}` can produce `Note-invoice.v1.pdf`. The plugin does
+  not maintain a historical-name database: repeating a batch whose pattern prefixes
+  `attachmentName` can prefix the current name again.
+- `{{fileNameSlug}}` and `{{FileNameSlug}}` trim the note name, lowercase it, and replace
+  runs of whitespace with a hyphen. Unicode letters, emoji and punctuation are retained
+  before ordinary filename sanitization; there is no ASCII transliteration.
+
+Existing patterns and automatic defaults are unchanged.
+
+### Optional naming controls
+
+- **Rename input selection** can put the caret at the start, at the end (default), or
+  select the full proposed stem. It also applies after **Use original name**.
+- **Duplicate number minimum digits** accepts 1–12 (default 1). New numbers can be
+  `001`, `002`, and so on, at either end. Existing conforming numbered names remain
+  unchanged, even if their padding differs, to avoid repeated-batch churn.
+- `{{nearestHeading}}` and `{{headerName}}` use the nearest heading of any level before
+  the attachment's earliest parsed link/embed in the captured source note. With no
+  preceding heading/reference they are empty. `{{firstHeading}}` remains the first H1.
+- `{{UUID}}` creates a version-4 UUID once per file operation. Repeated UUID tokens in
+  that pattern share a value; `{{HEX}}` is the same 32 hexadecimal digits without
+  hyphens. Another operation generates a fresh value, so rerunning a UUID-pattern
+  batch intentionally changes names. Random bytes come from the platform Web Crypto API.

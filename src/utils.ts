@@ -6,7 +6,7 @@ import {
 export const DEBUG = !(process.env.BUILD_ENV === 'production')
 if (DEBUG) console.log('DEBUG is enabled')
 
-export function debugLog(...args: any[]) {
+export function debugLog(...args: unknown[]) {
 	if (DEBUG) {
 		console.log((new Date()).toISOString().slice(11, 23), ...args)
 	}
@@ -52,8 +52,7 @@ export const path = {
 			// Push new path segments.
 			else newParts.push(part)
 		}
-		// Preserve the initial slash if there was one.
-		if (parts[0] === '') newParts.unshift('')
+		// Obsidian paths are always relative to the vault, including its root.
 		// Turn back into a single string path.
 		return newParts.join('/')
 	},
@@ -71,15 +70,17 @@ export const path = {
 	},
 }
 
-const filenameNotAllowedChars = /[^\p{L}0-9~`!@$&*()\-_=+{};'",<.>? ]/ug
+// Preserve Unicode punctuation, emoji and combining marks. Strip cross-platform
+// filesystem separators/control characters and Obsidian link delimiters.
+const filenameNotAllowedChars = /[\p{Cc}\\/:*?"<>|#[\]^]/gu
 
 export const sanitizer = {
 	filename(s: string): string {
-		return s.replace(filenameNotAllowedChars, '').trim()
+		return s.replace(filenameNotAllowedChars, '').trim().replace(/[. ]+$/g, '')
 	},
 
 	delimiter(s: string): string {
-		s = this.filename(s)
+		s = s.replace(filenameNotAllowedChars, '')
 		// use default '-' if no valid chars found
 		if (!s) s = '-'
 		return s
@@ -111,6 +112,7 @@ export function lockInputMethodComposition(el: HTMLInputElement): CompositionSta
 
 
 interface VaultConfig {
+	alwaysUpdateLinks?: boolean
 	useMarkdownLinks?: boolean
 }
 
