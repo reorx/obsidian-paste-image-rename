@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 45 issues
+## Open issue index — 44 issues
 
-Current GitHub status checked on 2026-10-14 03:33 UTC: **45 open issues**.
-The 28 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 03:41 UTC: **44 open issues**.
+The 29 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -54,8 +54,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/29">#29</a></td><td>pasting to a canvas doesn't trigger the plugin</td><td>Canvas compatibility</td><td>Paused</td><td>Canvas naming/source-node support remains absent; startup/no-source guards pass but do not implement live Canvas references.</td><td><a href="#issue-29">Details</a></td></tr>
 <tr><th colspan="6">P3</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td>Paused</td><td>Safe {{frontmatter:permalink}} stem works; no example defines URL/path extraction, routing or permalink property schema.</td><td><a href="#issue-103">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/100">#100</a></td><td>Issue: Add Support for File Extensions in Rename Patterns</td><td>Template feature / clarification</td><td>Doing</td><td>fileExt token and explicit terminal suffix implemented;80tests, independent parser-edge review and native single-extension paste pass.</td><td><a href="#issue-100">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/98">#98</a></td><td>Allow DATETIME variable</td><td>Documentation / existing capability</td><td></td><td></td><td><a href="#issue-98">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/98">#98</a></td><td>Allow DATETIME variable</td><td>Documentation / existing capability</td><td>Doing</td><td>Inspect requested DATETIME formatting syntax and current DATE clock behavior.</td><td><a href="#issue-98">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-95">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/88">#88</a></td><td>Add Field for Source of the image</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-88">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td></td><td></td><td><a href="#issue-77">Details</a></td></tr>
@@ -609,7 +608,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#100 Issue: Add Support for File Extensions in Rename Patterns](https://github.com/reorx/obsidian-paste-image-rename/issues/100)
 - Category: Template feature / clarification
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/100#issuecomment-6160359507).
 - Reproduction / request: Request fileExt placeholder, example ends .{{fileExt}}.
 - Acceptance / disposition: Clarify extension is already appended; if exposing ext, avoid .png.png and define whether template is stem or full filename.
 
@@ -1226,3 +1225,9 @@ Existing {{frontmatter:permalink}} can use a filename-safe frontmatter value, an
 Added {{fileExt}} for the original attachment extension, preserving casing. A standalone parsed terminal .{{fileExt}} opts into full-filename syntax; prompt remains stem-only and the actual extension is appended once. Other token positions are ordinary stem text; old patterns and literal replacement data are unchanged. Independent review caught a malformed/nested-token truncation edge before publication; corrected helper uses the renderer’s exact token boundaries and removes only an exact final suffix, including original trailing whitespace. Dedicated regression added.
 
 80/80 tests, production build/typecheck, lint and whitespace checks pass; independent reviewer reran them plus968 supplemental assertions. Native Linux Obsidian1.14.4 with frozen SHA2567ab10a1e09dbe4ea9524c2bbef8f7ba7c887b189f656a380985386d177598210 verifies {{fileName}}-{{DATE:YYYYMMDD}}.{{fileExt}} produces one .png extension, a correct saved link and unchanged bytes. Host-local date is used, not UTC. No faulty intermediate candidate was published.
+
+### #100 — Solved/published/closed; #98 selected next (03:41 UTC)
+
+Published [4827ee8](https://github.com/reorx/obsidian-paste-image-rename/commit/4827ee83891154c1596319424f3e15bf5492d8e5) with non-force expected-head update. Remote treebc338b454c92c940286d9a7be68fd2c364d62f56 matches reviewed local candidate exactly; fetched files compare byte-for-byte. [Native receipt](test-evidence/sequential-issue100-native.json) records the corrected tested bundle. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/100#issuecomment-6160359507) verified, row removed;44 open. No check runs reported for implementation commit; local/native verification is the evidence, not CI success.
+
+#98 is Doing: read desired date-time notation and define a compatible explicit alias rather than silently interpreting foreign format tokens.
