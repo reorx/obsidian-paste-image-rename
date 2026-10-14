@@ -1,0 +1,34 @@
+{
+  "issue": 45,
+  "result": "PASS",
+  "app": "Obsidian 1.14.4",
+  "platform": "Linux",
+  "tested_bundle_sha256": "aaf58c59be133d1500b4ec8cc379772ef897022e67e8c330248a2fb4d4c0fde4",
+  "pattern": "{{imageNameKey|dirName|my_default_value}}-{{fileName}}",
+  "autoRename": true,
+  "handleAllAttachments": false,
+  "workflow": "Real PNG file clipboard copy from native Thunar and native paste into two actual Obsidian notes",
+  "cases": [
+    {
+      "note": "Issue45 Fallback.md",
+      "yaml_imageNameKey": null,
+      "root_dirName": "",
+      "output": "assets/my_default_value-Issue45 Fallback.png",
+      "saved_embed": "![[my_default_value-Issue45 Fallback.png]]",
+      "source_and_output_sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+      "result": "PASS"
+    },
+    {
+      "note": "Issue45 Zero.md",
+      "yaml_imageNameKey": 0,
+      "root_dirName": "",
+      "output": "assets/0-Issue45 Zero.png",
+      "saved_embed": "![[0-Issue45 Zero.png]]",
+      "source_and_output_sha256": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971",
+      "result": "PASS"
+    }
+  ],
+  "verified_at": "2026-10-13T21:55:44.008547-07:00",
+  "previous_bundle_and_settings_restored_byte_for_byte": true,
+  "restored_bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51"
+}
