@@ -25,9 +25,9 @@ not a closed issue.
 </thead>
 <tbody>
 <tr><th colspan="6">P0</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td>Doing</td><td>Fresh report review; bounded Docxer import and collision/failure mapping checks in progress.</td><td><a href="#issue-107">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td>Paused</td><td>Source collision/failure mapping passes; actual importer attempt blocked twice by native GTK accessibility. Original Windows DOCX missing.</td><td><a href="#issue-107">Details</a></td></tr>
 <tr><th colspan="6">P1</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td></td><td></td><td><a href="#issue-119">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td>Doing</td><td>Inspect batch-limit report and exercise large mixed-note fixtures.</td><td><a href="#issue-119">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td></td><td></td><td><a href="#issue-112">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/108">#108</a></td><td>pasting in an image create duplicate named images</td><td>Data integrity investigation</td><td></td><td></td><td><a href="#issue-108">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/96">#96</a></td><td>Better integration with git plugin</td><td>Compatibility / integrity</td><td></td><td></td><td><a href="#issue-96">Details</a></td></tr>
@@ -1035,3 +1035,13 @@ The merge checkpoint has the exact maintenance tree. Relative to the accepted sn
 ### #107 — Doing (02:52 UTC)
 
 Fresh issue/comment review confirms Windows 11, Obsidian 1.8.9, Docxer 2.1.2, instant batch rename; there are no comments or source DOCX attachments. Attempt 1 checks actual Docxer import of a synthetic multi-image DOCX in an isolated Linux vault, retaining ordered image hashes. Attempt 2 checks collision and failed-rename mapping with the source-test seam. These cannot establish the original Windows document failure without its input. Existing synthetic Markdown mapping evidence remains historical, not a reproduction claim.
+
+### #107 — Paused (02:54 UTC)
+
+Attempt 1: four Docxer-style image names with an occupied destination, repeated batch, and injected second-rename I/O failure passed the source-seam mapping probe. Each parsed reference retained its exact intended file identity/content marker; on failure the remaining files and links stayed unchanged. The host rename/link behavior is mocked, so this does not reproduce Windows core behavior.
+
+Attempt 2: official Docxer 2.1.2 and a synthetic four-image DOCX were prepared in a new disposable vault. Actual import was blocked before it ran: the native Open-folder GTK picker reported an unavailable AT-SPI provider. Reset/reconnect returned the same error. Stop after these bounded attempts. The original DOCX/imported note and original attachment folder plus a usable Windows/native reproduction are still needed. No closure or code change; prior synthetic native mapping pass remains narrower evidence.
+
+### #119 — Doing (02:54 UTC)
+
+Next row selected in table order. Fresh issue/comments review and a large mixed-embed batch probe will distinguish a real attachment limit from the already-fixed early-return behavior.
