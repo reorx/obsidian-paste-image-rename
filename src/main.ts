@@ -23,6 +23,8 @@ import {
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
+import { planImageLinkConversion } from './link-conversion';
+import { ImageLinkConversionModal } from './link-conversion-modal';
 import { filenameTemplateStem, renderTemplate, TemplateDate } from './template';
 import { assertFilenameOnly, headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
 import {
@@ -121,6 +123,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (DEBUG) {
 			this.addRibbonIcon('wand-glyph', 'Batch rename all images instantly (in the current file)', batchRenameAllImages)
 		}
+
+		this.addCommand({id: 'convert-markdown-image-links', name: 'Convert Markdown image links to wiki embeds (current note)', callback: () => this.openImageLinkConversion()})
 
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -265,6 +269,29 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.modals.push(modal)
 		modal.open()
 		debugLog('modals count', this.modals.length)
+	}
+
+	openImageLinkConversion() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+		if (!view?.file || !view.editor) { new Notice('Open an editable Markdown note first.'); return }
+		if (typeof view.editor.transaction !== 'function' || typeof view.editor.offsetToPos !== 'function') { new Notice('This conversion command requires the editor transaction API available in Obsidian 0.13.0 or newer.'); return }
+		const source = view.file, sourcePath = source.path, editor = view.editor, original = editor.getValue()
+		try {
+			const plan = planImageLinkConversion(original, link => {
+				const file = this.app.metadataCache.getFirstLinkpathDest(link, sourcePath)
+				return file instanceof TFile && this.app.vault.getAbstractFileByPath(file.path) === file ? file : null
+			})
+			const modal = new ImageLinkConversionModal(this.app, plan, () => {
+				if (this.unloaded || this.app.workspace.getActiveViewOfType(MarkdownView) !== view || view.file !== source || view.editor !== editor || source.path !== sourcePath || this.app.vault.getAbstractFileByPath(sourcePath) !== source || editor.getValue() !== original) {
+					throw new Error('The note changed since preview. Cancel and run the command again.')
+				}
+				const changes = plan.filter(item => item.replacement !== undefined)
+				for (const item of changes) if (!(item.target instanceof TFile) || item.target.path !== item.targetPath || this.app.vault.getAbstractFileByPath(item.targetPath) !== item.target) throw new Error('An image changed since preview. Cancel and run the command again.')
+				editor.transaction({changes: changes.map(item => ({from: editor.offsetToPos(item.from), to: editor.offsetToPos(item.to), text: item.replacement}))})
+			}, () => { const index = this.modals.indexOf(modal); if (index >= 0) this.modals.splice(index, 1) })
+			this.modals.push(modal)
+			modal.open()
+		} catch (error) { new Notice(String(error)) }
 	}
 
 	openBatchRenameModal() {

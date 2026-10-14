@@ -1,3 +1,4 @@
+import './link-conversion-regressions';
 import './creation-regressions';
 import './batch-regressions';
 import './core';
@@ -350,4 +351,31 @@ test('template paths and direct allocator paths are rejected before filesystem m
     }
     for (const name of ['folder/Note.png','C:\\Note.png','../'.repeat(1000)+'Note.png']) await assert.rejects(f.plugin.deduplicateNewName(name,f.files[0]), /filename only/);
     assert.deepEqual(f.renamed,[]);
+});
+
+function conversionFixture(text='before ![](old.png) after') {
+    const f=fixture(); let content=text; let transactions=0;
+    const offset=(position:any)=>content.split('\n').slice(0,position.line).reduce((sum,line)=>sum+line.length+1,0)+position.ch;
+    const editor={getValue:()=>content,offsetToPos:(n:number)=>{const lines=content.slice(0,n).split('\n');return {line:lines.length-1,ch:lines.at(-1)!.length};},transaction:(transaction:any)=>{transactions++;for(const change of [...transaction.changes].reverse()){const from=offset(change.from),to=offset(change.to);content=content.slice(0,from)+change.text+content.slice(to);}}};
+    const view={file:f.note,editor};f.app.workspace.getActiveViewOfType=()=>view;f.app.vault.getAbstractFileByPath=(path:string)=>[f.note,...f.files].find(file=>file.path===path);
+    return {...f,view,editor,content:()=>content,setContent:(value:string)=>{content=value;},transactions:()=>transactions,open:()=>{f.plugin.openImageLinkConversion();return f.plugin.modals.at(-1) as any;}};
+}
+test('conversion preview confirms once in one transaction and never renames files',async()=>{
+    const f=conversionFixture('before ![](old.png) and ![250](old.png) after');const modal=f.open();
+    assert.equal(f.transactions(),0);const button=modal.contentEl.find('button','Convert supported images');await button.emit('click');await button.emit('click');
+    assert.equal(f.content(),'before ![[old.png]] and ![[old.png|250]] after');assert.equal(f.transactions(),1);assert.deepEqual(f.renamed,[]);
+});
+test('conversion cancel, unload, stale editor, source replacement and moved target cause zero writes',async()=>{
+    for(const action of ['cancel','unload','edit','switch','source','target']){
+        const f=conversionFixture();const modal=f.open();const button=modal.contentEl.find('button','Convert supported images');
+        if(action==='cancel')modal.close();if(action==='unload')(f.plugin as any).unloaded=true;if(action==='edit')f.setContent('changed');if(action==='switch')f.app.workspace.getActiveViewOfType=()=>({...f.view});if(action==='source')f.app.vault.getAbstractFileByPath=()=>file('other.md');if(action==='target')f.files[0].path='moved.png';
+        await button.emit('click');assert.equal(f.transactions(),0,action);assert.deepEqual(f.renamed,[]);
+    }
+});
+test('conversion with only skipped images offers no apply action',()=>{
+    const f=conversionFixture('![caption](old.png)');const modal=f.open();assert.equal(modal.contentEl.find('button','Convert supported images'),undefined);assert.equal(f.transactions(),0);
+});
+
+test('conversion capability guard keeps older editors unchanged',()=>{
+    const f=conversionFixture();delete (f.editor as any).transaction;f.plugin.openImageLinkConversion();assert.equal(f.plugin.modals.length,0);assert.equal(f.content(),'before ![](old.png) after');assert.deepEqual(f.renamed,[]);
 });

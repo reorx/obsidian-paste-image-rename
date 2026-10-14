@@ -1,0 +1,49 @@
+{
+  "issue": 77,
+  "result": "PASS",
+  "app": "Obsidian 1.14.4",
+  "platform": "Linux",
+  "tested_bundle_sha256": "02a596af7ca739f24ff88f4495fe932e59710323c584555141b5784826ee2e9c",
+  "command": "Convert Markdown image links to wiki embeds (current note)",
+  "native_modes": [
+    "Source",
+    "Live Preview"
+  ],
+  "preview": {
+    "supported": 3,
+    "skipped": 3,
+    "nonmutating": true,
+    "cancel_nonmutating": true
+  },
+  "each_mode": {
+    "only_three_expected_replacements": true,
+    "all_other_note_bytes_preserved": true,
+    "single_undo_restored_original": true,
+    "single_redo_restored_expected": true
+  },
+  "protected_content": [
+    "ordinary text",
+    "descriptive alt image",
+    "inline code",
+    "fenced code",
+    "HTML comment",
+    "math",
+    "Obsidian comment"
+  ],
+  "stale_preview": {
+    "external_edit_observed_in_editor": true,
+    "confirm_rejected": true,
+    "error": "The note changed since preview. Cancel and run the command again.",
+    "image_embed_and_new_edit_preserved": true
+  },
+  "images_before": {
+    "Issue77/assets/a.png": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+    "Issue77/assets/My image.png": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971"
+  },
+  "images_after": {
+    "Issue77/assets/a.png": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+    "Issue77/assets/My image.png": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971"
+  },
+  "image_paths_and_bytes_unchanged": true,
+  "verified_at": "2026-10-14T03:52:09.378892-07:00"
+}
