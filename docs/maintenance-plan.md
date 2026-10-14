@@ -25,7 +25,7 @@ not a closed issue.
 </thead>
 <tbody>
 <tr><th colspan="6">P0</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td></td><td></td><td><a href="#issue-107">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td>Doing</td><td>Fresh report review; bounded Docxer import and collision/failure mapping checks in progress.</td><td><a href="#issue-107">Details</a></td></tr>
 <tr><th colspan="6">P1</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td></td><td></td><td><a href="#issue-119">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td></td><td></td><td><a href="#issue-112">Details</a></td></tr>
@@ -1029,3 +1029,9 @@ Closure receipts:
 The maintainer explicitly approved merging the maintenance work and requested that future changes default directly to `master`. Remote heads were read immediately before the operation: `master` was still baseline `3801513c406a86ad90c94a1bd7c95c6b837e063d`, and the maintenance branch was `88cdb1d2555cda28d77f85efdba97b3f3540742c`. Ancestry was verified, then master was advanced with a non-force, expected-head-checked update. A remote read confirmed the target, and the local working checkout was switched safely to `master`; existing branches were preserved.
 
 The merge checkpoint has the exact maintenance tree. Relative to the accepted snapshot `19c50908`, only `docs/maintenance-plan.md` differs; all code, tests, configuration and evidence remain byte-identical. This follow-up updates only the plan to record the merge and branch preference. The earlier publication audit accurately describes the state at its own timestamp and is superseded by this section for the current branch state. No release, tag or version bump was made.
+
+## Sequential remaining-issue pass — 2026-10-14
+
+### #107 — Doing (02:52 UTC)
+
+Fresh issue/comment review confirms Windows 11, Obsidian 1.8.9, Docxer 2.1.2, instant batch rename; there are no comments or source DOCX attachments. Attempt 1 checks actual Docxer import of a synthetic multi-image DOCX in an isolated Linux vault, retaining ordered image hashes. Attempt 2 checks collision and failed-rename mapping with the source-test seam. These cannot establish the original Windows document failure without its input. Existing synthetic Markdown mapping evidence remains historical, not a reproduction claim.
