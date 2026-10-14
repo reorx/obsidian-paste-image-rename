@@ -1,0 +1,41 @@
+{
+  "issue": 53,
+  "result": "PASS",
+  "app": "Obsidian 1.14.4",
+  "platform": "Linux",
+  "tested_bundle_sha256": "0b97d581476a22f529c54013b79f8574776b7f7b125345ec800e72ae5c91a222",
+  "dupNumberAcrossExtensions": true,
+  "imageNamePattern": "{{fileName}}",
+  "dupNumberAlways": false,
+  "dupNumberWidth": 1,
+  "workflow": "native command palette instant batch on three valid embedded formats, then same native command repeated",
+  "note": "Issue 53/Note.md",
+  "output_parent": "Issue 53/assets",
+  "ordered_links": [
+    "Note.png",
+    "Note-1.jpg",
+    "Note-2.webp"
+  ],
+  "images": [
+    {
+      "original": "Original 1.png",
+      "expected": "Note.png",
+      "sha256": "7d1817a8ae60f0ec39307cbbb56b85c728703332b927c84f327ab9e161aad123"
+    },
+    {
+      "original": "Original 2.jpg",
+      "expected": "Note-1.jpg",
+      "sha256": "b0195b3fb46e9ed70bf372148ea65a9f0ff6b584691706af58374534ce6ba2f3"
+    },
+    {
+      "original": "Original 3.webp",
+      "expected": "Note-2.webp",
+      "sha256": "9f6dd16f97e6f8e2013fbfa764fd759190bfe25a80774de54da1c6145e65ca93"
+    }
+  ],
+  "repeat_saved_note_byte_identical": true,
+  "repeat_file_names_and_hashes_unchanged": true,
+  "verified_at": "2026-10-13T21:46:26.291191-07:00",
+  "previous_bundle_and_settings_restored_byte_for_byte": true,
+  "restored_bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51"
+}
