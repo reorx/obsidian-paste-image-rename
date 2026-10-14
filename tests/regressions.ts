@@ -313,3 +313,21 @@ test('existing fallback final literals keep precedence over conditional-affix gr
     assert.equal(renderTemplate('{{imageNameKey|dirName|pre:fileName:post}}', {...data, imageNameKey: ''}), 'pre:fileName:post');
     assert.equal(renderTemplate('{{:fileNameSlug:-}}', data), 'note-');
 });
+
+test('nearest-heading data resolves through bare, fallback and affix named-variable access', () => {
+    const f = fixture(); f.app.metadataCache.getFileCache = () => ({headings: [{heading:'Section', level:2, position:{start:{line:2}}}], embeds:[{link:'old.png',position:{start:{line:4}}}]});
+    for (const alias of ['nearestHeading','headerName']) {
+        for (const [pattern, expected] of [[`{{${alias}}}`, 'Section.png'],[`{{${alias}|fileName}}`, 'Section.png'],[`{{${alias}:-}}{{fileName}}`, 'Section-Note.png'],[`{{pre:${alias}:post}}`, 'preSectionpost.png']]) {
+            f.plugin.settings.imageNamePattern = pattern; assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, expected);
+        }
+    }
+});
+test('heading extraction is lazy, memoized and never triggered by replacement data or unknown tokens', () => {
+    const f = fixture(); let resolutions = 0;
+    f.app.metadataCache.getFileCache = () => ({headings:[{heading:'Section',level:2,position:{start:{line:2}}}],embeds:[{link:'old.png',position:{start:{line:4}}}], frontmatter:{imageNameKey:'{{nearestHeading}}'}});
+    f.app.metadataCache.getFirstLinkpathDest = () => {resolutions++; return f.files[0];};
+    for (const pattern of ['{{imageNameKey|nearestHeading}}','{{unknown|nearestHeading}}','{{frontmatter:nearestHeading}}']) {f.plugin.settings.imageNamePattern=pattern; f.plugin.generateNewName(f.files[0], f.note);}
+    assert.equal(resolutions,0);
+    f.plugin.settings.imageNamePattern='{{nearestHeading}}-{{headerName:-}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName,'Section-Section-.png'); assert.equal(resolutions,1);
+});

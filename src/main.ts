@@ -318,7 +318,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	generateNewName(file: TFile, activeFile: TFile, now?: TemplateDate) {
 		let imageNameKey = ''
 		let firstHeading = ''
-		let nearestHeading = ''
+		let nearestHeading: string | undefined
 		let frontmatter
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (fileCache) {
@@ -326,15 +326,21 @@ export default class PasteImageRenamePlugin extends Plugin {
 			frontmatter = fileCache.frontmatter
 			imageNameKey = frontmatter?.imageNameKey ?? ''
 			firstHeading = getFirstHeading(fileCache.headings)
-			if (/{{(?:nearestHeading|headerName)}}/.test(this.settings.imageNamePattern)) {
-				const referenceLines = [...(fileCache.embeds || []), ...(fileCache.links || [])]
-					.filter(reference => this.app.metadataCache.getFirstLinkpathDest(reference.link, activeFile.path) === file)
-					.map(reference => reference.position?.start.line)
-					.filter(line => typeof line === 'number')
-				nearestHeading = headingBeforeReference(fileCache.headings || [], referenceLines.length ? Math.min(...referenceLines) : undefined)
-			}
+
 		} else {
 			console.warn('could not get file cache from active file', activeFile.name)
+		}
+
+		// Resolve through the renderer's actual named-variable access. This covers
+		// bare, fallback and affix forms without a second, divergent token parser.
+		const getNearestHeading = () => {
+			if (nearestHeading !== undefined) return nearestHeading
+			const referenceLines = [...(fileCache?.embeds || []), ...(fileCache?.links || [])]
+				.filter(reference => this.app.metadataCache.getFirstLinkpathDest(reference.link, activeFile.path) === file)
+				.map(reference => reference.position?.start.line)
+				.filter(line => typeof line === 'number')
+			nearestHeading = headingBeforeReference(fileCache?.headings || [], referenceLines.length ? Math.min(...referenceLines) : undefined)
+			return nearestHeading
 		}
 
 		const rendered = renderTemplate(
@@ -346,7 +352,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 				firstHeading,
 				attachmentName: file.basename,
 				fileExt: file.extension,
-				nearestHeading,
+				get nearestHeading() { return getNearestHeading() },
 			},
 			frontmatter, now)
 		// An explicit terminal extension token opts into full-filename syntax.
