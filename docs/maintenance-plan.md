@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 44 issues
+## Open issue index — 43 issues
 
-Current GitHub status checked on 2026-10-14 03:41 UTC: **44 open issues**.
-The 29 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 03:55 UTC: **43 open issues**.
+The 30 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -54,8 +54,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/29">#29</a></td><td>pasting to a canvas doesn't trigger the plugin</td><td>Canvas compatibility</td><td>Paused</td><td>Canvas naming/source-node support remains absent; startup/no-source guards pass but do not implement live Canvas references.</td><td><a href="#issue-29">Details</a></td></tr>
 <tr><th colspan="6">P3</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td>Paused</td><td>Safe {{frontmatter:permalink}} stem works; no example defines URL/path extraction, routing or permalink property schema.</td><td><a href="#issue-103">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/98">#98</a></td><td>Allow DATETIME variable</td><td>Documentation / existing capability</td><td>Doing</td><td>DATETIME plus bounded time directives verified:84tests,independent Moment grammar review,native exact requested pattern pass.</td><td><a href="#issue-98">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-95">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td>Doing</td><td>Inspect per-insertion width/preset request and source-only embed mutation safety.</td><td><a href="#issue-95">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/88">#88</a></td><td>Add Field for Source of the image</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-88">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td></td><td></td><td><a href="#issue-77">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-62">Details</a></td></tr>
@@ -616,7 +615,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#98 Allow DATETIME variable](https://github.com/reorx/obsidian-paste-image-rename/issues/98)
 - Category: Documentation / existing capability
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/98#issuecomment-6160514036).
 - Reproduction / request: Request DATETIME with date+time tokens.
 - Acceptance / disposition: Document existing DATE:YYYY-MM-DDTHH-mm-ss and filename-safe tokens; no new DATETIME needed unless compatibility alias desired.
 
@@ -1237,3 +1236,9 @@ Published [4827ee8](https://github.com/reorx/obsidian-paste-image-rename/commit/
 DATETIME accepts Moment format syntax plus explicitly limited %H/%M/%S directives with optional zero/space/no-padding flags. %% is literal percent; unknown percent-letter directives remain literal; DATE is unchanged. Independent review caught a mismatch in greedy Moment bracket-literal boundaries before publication; fixed against the installed Moment tokenizer and regression-tested. This is not full strftime support.
 
 84/84 tests, build/typecheck, lint and whitespace checks pass; independent review reran them plus4048 grammar/time assertions. Native Linux Obsidian1.14.4 used the exact mixed pattern and frozen bundle SHA256f6fdb72ac31b2340cee99957ac621375f539832adb4316103f4c2abcab2af81e: host20:52:18PDT produced 2026-10-13T205218.png after existing safe colon removal, correct saved embed and unchanged image bytes. Earlier candidate was not pasted or published.
+
+### #98 — Solved/published/closed; #95 selected next (03:55 UTC)
+
+Published [e150ef9](https://github.com/reorx/obsidian-paste-image-rename/commit/e150ef946ad5d192c05ede08f2820ed9a9720f51) using a non-force expected-head update; remote tree6ca7ec5322937a54dc99f71948de7fcf1c3f7426 equals reviewed local candidate, fetched files identical. [Native receipt](test-evidence/sequential-issue98-native.json) records exact format, time window, safe filename and bytes. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/98#issuecomment-6160514036) verified; row removed,43 open. No remote check runs reported.
+
+#95 is Doing: distinguish choosing displayed width for the newly inserted embed from changing every shared reference or image bytes. Review original preset/UI expectations before selecting a safe bounded implementation.
