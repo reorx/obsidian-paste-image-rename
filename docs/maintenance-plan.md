@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 43 issues
+## Open issue index — 42 issues
 
-Current GitHub status checked on 2026-10-14 03:55 UTC: **43 open issues**.
-The 30 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 04:48 UTC: **42 open issues**.
+The 31 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -59,8 +59,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Paused</td><td>Public cache lacks paired current text outside change events; safe conversion needs a proven parser and alt/path semantics.</td><td><a href="#issue-77">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td>Paused</td><td>Suffix insertion shares #95 native merge race; PR75 also deletes empty suffix links and restores old targets.</td><td><a href="#issue-62">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td>Paused</td><td>Requested default/prompt width depends on the #95 native merge race; PR75 has additional link-integrity defects.</td><td><a href="#issue-57">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/53">#53</a></td><td>Files (of different types) shouldn't end up with the same name.</td><td>Numbering feature</td><td>Doing</td><td>Reproduce cross-extension duplicate numbering and assess an opt-in allocator policy.</td><td><a href="#issue-53">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/45">#45</a></td><td>default/alternative values in variables</td><td>Template feature</td><td></td><td></td><td><a href="#issue-45">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/45">#45</a></td><td>default/alternative values in variables</td><td>Template feature</td><td>Doing</td><td>Read exact feature request and assess safe scope.</td><td><a href="#issue-45">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/44">#44</a></td><td>trim dashes from empty variables</td><td>Template feature</td><td></td><td></td><td><a href="#issue-44">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td></td><td></td><td><a href="#issue-38">Details</a></td></tr>
 <tr><th colspan="6">P4</th></tr>
@@ -695,7 +694,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#53 Files (of different types) shouldn't end up with the same name.](https://github.com/reorx/obsidian-paste-image-rename/issues/53)
 - Category: Numbering feature
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/53#issuecomment-6161124215).
 - Reproduction / request: PNG/JPG receive same counter despite different types.
 - Acceptance / disposition: Optional cross-extension counter with clear compatibility policy; distinct extensions are not actual path collision. Related #78.
 
@@ -1296,3 +1295,9 @@ Reproduced extension-specific numbering in the existing allocator. Added default
 ### #53 — native verification passed (04:47 UTC)
 
 Linux Obsidian1.14.4 tested the exact reviewed bundle with the opt-in enabled. Native instant batch produced Note.png, Note-1.jpg and Note-2.webp in source order, with original extensions and SHA256 bytes preserved. A second native batch left saved Markdown byte-identical and all filenames/hashes unchanged. Ready for publication; no release/version bump.
+
+### #53 — Solved/published/closed; #45 selected next (04:48 UTC)
+
+Published [ea79573](https://github.com/reorx/obsidian-paste-image-rename/commit/ea79573d547716b4c3d24efb9c03fd53cb7d6dfc) with expected-head non-force update. Remote tree92344c79526f8a1bfced56c3d83d0ff9e2800c4e exactly matches the reviewed candidate; fetched changed files compare byte-for-byte. [Native receipt](test-evidence/sequential-issue53-native.json) records mixed-format and repeat passes. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/53#issuecomment-6161124215) verified. Row removed;42 open. No remote check runs reported; no release.
+
+#45 is Doing: inspect the original request before determining its bounded implementation scope.
