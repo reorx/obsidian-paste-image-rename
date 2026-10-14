@@ -285,3 +285,9 @@ Use `{{imageNameKey|dirName|my_default_value}}-{{fileName}}` to select the first
 Fallback operands support the plain named variables listed above (including `attachmentName`, `firstHeading`, `UUID` and `HEX`). Unknown intermediate names keep the whole token unchanged, helping reveal typos. Existing `DATE:`, `DATETIME:`, `frontmatter:` and slug-option tokens retain their own syntax, including literal pipes; they are not fallback operands. Inserted values are never interpreted as new template tokens.
 
 Frontmatter `imageNameKey: 0` and `imageNameKey: false` are nonblank values and produce `0` and `false`, just like their quoted forms. Missing/null/empty values fall through. This also corrects bare `{{imageNameKey}}` handling of zero and false.
+
+### Conditional separators around variables
+
+Use `{{dirName:-}}` for a suffix that appears only when `dirName` is nonblank, or `{{__:imageNameKey:__}}` for a literal prefix and suffix. Together, `{{dirName:-}}{{__:imageNameKey:__}}{{fileName}}` produces `Folder-__key__Note`, `Folder-Note`, `__key__Note`, or `Note`, depending on which variables are present. Whitespace-only values omit the entire conditional token. Zero and false are retained. `{{prefix:variable:}}` gives a prefix only.
+
+This opt-in syntax supports plain named variables; affixes cannot contain a colon or pipe, and cannot wrap a fallback chain or formatted token. Existing DATE/DATETIME/frontmatter and slug-option syntax keeps precedence, including invalid slug-option tokens. For a conditional slug suffix, use the three-part form `{{:fileNameSlug:-}}`. Prefixes/suffixes and inserted values are literal data, subject to ordinary filename safety. Existing patterns keep their literal dashes; there is no global trimming or executable template language.

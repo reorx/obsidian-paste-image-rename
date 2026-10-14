@@ -279,3 +279,37 @@ test('fallback filename generation retains zero and false but skips nullish or b
         assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, `${value}.png`);
     }
 });
+
+test('conditional affixes omit both separators when a named variable is blank', () => {
+    const base = {imageNameKey: '', dirName: '', fileName: 'file', firstHeading: ''};
+    const pattern = '{{dirName:-}}{{__:imageNameKey:__}}{{fileName}}';
+    assert.equal(renderTemplate(pattern, base), 'file');
+    assert.equal(renderTemplate(pattern, {...base, dirName: 'Folder'}), 'Folder-file');
+    assert.equal(renderTemplate(pattern, {...base, imageNameKey: 'key'}), '__key__file');
+    assert.equal(renderTemplate(pattern, {...base, dirName: 'Folder', imageNameKey: 'key'}), 'Folder-__key__file');
+    assert.equal(renderTemplate(pattern, {...base, dirName: '  ', imageNameKey: '\t'}), 'file');
+    assert.equal(renderTemplate('{{pre:dirName:}}', {...base, dirName: 'Folder'}), 'preFolder');
+});
+test('conditional affixes preserve formatted-token precedence and literal replacement values', () => {
+    const data = {imageNameKey: '{{UUID}}', dirName: 'Folder', fileName: 'Note', firstHeading: ''};
+    assert.equal(renderTemplate('{{__:imageNameKey:__}}', data), '__{{UUID}}__');
+    assert.equal(renderTemplate('{{DATE:HH:mm:ss}}', data, undefined, {format: p => p}), 'HH:mm:ss');
+    assert.equal(renderTemplate('{{frontmatter:dirName:-}}', data, {'dirName:-': 'property'}), 'property');
+    assert.equal(renderTemplate('{{unknown:-}}-{{pre:unknown:post}}', data), '{{unknown:-}}-{{pre:unknown:post}}');
+    assert.equal(renderTemplate('{{fileNameSlug:preserve:underscore}}', data), 'Note');
+    assert.equal(renderTemplate('{{dirName:-}}-{{imageNameKey|default}}', data), 'Folder--{{UUID}}');
+});
+test('conditional affixes retain zero/false values and ordinary filename safety', () => {
+    const f = fixture(); f.plugin.settings.imageNamePattern = '{{pre:imageNameKey:post}}-{{fileName}}';
+    for (const value of [0, false]) { f.app.metadataCache.getFileCache = () => ({frontmatter: {imageNameKey: value}}); assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, `pre${value}post-Note.png`); }
+    f.plugin.settings.imageNamePattern = '{{fileName::bad}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, '{{fileNamebad}}.png');
+});
+
+
+test('existing fallback final literals keep precedence over conditional-affix grammar', () => {
+    const data = {imageNameKey: 'chosen', dirName: '', fileName: 'Note', firstHeading: ''};
+    assert.equal(renderTemplate('{{imageNameKey|dirName|pre:fileName:post}}', data), 'chosen');
+    assert.equal(renderTemplate('{{imageNameKey|dirName|pre:fileName:post}}', {...data, imageNameKey: ''}), 'pre:fileName:post');
+    assert.equal(renderTemplate('{{:fileNameSlug:-}}', data), 'note-');
+});

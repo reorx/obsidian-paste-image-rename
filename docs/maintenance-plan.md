@@ -1316,3 +1316,13 @@ Linux Obsidian1.14.4 tested the reviewed aaf58c59 bundle with the exact requeste
 Published [2b5f3bb](https://github.com/reorx/obsidian-paste-image-rename/commit/2b5f3bbbd9a3105a7a253d0e9f884692adfa71c8) by non-force expected-head update. Remote tree8a079818b4489385d3fd8ee76c782376642bf4a9 matches reviewed candidate, fetched changed files identical. [Native receipt](test-evidence/sequential-issue45-native.json) records fallback/zero passes. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/45#issuecomment-6161218295) verified; row removed,41 open. No release.
 
 #44 is Doing: inspect the original request and avoid treating partial token support as full resolution.
+
+### #44 — conditional affixes independently verified (05:00 UTC)
+
+Added opt-in {{variable:suffix}} and {{prefix:variable:suffix}} for plain named variables. Blank variables omit the complete affixed token; affixes are independent, so an empty dirName with a populated imageNameKey correctly yields __key__Note in the proposed combined example. The original request’s one missing-prefix example is inconsistent with its own grammar; no cross-variable coupling was introduced. Existing literal dashes are unchanged. No executable template engine was added.
+
+Compatibility checks preserve DATE/DATETIME/frontmatter/slug syntax and #45 fallback final literals containing colons; affixes cannot contain colons or pipes. 97 tests, typecheck, lint, build and whitespace checks pass. Independent review passed1848 additional assertions on exact frozen SHA2561e4d3730e9936cd3eaed70452e4210005460484b2ef27b6b57b6ad13b671a290. Native transport recovery is being attempted once; results will be recorded separately.
+
+### #44 — native check unavailable; publication gate is automated validation (05:01 UTC)
+
+One bounded native transport recovery attempt failed. The candidate was not deployed or tested in Obsidian. This scoped pure-template change is approved for publication based on97 automated tests, build/typecheck/lint and independent1848-assertion review; no native-pass claim will be made. The last verified native artifact remains the preceding fallback candidate, not this affix build.

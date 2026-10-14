@@ -80,6 +80,7 @@ export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: F
 	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
 		const slug = /^(?:fileNameSlug|FileNameSlug):(lower|preserve):(hyphen|underscore)$/.exec(token)
 		if (slug) return filenameSlug(data.fileName, slug[1] as 'lower' | 'preserve', slug[2] as 'hyphen' | 'underscore')
+		if (/^(?:fileNameSlug|FileNameSlug):/.test(token)) return match
 		if (token.startsWith('DATETIME:') && token.length > 9) return formatDateTime(token.slice(9), now)
 		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
 		if (token.startsWith('frontmatter:') && token.length > 12) {
@@ -93,6 +94,13 @@ export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: F
 				if (value.trim()) return value
 			}
 			return ''
+		}
+		const affix = token.split(':')
+		const affixName = affix.length === 2 ? affix[0] : affix.length === 3 ? affix[1] : undefined
+		if (!token.includes('|') && affixName && namedTokens.has(affixName)) {
+			const value = namedValue(affixName) || ''
+			if (!value.trim()) return ''
+			return (affix.length === 3 ? affix[0] : '') + value + affix[affix.length - 1]
 		}
 		return namedValue(token) ?? match
 	})
