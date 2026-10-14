@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 47 issues
+## Open issue index — 46 issues
 
-Current GitHub status checked on 2026-10-14 03:07 UTC: **47 open issues**.
-The 26 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 03:25 UTC: **46 open issues**.
+The 27 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -49,8 +49,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/74">#74</a></td><td>It doesn't work in Excalidraw</td><td>Excalidraw compatibility</td><td>Paused</td><td>Issue has title only; no drawing/plugin version/workflow. Needs supported Excalidraw source/reference integration.</td><td><a href="#issue-74">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/66">#66</a></td><td>amazing! yet it does not seem to respect the obsidian subfolder name option for attachment saving?</td><td>Path compatibility</td><td>Paused</td><td>Native Linux ./assets paste passes, but original macOS/iPad placement failure not reproduced; baseline already used same parent join.</td><td><a href="#issue-66">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/64">#64</a></td><td>Cannot enable plugin.  Have never encountered this before with any plugin.</td><td>Install investigation</td><td>Paused</td><td>Current build activates in native Obsidian; report provides no app/OS version or console/module error to reproduce install failure.</td><td><a href="#issue-64">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/63">#63</a></td><td>Hope to support gif files</td><td>Format compatibility / docs</td><td>Doing</td><td>Verify GIF extension support and unchanged animation bytes through rename.</td><td><a href="#issue-63">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/60">#60</a></td><td>Specifiying directory when renaming</td><td>Path feature</td><td></td><td></td><td><a href="#issue-60">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/60">#60</a></td><td>Specifiying directory when renaming</td><td>Path feature</td><td>Doing</td><td>Inspect custom destination-folder request against current filename-only contract.</td><td><a href="#issue-60">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/49">#49</a></td><td>Create parent folder when it does not exist</td><td>Path feature / bug</td><td></td><td></td><td><a href="#issue-49">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/29">#29</a></td><td>pasting to a canvas doesn't trigger the plugin</td><td>Canvas compatibility</td><td></td><td></td><td><a href="#issue-29">Details</a></td></tr>
 <tr><th colspan="6">P3</th></tr>
@@ -531,7 +530,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P2 · [#63 Hope to support gif files](https://github.com/reorx/obsidian-paste-image-rename/issues/63)
 - Category: Format compatibility / docs
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/63#issuecomment-6160179450).
 - Reproduction / request: Title requests GIF support; no body/repro.
 - Acceptance / disposition: GIF already in batch regex and preview list; verify creation-route behavior before closing as supported.
 
@@ -1178,3 +1177,9 @@ Native picker access recovered during this test. #107 retains its historical fai
 Fresh report supplies only plugin-browser installation and an activation-failure screenshot, with no app/OS version or console error. Current manifest ID and required three build files are present; startup/layout registration regression passes, and #66 just exercised this exact bundle enabled in native Obsidian1.14.4. No failure can be reproduced from the available data. Pause for console stack, Obsidian/platform version and installed main.js/manifest files; do not change minimum-version metadata based on an unspecified install.
 
 #63 is Doing: GIF is recognized by current code. Check actual local-file rename support, with animation bytes preserved, separately from downloading remote GIF URLs.
+
+### #63 — Solved/closed; #60 selected next (03:25 UTC)
+
+Independent review confirmed this title-only request is an existing capability, not a newly introduced format fix. Native Linux Obsidian1.14.4 verified both automatic paste and instant batch on a three-frame animated GIF; saved embeds and .gif extensions are correct, complete original SHA256 preserved. Automatic generic filenames require Handle all attachments; Auto rename chooses automatic versus prompt. Pure GIF collision/repeat/failure mapping also passed. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/63#issuecomment-6160179450) were read back; no release claim. Removed its index row, retained history;46 open.
+
+#60 is Doing: inspect custom destination-folder scope and whether any safe no-routing subset satisfies the actual request.
