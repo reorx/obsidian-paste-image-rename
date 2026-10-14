@@ -1,13 +1,13 @@
 # Maintenance plan and progress
 
 Updated: 2026-10-14. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
-Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 33 verified issue closures in total; no release.
+Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 34 verified issue closures in total; no release.
 
 ## Current result — sequential pass complete; maintainer scope clarified
 
-- Assessed all **48** issues remaining after the accepted first pass, in table order: **8 solved and closed**, **39 Paused**, **1 Skipped** at completion. Following the maintainer’s 10:09 scope decision, the open index had **28 Paused**, **12 Skipped**. The newly authorized #77 command is now **Doing**, leaving **27 Paused**, **12 Skipped**, **1 Doing**; no unreviewed rows remain. The open-only index contains **40** issues.
+- Assessed all **48** issues remaining after the accepted first pass, in table order: **8 solved and closed**, **39 Paused**, **1 Skipped** at completion. Following the maintainer’s 10:09 scope decision, the open index had **28 Paused**, **12 Skipped**. The subsequently authorized #77 standalone conversion command is now published and closed, leaving **27 Paused**, **12 Skipped**, and no Doing or unreviewed rows. The open-only index contains **39** issues.
 - Newly closed: **#82, #63, #111, #100, #98, #53, #45, #44**. Six implementation groups were published; #82/#63 were verified existing capabilities. Individual evidence and verified reply/closure links are retained below.
-- Latest source commit: [29cb548](https://github.com/reorx/obsidian-paste-image-rename/commit/29cb548a27259363c6dca5b20d9ec775adf83bf0). Current build SHA256: `f0233e30ff734d7ab5d4cdf9ebb10cf9aa187e2b3cb6f622ce9c09e006b24243`. **102 automated tests**, typecheck, lint, build and independent review passed. No remote check runs were reported for the latest source commit.
+- Latest source commit: [bc1401e](https://github.com/reorx/obsidian-paste-image-rename/commit/bc1401e3d4d43dec275f02464b4b658c02b2cd9c). Current build SHA256: `02a596af7ca739f24ff88f4495fe932e59710323c584555141b5784826ee2e9c`. **115 automated tests**, typecheck, lint, build and independent review passed. Native Linux Obsidian1.14.4 verified #77 in Source and Live Preview, saved content, image hashes, Undo/Redo and stale-preview rejection. No remote check runs were reported for this source commit.
 - Native Linux Obsidian1.14.4 verified #63/#66 and the #111/#100/#98/#53/#45 candidates. **#44 and the final heading-composition correction were not tested natively** after the UI transport failed; their pure-template verification is automated plus independent review. macOS/iOS/minimum-version behavior is not certified.
 - **#95 remains Paused**: its unpublished width candidate passed mocks but failed native host-link merging, producing a broken saved target. The candidate patch was preserved separately, source restored, and no width implementation was published. #88/#62/#57 share that unresolved host-edit coordination boundary.
 - Older checkpoints and counts below are chronological history, not the current completion claim. This pass does not claim all issues fixed, and does not create a release, tag or version bump.
@@ -20,10 +20,10 @@ The owner explicitly skips unresolved insertion-provenance work (#96/#61/#38). W
 
 <a id="issue-index"></a>
 
-## Open issue index — 40 issues
+## Open issue index — 39 issues
 
-Current GitHub status checked on 2026-10-14 05:05 UTC: **40 open issues**.
-The 33 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 10:55 UTC: **39 open issues**.
+The 34 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -71,7 +71,6 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td>Paused</td><td>Safe {{frontmatter:permalink}} stem works; no example defines URL/path extraction, routing or permalink property schema.</td><td><a href="#issue-103">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td>Paused</td><td>Native Obsidian external-change merge corrupted the width candidate after two review corrections; unpublished patch preserved, source restored.</td><td><a href="#issue-95">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/88">#88</a></td><td>Add Field for Source of the image</td><td>Embed feature</td><td>Paused</td><td>Caption insertion shares the confirmed #95 core-link/editor merge race; safe host transaction coordination is needed first.</td><td><a href="#issue-88">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Doing</td><td>Maintainer approved a standalone current-note conversion command; reliable parser candidate under review.</td><td><a href="#issue-77">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td>Paused</td><td>Suffix insertion shares #95 native merge race; PR75 also deletes empty suffix links and restores old targets.</td><td><a href="#issue-62">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td>Paused</td><td>Requested default/prompt width depends on the #95 native merge race; PR75 has additional link-integrity defects.</td><td><a href="#issue-57">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td>Skipped</td><td>Original-name token exists; maintainer skips reliable file-versus-pasted-image provenance selection.</td><td><a href="#issue-38">Details</a></td></tr>
@@ -1457,3 +1456,7 @@ Independent review passed on the unchanged 02a596af candidate: all115 regression
 ### #77 native acceptance and publication gate (10:52 UTC)
 
 Linux Obsidian1.14.4 passed on the reviewed 02a596af build in both Source and Live Preview. Each mode converted exactly three supported images, preserved all other note bytes, and restored exact original/converted text with one Undo/Redo. Preview and Cancel were non-mutating. A concurrent external edit visible in the editor made confirmation reject safely. Both attachment paths and SHA256 hashes stayed unchanged. [Native evidence](test-evidence/issue77-native.json). Independent115-test/full-check and424 supplemental-assertion approval plus native acceptance authorize publication of this bounded command. This does not implement automatic paste conversion or every Markdown/Obsidian syntax form.
+
+### #77 publication and closure receipt (10:55 UTC)
+
+Published [bc1401e](https://github.com/reorx/obsidian-paste-image-rename/commit/bc1401e3d4d43dec275f02464b4b658c02b2cd9c) with non-force expected-head update; exact tree d9dba357827432fabae767d55c2503237bb6bcb9 and all changed/new files match the reviewed candidate. [Reporter reply](https://github.com/reorx/obsidian-paste-image-rename/issues/77#issuecomment-6166741471) states supported forms, conservative skips, explicit-command scope and unreleased status. Completed closure read back successfully; only its open-index row was removed.39 remain open,27 Paused and12 Skipped. Native app closure and restoration of seven original QA files were verified. No release, tag or version bump.
