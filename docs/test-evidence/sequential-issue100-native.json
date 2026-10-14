@@ -1,0 +1,29 @@
+{
+  "bundle_sha256": "7ab10a1e09dbe4ea9524c2bbef8f7ba7c887b189f656a380985386d177598210",
+  "pattern": "{{fileName}}-{{DATE:YYYYMMDD}}.{{fileExt}}",
+  "host_local_time": "2026-10-13T20:36:12-0700 PDT",
+  "expected_filename": "Extension Example-20261013.png",
+  "image_sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+  "superseded_candidate": "c56a9b3359f77080894b9dca6bbd71f31f02177eaf699ac629352e82b3a43e20 was installed but not pasted/tested",
+  "issue": 100,
+  "obsidian": "1.14.4",
+  "platform": "Linux",
+  "native_method": "Thunar file copy and native Obsidian Control+V",
+  "note_path": "Issue 100/Extension Example.md",
+  "image_path": "Issue 100/assets/Extension Example-20261013.png",
+  "saved_markdown": "# Extension Example\n\nPaste below:\n\n![[Extension Example-20261013.png]]",
+  "settings": {
+    "imageNamePattern": "{{fileName}}-{{DATE:YYYYMMDD}}.{{fileExt}}",
+    "dupNumberAtStart": false,
+    "dupNumberDelimiter": "-",
+    "dupNumberAlways": false,
+    "autoRename": true,
+    "handleAllAttachments": false,
+    "excludeExtensionPattern": "",
+    "excludedFolders": "",
+    "disableRenameNotice": false,
+    "nameInputPosition": "select",
+    "dupNumberWidth": 1
+  },
+  "passed": true
+}
