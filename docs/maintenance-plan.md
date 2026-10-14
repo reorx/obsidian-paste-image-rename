@@ -1,14 +1,23 @@
 # Maintenance plan and progress
 
 Updated: 2026-10-14. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
-Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 25 verified issue closures; no release.
+Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 33 verified issue closures in total; no release.
+
+## Current result — sequential pass complete
+
+- Assessed all **48** issues remaining after the accepted first pass, in table order: **8 solved and closed**, **39 Paused**, **1 Skipped**. No Doing or unreviewed rows remain. The open-only index contains **40** issues.
+- Newly closed: **#82, #63, #111, #100, #98, #53, #45, #44**. Six implementation groups were published; #82/#63 were verified existing capabilities. Individual evidence and verified reply/closure links are retained below.
+- Latest source commit: [9f6c2fb](https://github.com/reorx/obsidian-paste-image-rename/commit/9f6c2fbfa61bbb3eae0dcc37c13d040b74227b91). Final build SHA256: `1742d7e48ace13ab1025c9ff124132beac65f523203dcd179506499c0d141265`. **99 automated tests**, typecheck, lint, build and independent review passed. No remote check runs were reported for the latest source commit.
+- Native Linux Obsidian1.14.4 verified #63/#66 and the #111/#100/#98/#53/#45 candidates. **#44 and the final heading-composition correction were not tested natively** after the UI transport failed; their pure-template verification is automated plus independent review. macOS/iOS/minimum-version behavior is not certified.
+- **#95 remains Paused**: its unpublished width candidate passed mocks but failed native host-link merging, producing a broken saved target. The candidate patch was preserved separately, source restored, and no width implementation was published. #88/#62/#57 share that unresolved host-edit coordination boundary.
+- Older checkpoints and counts below are chronological history, not the current completion claim. This pass does not claim all issues fixed, and does not create a release, tag or version bump.
 
 <a id="issue-index"></a>
 
-## Open issue index — 41 issues
+## Open issue index — 40 issues
 
-Current GitHub status checked on 2026-10-14 04:56 UTC: **41 open issues**.
-The 32 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 05:05 UTC: **40 open issues**.
+The 33 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -44,7 +53,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/83">#83</a></td><td>[Feature]Allow folder creation.</td><td>Path feature / bug</td><td>Paused</td><td>Proposed current-parent folder creation nests paths on repeat; stable destination base/shared-file move semantics unresolved.</td><td><a href="#issue-83">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/81">#81</a></td><td>Multiple use of DATE: variable</td><td>Template bug</td><td>Paused</td><td>Multiple DATE tokens render correctly; supplied date-folder workflow still cannot be saved until routing policy is implemented.</td><td><a href="#issue-81">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/79">#79</a></td><td>When I drag an image into a document, it can't be renamed</td><td>Compatibility / docs</td><td>Paused</td><td>Screenshot filename policy works with Handle all attachments enabled; reporter settings and native macOS copy/drag trace missing.</td><td><a href="#issue-79">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/78">#78</a></td><td>When there are too many pictures in an article, such as 30, they cannot be effectively renamed.</td><td>Batch / numbering</td><td>Paused</td><td>Timestamp instability fixed/tested; cross-extension global numbering and whole-vault renaming requests remain broader semantics.</td><td><a href="#issue-78">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/78">#78</a></td><td>When there are too many pictures in an article, such as 30, they cannot be effectively renamed.</td><td>Batch / numbering</td><td>Paused</td><td>Per-batch clock and opt-in cross-extension numbering are fixed; whole-vault scope still needs shared-source precedence.</td><td><a href="#issue-78">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/76">#76</a></td><td>It doesn't effect when pictures are “webp” format</td><td>Format compatibility</td><td>Paused</td><td>WEBP policy/batch passes; supplied screenshot shows MD5-named PNG, suggesting importer/prefix interaction rather than unsupported format.</td><td><a href="#issue-76">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/74">#74</a></td><td>It doesn't work in Excalidraw</td><td>Excalidraw compatibility</td><td>Paused</td><td>Issue has title only; no drawing/plugin version/workflow. Needs supported Excalidraw source/reference integration.</td><td><a href="#issue-74">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/66">#66</a></td><td>amazing! yet it does not seem to respect the obsidian subfolder name option for attachment saving?</td><td>Path compatibility</td><td>Paused</td><td>Native Linux ./assets paste passes, but original macOS/iPad placement failure not reproduced; baseline already used same parent join.</td><td><a href="#issue-66">Details</a></td></tr>
@@ -59,18 +68,17 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Paused</td><td>Public cache lacks paired current text outside change events; safe conversion needs a proven parser and alt/path semantics.</td><td><a href="#issue-77">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td>Paused</td><td>Suffix insertion shares #95 native merge race; PR75 also deletes empty suffix links and restores old targets.</td><td><a href="#issue-62">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td>Paused</td><td>Requested default/prompt width depends on the #95 native merge race; PR75 has additional link-integrity defects.</td><td><a href="#issue-57">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/44">#44</a></td><td>trim dashes from empty variables</td><td>Template feature</td><td>Doing</td><td>Read original request and compare implemented template behavior.</td><td><a href="#issue-44">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td></td><td></td><td><a href="#issue-38">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td>Paused</td><td>Original-name token works, but file-only versus pasted-image pattern selection needs a reliable insertion-origin policy.</td><td><a href="#issue-38">Details</a></td></tr>
 <tr><th colspan="6">P4</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/94">#94</a></td><td>Add option to, while batch renaming, moving the picture to [[subfolder name]]</td><td>Attachment lifecycle feature</td><td></td><td></td><td><a href="#issue-94">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/73">#73</a></td><td>Batch rename embeded files (whole vault)</td><td>Bulk feature / high risk</td><td></td><td></td><td><a href="#issue-73">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/72">#72</a></td><td>Option for cancel button to delete file</td><td>Deletion UX feature / high risk</td><td></td><td></td><td><a href="#issue-72">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/70">#70</a></td><td>Add Png to Jpeg option</td><td>Compression feature</td><td></td><td></td><td><a href="#issue-70">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/39">#39</a></td><td>Move attachments with note</td><td>Attachment lifecycle feature</td><td></td><td></td><td><a href="#issue-39">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/33">#33</a></td><td>Support image optimization while renaming</td><td>Compression feature</td><td></td><td></td><td><a href="#issue-33">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/1">#1</a></td><td>auto move image by name-dest rules</td><td>Attachment routing feature</td><td></td><td></td><td><a href="#issue-1">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/94">#94</a></td><td>Add option to, while batch renaming, moving the picture to [[subfolder name]]</td><td>Attachment lifecycle feature</td><td>Paused</td><td>Automatic attachment relocation needs shared-reference ownership, stable destination and collision/rollback policy.</td><td><a href="#issue-94">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/73">#73</a></td><td>Batch rename embeded files (whole vault)</td><td>Bulk feature / high risk</td><td>Paused</td><td>Whole-vault rename needs shared-attachment source precedence and a reviewable resumable migration plan.</td><td><a href="#issue-73">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/72">#72</a></td><td>Option for cancel button to delete file</td><td>Deletion UX feature / high risk</td><td>Paused</td><td>Delete-on-Cancel needs explicit trash/undo and shared-reference ownership rules; current cancellation remains non-destructive.</td><td><a href="#issue-72">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/70">#70</a></td><td>Add Png to Jpeg option</td><td>Compression feature</td><td>Paused</td><td>Lossy transcoding requires transparency/original retention/metadata and mobile codec policies plus byte-changing QA.</td><td><a href="#issue-70">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/39">#39</a></td><td>Move attachments with note</td><td>Attachment lifecycle feature</td><td>Paused</td><td>Filename substring matching does not establish attachment ownership; shares relocation policy blocker with #94.</td><td><a href="#issue-39">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/33">#33</a></td><td>Support image optimization while renaming</td><td>Compression feature</td><td>Paused</td><td>Lossy/lossless byte rewriting needs codec/external-tool selection, original recovery and platform validation.</td><td><a href="#issue-33">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/1">#1</a></td><td>auto move image by name-dest rules</td><td>Attachment routing feature</td><td>Paused</td><td>Routing rules need destination-aware allocation, rule/tag precedence and shared-file ownership; current parent-only contract retained.</td><td><a href="#issue-1">Details</a></td></tr>
 <tr><th colspan="6">G</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/122">#122</a></td><td>Request to take over plugin/repository</td><td>Governance</td><td></td><td></td><td><a href="#issue-122">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/122">#122</a></td><td>Request to take over plugin/repository</td><td>Governance</td><td>Paused</td><td>Repository/plugin-ID transfer is a maintainer governance decision; maintenance reply already sent, no transfer authorized.</td><td><a href="#issue-122">Details</a></td></tr>
 </tbody>
 </table>
 
@@ -725,7 +733,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#44 trim dashes from empty variables](https://github.com/reorx/obsidian-paste-image-rename/issues/44)
 - Category: Template feature
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/44#issuecomment-6161292595).
 - Reproduction / request: Empty variables leave leading/repeated separators.
 - Acceptance / disposition: Define explicit optional-group/filter grammar; preserve compatibility. Don't trim intentional literal punctuation globally.
 
@@ -1326,3 +1334,72 @@ Compatibility checks preserve DATE/DATETIME/frontmatter/slug syntax and #45 fall
 ### #44 — native check unavailable; publication gate is automated validation (05:01 UTC)
 
 One bounded native transport recovery attempt failed. The candidate was not deployed or tested in Obsidian. This scoped pure-template change is approved for publication based on97 automated tests, build/typecheck/lint and independent1848-assertion review; no native-pass claim will be made. The last verified native artifact remains the preceding fallback candidate, not this affix build.
+
+### #44 — Solved/published/closed; #38 selected next (05:02 UTC)
+
+Published [961363b](https://github.com/reorx/obsidian-paste-image-rename/commit/961363bc420fcefad439f067e500a324e2776b4d), expected-head/non-force. Remote treeceef6e023eed51232572c85efe244fafeee1d363 equals reviewed local candidate; fetched files identical. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/44#issuecomment-6161292595) verified and explicitly discloses that native UI validation was unavailable. Row removed;40 open.
+
+#38 is Doing: inspect the full request, not only the already implemented original-name variable.
+
+### #38 — Paused as partial capability; #94 selected next (05:03 UTC)
+
+The exact original-name token {{originalAttachmentFileName}} is implemented and tested, but the request explicitly applies only to actual files and excludes pasted images. The current create/reference lifecycle has one naming pattern and no definitive insertion-origin metadata; filename prefix and extension are not proof of clipboard-versus-file provenance. A non-image-only override would silently narrow the request and misclassify imported image files. Keep open pending an explicit supported insertion-classification policy and separate template semantics. No closure based solely on the existing token.
+
+#94 is Doing: read exact feature and integration scope.
+
+### #94 — Paused; #73 selected next (05:03 UTC)
+
+The example requests moving Inbox/_attachments files to a moved note’s new folder, and the body extends this to automatic note-move handling. Current tested invariant keeps attachments in their existing parent. Automatically moving shared attachments when one of several notes moves requires an ownership rule; otherwise different note moves can repeatedly relocate the same file. Stable destination creation, collisions, external moves and partial-failure recovery also need a dedicated migration design. This is the same routing boundary as #55/#83, not a rename defect. No files moved or routing feature added.
+
+#73 is Doing: inspect exact requested behavior.
+
+### #73 — Paused; #72 selected next (05:04 UTC)
+
+Whole-vault batch is not equivalent to safely repeating the current-note command: the same attachment may resolve from notes with different fileName/frontmatter/heading templates, so iteration order would decide its final name. Current batch tests prove per-note identity and partial-error safety, not a vault-wide plan. Pause for deterministic shared-attachment source precedence, complete preview, cancellation/resume and recovery semantics before introducing broad mutation scope. No whole-vault operation run.
+
+#72 is Doing: read the automation request and identify whether its source ownership is defined.
+
+### #72 — Paused; #70 selected next (05:04 UTC)
+
+Request makes Cancel delete the newly pasted file. Creation plus a parsed reference does not prove exclusive ownership, and another note may already reference the attachment. Deleting the file also requires safe removal of the inserted embed, which shares the unresolved #95 host edit/merge coordination. A destructive Cancel mode needs explicit trash-versus-permanent behavior, undo/recovery, shared-reference protection and in-flight rename handling. Keep the current non-destructive Cancel behavior; no deletion code or user-data deletion performed.
+
+#70 is Doing: read the requested lifecycle behavior.
+
+### #70 — Paused; #39 selected next (05:04 UTC)
+
+Request adds automatic PNG-to-JPEG conversion with quality control. Current plugin intentionally renames without changing image bytes. This requires a separate codec pipeline and decisions on alpha flattening/background color, original retention, metadata/orientation, conversion failures and shared references; native/mobile codec and memory behavior must be tested. Renaming .png to .jpg is not conversion and is not an acceptable shortcut. No binary conversion or original deletion implemented.
+
+#39 is Doing: inspect exact requested integration.
+
+### #39 — Paused; #33 selected next (05:04 UTC)
+
+Same note-move attachment relocation as #94. The suggested filename-contains-note-name heuristic can match unrelated attachments or notes with overlapping names, and breaks under custom templates. Public resolved references establish links but not exclusive ownership. Pause for explicit shared-reference and destination policy instead of moving files based on substring guesses.
+
+#33 is Doing: read the complete request before deciding scope.
+
+### #33 — Paused; #1 selected next (05:05 UTC)
+
+Maintainer-authored request explicitly includes lossy canvas conversion and lossless external-tool optimization, default settings and quality controls. Canvas/modifyBinary are mechanisms, not a complete safe conversion transaction. This extends #70 with external-tool installation/execution and cross-platform availability. Pause for selected codecs/tools, transparency/orientation/metadata policy, original recovery and binary-failure QA; current byte-preserving invariant remains. No arbitrary executable installed or original image rewritten.
+
+#1 is Doing: inspect original lifecycle automation and shared-reference behavior.
+
+### #1 — Paused; #122 governance review completed (05:05 UTC)
+
+Read original issue, tag-related comment and [linked maintainer discussion](https://www.v2ex.com/t/847152#reply3). The discussion specifically demonstrates duplicate allocation in the old folder followed by a move collision in the destination. A correct routing engine must allocate in the destination and define rule/tag precedence, stable path semantics, folder creation and shared ownership. Current rename-only tests do not certify that migration workflow; pause without introducing a second independent mover.
+
+#122 requests repository and Obsidian plugin-ID takeover. The maintainer’s authorized maintenance reply has already been sent. The latest reply also reports activation failure without an exact version or diagnostic trace; existing startup/native checks do not reproduce that report. Transferring ownership or approving a takeover is a separate explicit governance decision and was not authorized by the code-maintenance request. Mark Paused; do not close the unresolved request or grant access.
+
+All48 issues in this sequential pass have now been assessed in original table order. Completed rows were removed only after verified closure. Remaining status counts and live GitHub reconciliation are being audited before final publication of this pass summary.
+
+### Final audit clarification for #78 (05:06 UTC)
+
+The earlier03:09 assessment is historical: #53 subsequently implemented opt-in cross-extension numbering in ea79573, with native mixed-format/repeat verification. Along with the existing per-batch clock fix, that resolves those portions of #78. Its whole-vault request remains open on the same shared-attachment source-precedence and reviewable migration-plan blocker as #73. Updated the current index reason accordingly without rewriting the earlier chronology.
+
+
+### Final integration audit and publication (05:11 UTC)
+
+Independent audit verified original48-row assessment order, all73 stable issue anchors, exact40-row/live-open equality and all8 new closure receipts. Broad feature pauses are documented architecture/ownership/platform boundaries, not claims that every issue received multiple failed implementations. Current #78 reason was corrected for the later #53 numbering fix.
+
+Audit found a genuine composition gap: heading data was extracted only for bare nearestHeading/headerName tokens. Published [9f6c2fb](https://github.com/reorx/obsidian-paste-image-rename/commit/9f6c2fbfa61bbb3eae0dcc37c13d040b74227b91) makes heading extraction a lazy memoized getter invoked by the actual renderer, covering bare/fallback/affix forms without a second parser or rescanning replacement data. Source tree3ebf7ef9086d9c88e15b53c9263d327aa89a9ffe exactly matched the local reviewed two-file patch.99 tests, typecheck, lint, build and diff checks pass; independent reviewer added246 heading-context assertions. Final bundle SHA2561742d7e48ace13ab1025c9ff124132beac65f523203dcd179506499c0d141265. This final integration correction was not run in native Obsidian due to the documented UI transport failure.
+
+Final disposition:48 assessed,8 solved/closed,39 Paused,1 Skipped;40 open issues remain. No Doing/unreviewed rows, no release/tag/version bump, and no unsafe #95 width candidate published.
