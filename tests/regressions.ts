@@ -154,3 +154,44 @@ test('slug option integrates into generated filename without changing extension'
     f.plugin.settings.imageNamePattern = '{{FileNameSlug:preserve:underscore}}';
     assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, 'Obsidian_Plugin_Test_File.png');
 });
+
+test('explicit fileExt suffix produces one extension and a stem-only prompt', async () => {
+    const f = fixture(['invoice.v1.PNG']); f.note.basename = 'NoteTitle';
+    f.plugin.settings.imageNamePattern = '{{fileName}}-{{DATE:YYYYMMDD}}.{{fileExt}}';
+    const proposed = f.plugin.generateNewName(f.files[0], f.note, {format: () => '20241115'});
+    assert.equal(proposed.stem, 'NoteTitle-20241115');
+    assert.equal(proposed.newName, 'NoteTitle-20241115.PNG');
+    f.app.vault.getResourcePath = () => ''; let submitted = '';
+    f.plugin.renameFile = async (_file, name) => { submitted = name; };
+    f.plugin.openRenameModal(f.files[0], proposed.stem, f.note.path);
+    const modal = f.plugin.modals.at(-1) as any;
+    assert.equal(modal.contentEl.find('input').value, proposed.stem);
+    await modal.contentEl.find('button', 'Rename').emit('click'); await Promise.resolve();
+    assert.equal(submitted, proposed.newName);
+});
+test('fileExt in stem and terminal token preserve established filename behavior', () => {
+    const f = fixture(['archive.tar.gz']); f.note.basename = 'Note.png';
+    for (const [pattern, expected] of [
+        ['{{fileName}}', 'Note.png.gz'],
+        ['{{fileExt}}-{{fileName}}', 'gz-Note.png.gz'],
+        ['{{attachmentName}}.{{fileExt}}', 'archive.tar.gz'],
+        ['{{fileName}}.{{fileExt}}   ', 'Note.png.gz'],
+        ['{{fileName}}.{{fileExt}}-copy', 'Note.png.gz-copy.gz'],
+    ]) { f.plugin.settings.imageNamePattern = pattern; assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, expected); }
+});
+test('fileExt token never rescans filename or frontmatter replacement data', () => {
+    const data = { fileName: 'Note.{{fileExt}}', fileExt: 'png', dirName: '', firstHeading: '', imageNameKey: '' };
+    assert.equal(renderTemplate('{{fileName}}-{{frontmatter:a}}.{{fileExt}}', data, {a: '{{fileExt}}'}), 'Note.{{fileExt}}-{{fileExt}}.png');
+});
+
+test('fileExt suffix recognition follows actual parser boundaries without truncating data', () => {
+    const f = fixture(); f.note.basename = 'MeaningfulNote';
+    f.app.metadataCache.getFileCache = () => ({frontmatter: {'a.{{fileExt': 'MeaningfulName'}});
+    f.plugin.settings.imageNamePattern = '{{frontmatter:a.{{fileExt}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, 'MeaningfulName.png');
+    f.plugin.settings.imageNamePattern = '{{unknown.{{fileExt}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, '{{unknown.{{fileExt}}.png');
+    f.files[0].extension = 'png ';
+    f.plugin.settings.imageNamePattern = '{{fileName}}.{{fileExt}}  ';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).stem, 'MeaningfulNote');
+});

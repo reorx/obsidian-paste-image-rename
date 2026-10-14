@@ -11,6 +11,7 @@ interface TemplateData {
 	dirName: string
 	firstHeading: string
 	attachmentName?: string
+	fileExt?: string
 	nearestHeading?: string
 	uuid?: string
 }
@@ -18,6 +19,19 @@ interface TemplateData {
 export const filenameSlug = (name: string, casing: 'lower' | 'preserve' = 'lower', separator: 'hyphen' | 'underscore' = 'hyphen'): string => {
 	const trimmed = name.trim()
 	return (casing === 'lower' ? trimmed.toLowerCase() : trimmed).replace(/\s+/gu, separator === 'underscore' ? '_' : '-')
+}
+
+/** Recognize the terminal extension using the same token boundaries as rendering. */
+export function filenameTemplateStem(tmpl: string, rendered: string, extension: string): string {
+	const tokens = /{{([^}]+)}}/g
+	let token: RegExpExecArray | null
+	while ((token = tokens.exec(tmpl)) !== null) {
+		const tail = tmpl.slice(token.index + token[0].length)
+		if (token[1] !== 'fileExt' || tmpl[token.index - 1] !== '.' || !/^\s*$/.test(tail)) continue
+		const suffix = '.' + extension + tail
+		return rendered.endsWith(suffix) ? rendered.slice(0, -suffix.length) : rendered
+	}
+	return rendered
 }
 
 export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
@@ -34,6 +48,7 @@ export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: F
 		switch (token) {
 			case 'imageNameKey': return String(data.imageNameKey)
 			case 'fileName': return data.fileName
+			case 'fileExt': return data.fileExt || ''
 			case 'dirName': return data.dirName
 			case 'firstHeading': return data.firstHeading
 			case 'nearestHeading':

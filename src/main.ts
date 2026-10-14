@@ -23,7 +23,7 @@ import {
 } from 'obsidian';
 
 import { ImageBatchRenameModal } from './batch';
-import { renderTemplate, TemplateDate } from './template';
+import { filenameTemplateStem, renderTemplate, TemplateDate } from './template';
 import { headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
 import {
   createElementTree,
@@ -335,7 +335,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			console.warn('could not get file cache from active file', activeFile.name)
 		}
 
-		const stem = renderTemplate(
+		const rendered = renderTemplate(
 			this.settings.imageNamePattern,
 			{
 				imageNameKey,
@@ -343,9 +343,14 @@ export default class PasteImageRenamePlugin extends Plugin {
 				dirName: activeFile.parent.name,
 				firstHeading,
 				attachmentName: file.basename,
+				fileExt: file.extension,
 				nearestHeading,
 			},
 			frontmatter, now)
+		// An explicit terminal extension token opts into full-filename syntax.
+		// Keep the modal stem-only and append the actual extension exactly once.
+		// Never infer this from rendered data, which may itself contain ".png".
+		const stem = filenameTemplateStem(this.settings.imageNamePattern, rendered, file.extension)
 		const safeStem = stem.split('/').map(segment => sanitizer.filename(segment)).join('/')
 		const meaninglessRegex = new RegExp(`[${escapeRegExp(this.settings.dupNumberDelimiter)}\\s]`, 'g')
 

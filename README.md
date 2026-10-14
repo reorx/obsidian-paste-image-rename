@@ -238,6 +238,14 @@ Do not append `.png` or another extension to the pattern itself.
 
 Existing patterns and automatic defaults are unchanged.
 
+`{{fileExt}}` is the current attachment extension without the dot. For example,
+`{{fileName}}-{{DATE:YYYYMMDD}}.{{fileExt}}` produces `Note-20261014.png` for a PNG.
+A pattern ending in `.{{fileExt}}` explicitly includes the final extension; it is
+appended only once, and the rename prompt still edits the stem without the extension.
+Used elsewhere, the token is ordinary stem text: `{{fileExt}}-{{fileName}}` produces
+`png-Note.png`. Original extension casing is retained. Existing patterns without a
+terminal `.{{fileExt}}` keep their previous stem-plus-extension behavior.
+
 ### Optional naming controls
 
 - **Rename input selection** can put the caret at the start, at the end (default), or
