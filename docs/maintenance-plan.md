@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 48 issues
+## Open issue index — 47 issues
 
-Current GitHub status checked on 2026-10-14 02:43 UTC: **48 open issues**.
-The 25 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 03:07 UTC: **47 open issues**.
+The 26 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -42,8 +42,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/109">#109</a></td><td>Chinese file names containing spaces are escaped</td><td>Link compatibility / docs</td><td>Skipped</td><td>Percent-escaped spaces are valid Markdown; raw-space expectation needs angle destinations or explicit format policy, not blind unescaping.</td><td><a href="#issue-109">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/101">#101</a></td><td>Can't rename pasted image on canvas</td><td>Canvas compatibility</td><td>Paused</td><td>Canvas has no Markdown metadata source; needs supported live-node/reference integration and shared-file policy.</td><td><a href="#issue-101">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/83">#83</a></td><td>[Feature]Allow folder creation.</td><td>Path feature / bug</td><td>Paused</td><td>Proposed current-parent folder creation nests paths on repeat; stable destination base/shared-file move semantics unresolved.</td><td><a href="#issue-83">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/82">#82</a></td><td>Option for file location</td><td>Path compatibility / feature</td><td>Doing</td><td>Check requested preservation of configured attachment subfolder and existing relative-path ambiguity.</td><td><a href="#issue-82">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/81">#81</a></td><td>Multiple use of DATE: variable</td><td>Template bug</td><td></td><td></td><td><a href="#issue-81">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/81">#81</a></td><td>Multiple use of DATE: variable</td><td>Template bug</td><td>Doing</td><td>Check repeated DATE rendering separately from unsupported date-derived folder routing.</td><td><a href="#issue-81">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/79">#79</a></td><td>When I drag an image into a document, it can't be renamed</td><td>Compatibility / docs</td><td></td><td></td><td><a href="#issue-79">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/78">#78</a></td><td>When there are too many pictures in an article, such as 30, they cannot be effectively renamed.</td><td>Batch / numbering</td><td></td><td></td><td><a href="#issue-78">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/76">#76</a></td><td>It doesn't effect when pictures are “webp” format</td><td>Format compatibility</td><td></td><td></td><td><a href="#issue-76">Details</a></td></tr>
@@ -460,7 +459,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P2 · [#82 Option for file location](https://github.com/reorx/obsidian-paste-image-rename/issues/82)
 - Category: Path compatibility / feature
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/82#issuecomment-6159969522).
 - Reproduction / request: Several plugins manage attachment location; user asks rename without moving.
 - Acceptance / disposition: Plain-name rename must preserve parent; define explicit optional path behavior. Mixed comments also request custom destination.
 
@@ -1129,3 +1128,9 @@ Absent-Markdown-source guards and unrelated-source tests pass (2/2), eliminating
 Reviewed supplied createFolder patch: it derives each new folder from file.parent, so applying the same folder-producing pattern again can nest the destination repeatedly. It also does not establish allocation in the destination directory or shared-file move ownership. Current path rejection is reproducible and leaves bytes/links untouched, but intentionally does not satisfy this feature. Pause until destination base/repeat semantics are chosen; do not merge the suggested three-line patch as a safe fix.
 
 #82 is Doing: determine whether the request is an ordinary rename preserving the configured attachment directory or a new folder-routing policy.
+
+### #82 — Solved/closed; #81 selected next (03:07 UTC)
+
+Independent scope/code review confirmed the original no-move request is supported: ordinary rename joins the current parent directory. Parent-preservation/path/concurrency regressions pass; prior native four-image ordered-hash evidence remains in Attachments/. No historical root-move cause was claimed reproduced. [One explanatory comment](https://github.com/reorx/obsidian-paste-image-rename/issues/82#issuecomment-6159969522) and closed/completed state were read back. Custom routing remains in #55/#83 and the build remains unreleased. Removed only the #82 index row; preserved its history. 47 issues remain open.
+
+#81 is Doing: repeat-DATE rendering has a regression fix, while the reported full pattern also routes into date-named folders. Test both boundaries before disposition.
