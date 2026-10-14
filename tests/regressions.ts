@@ -128,3 +128,29 @@ test('UUID prompt submits the displayed proposal without regenerating it', async
     await modal.contentEl.find('button', 'Rename').emit('click'); await Promise.resolve();
     assert.equal(submitted, proposal.newName);
 });
+
+test('slug arguments support all requested case and separator combinations', () => {
+    const data = { fileName: ' Obsidian  Plugin\tTest File ', dirName: '', firstHeading: '', imageNameKey: '' };
+    for (const alias of ['fileNameSlug', 'FileNameSlug']) {
+        for (const [args, expected] of [
+            ['lower:underscore', 'obsidian_plugin_test_file'],
+            ['preserve:underscore', 'Obsidian_Plugin_Test_File'],
+            ['lower:hyphen', 'obsidian-plugin-test-file'],
+            ['preserve:hyphen', 'Obsidian-Plugin-Test-File'],
+        ]) assert.equal(renderTemplate(`{{${alias}:${args}}}`, data), expected);
+        assert.equal(renderTemplate(`{{${alias}}}`, data), 'obsidian-plugin-test-file');
+    }
+});
+test('slug arguments preserve Unicode and never reparse replacement data', () => {
+    const data = { fileName: ' 测试 ÉMOJI 🎉 {{UUID}} ', dirName: '', firstHeading: '', imageNameKey: '' };
+    assert.equal(renderTemplate('{{fileNameSlug:preserve:underscore}}', data), '测试_ÉMOJI_🎉_{{UUID}}');
+    assert.equal(renderTemplate('{{FileNameSlug:lower:hyphen}}', data), '测试-émoji-🎉-{{uuid}}');
+    for (const token of ['fileNameSlug:upper:hyphen', 'fileNameSlug:lower:/', 'fileNameSlug:lower', 'fileNameSlug:preserve:underscore:extra']) {
+        assert.equal(renderTemplate(`{{${token}}}`, data), `{{${token}}}`);
+    }
+});
+test('slug option integrates into generated filename without changing extension', () => {
+    const f = fixture(); f.note.basename = 'Obsidian Plugin Test File';
+    f.plugin.settings.imageNamePattern = '{{FileNameSlug:preserve:underscore}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, 'Obsidian_Plugin_Test_File.png');
+});

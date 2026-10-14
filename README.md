@@ -229,6 +229,12 @@ Do not append `.png` or another extension to the pattern itself.
 - `{{fileNameSlug}}` and `{{FileNameSlug}}` trim the note name, lowercase it, and replace
   runs of whitespace with a hyphen. Unicode letters, emoji and punctuation are retained
   before ordinary filename sanitization; there is no ASCII transliteration.
+  Optional arguments choose casing and separator: `{{fileNameSlug:lower:underscore}}`
+  produces `obsidian_plugin_test_file` from `Obsidian Plugin Test File`;
+  `{{fileNameSlug:preserve:underscore}}` produces `Obsidian_Plugin_Test_File`.
+  Use `hyphen` instead of `underscore` for the two hyphenated variants.
+  Both token aliases accept these arguments. Bare tokens keep their existing
+  lowercase-hyphen behavior; unrecognized argument combinations stay literal.
 
 Existing patterns and automatic defaults are unchanged.
 

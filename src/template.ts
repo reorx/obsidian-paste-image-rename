@@ -15,13 +15,18 @@ interface TemplateData {
 	uuid?: string
 }
 
-export const filenameSlug = (name: string): string => name.trim().toLowerCase().replace(/\s+/gu, '-')
+export const filenameSlug = (name: string, casing: 'lower' | 'preserve' = 'lower', separator: 'hyphen' | 'underscore' = 'hyphen'): string => {
+	const trimmed = name.trim()
+	return (casing === 'lower' ? trimmed.toLowerCase() : trimmed).replace(/\s+/gu, separator === 'underscore' ? '_' : '-')
+}
 
 export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
 	let uuid: string | undefined
 	// Interpret only tokens present in the pattern. Replacement values are data,
 	// not additional template source (filenames can legitimately contain braces).
 	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
+		const slug = /^(?:fileNameSlug|FileNameSlug):(lower|preserve):(hyphen|underscore)$/.exec(token)
+		if (slug) return filenameSlug(data.fileName, slug[1] as 'lower' | 'preserve', slug[2] as 'hyphen' | 'underscore')
 		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
 		if (token.startsWith('frontmatter:') && token.length > 12) {
 			return frontmatter ? String(frontmatter[token.slice(12)] ?? '') : match
