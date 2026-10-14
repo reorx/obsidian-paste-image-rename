@@ -1,0 +1,22 @@
+{
+  "notes": {
+    "Stale Source.md": "Before\n![[Pasted image 202610140105.png]]\nAfter\nExternal edit preserved\n",
+    "Delete Success.md": "Before\n![[Pasted image 202610140101.png]]\nAfter\n",
+    "Plain Cancel.md": "Before\n![[Pasted image 202610140102.png]]\nAfter\n",
+    "Shared Reference.md": "Before\n![[Pasted image 202610140104.png]]\nAfter\n",
+    "Escape Cancel.md": "Before\n![[Pasted image 202610140103.png]]\nAfter\n",
+    "Mixed Vault.md": "Before\n![[Pasted image 202610140107.png]]\nAfter\n",
+    "Retry Guard.md": "Before\n\nAfter\n",
+    "Other Reference.md": "Other note keeps ![[Pasted image 202610140104.png]] here.\n"
+  },
+  "images": {
+    ".trash/Pasted image 202610140106.png": "178303aa7a5ec550d5fd07c84b59eb6425cc49f446d7a3cc32548301ef2e711d",
+    "assets/Pasted image 202610140102.png": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971",
+    "assets/Pasted image 202610140107.png": "939dd4608df2442e8707c9328a200450c0abaddb538f9402de70efec42a326e7",
+    "assets/Pasted image 202610140105.png": "0442be9b3913378490aed24fdc189ffd77784963c8399b5c6bd9915760b8b441",
+    "assets/Pasted image 202610140101.png": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+    "assets/Pasted image 202610140103.png": "8cf6e8fe7ae2af91e4805c1a163c1a284c3810166062bfe7e391e748ac36f89c",
+    "assets/Pasted image 202610140104.png": "b17933300c0fd37f0d81302843f1174581689aa238dcab30c64c3e396a580d11"
+  },
+  "canvas": "{\"nodes\":[],\"edges\":[]}\n"
+}

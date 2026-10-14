@@ -10,6 +10,8 @@
  */
 import {
   App,
+  CachedMetadata,
+  requireApiVersion,
   HeadingCache,
   MarkdownView,
   Modal,
@@ -22,6 +24,7 @@ import {
   TFile,
 } from 'obsidian';
 
+import { DiscardAction, DiscardController } from './discard-controller';
 import { ImageBatchRenameModal } from './batch';
 import { planImageLinkConversion } from './link-conversion';
 import { ImageLinkConversionModal } from './link-conversion-modal';
@@ -81,24 +84,34 @@ export default class PasteImageRenamePlugin extends Plugin {
 	private pendingAttachments = new Map<TFile, {source: TFile, autoRename: boolean, timer: number}>()
 	private unloaded = false
 	private drawingSources = new WeakSet<TFile>()
+	private discardController?: DiscardController
 
 	async onload() {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
+		if (typeof requireApiVersion === 'function' && requireApiVersion('1.1.1') && typeof this.app.workspace.on === 'function' && typeof this.app.workspace.getLeavesOfType === 'function') {
+			this.discardController = new DiscardController(this.app, file => this.sourceProtectionReason(file))
+			this.registerEvent(this.app.workspace.on('editor-paste', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
+			this.registerEvent(this.app.workspace.on('editor-drop', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
+			this.registerEvent(this.app.workspace.on('editor-change', (_editor, info) => this.discardController?.changed(info.file)))
+		}
 
 		// The official Vault API recommends registering here to exclude startup
 		// scans. Creation timestamps are unreliable for copied/large/mobile files.
 		this.app.workspace.onLayoutReady(() => {
 			if (this.unloaded) return
-			this.registerEvent(this.app.vault.on('create', file => this.trackAttachment(file)))
+			this.registerEvent(this.app.vault.on('create', file => { this.discardController?.changed(file, true); this.trackAttachment(file) }))
 			this.registerEvent(this.app.vault.on('delete', file => {
+				this.discardController?.changed(file)
 				for (const [attachment, pending] of this.pendingAttachments) {
 					if (attachment === file || pending.source === file) this.cancelPendingAttachment(attachment)
 				}
 			}))
-			this.registerEvent(this.app.metadataCache.on('changed', source => { this.sourceProtectionReason(source); this.processPendingAttachments(source) }))
+			this.registerEvent(this.app.vault.on('modify', file => this.discardController?.changed(file)))
+			this.registerEvent(this.app.vault.on('rename', file => this.discardController?.changed(file)))
+			this.registerEvent(this.app.metadataCache.on('changed', (source, data, cache) => { this.sourceProtectionReason(source); this.processPendingAttachments(source, data, cache) }))
 		})
 
 		const startBatchRenameProcess = () => {
@@ -185,7 +198,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.pendingAttachments.delete(file)
 	}
 
-	processPendingAttachments(source: TFile) {
+	processPendingAttachments(source: TFile, data?: string, cache?: CachedMetadata) {
 		if (this.unloaded) return
 		if (this.sourceProtectionReason(source)) {
 			for (const [file, pending] of this.pendingAttachments) if (pending.source === source) this.cancelPendingAttachment(file)
@@ -195,14 +208,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 			if (pending.source !== source || !this.sourceReferencesAttachment(source, file)) continue
 			this.cancelPendingAttachment(file)
 			// Keep the source captured at creation, even after the user changes tabs.
-			void this.startRenameProcess(file, pending.autoRename, source).catch(error => {
+			const action = !pending.autoRename ? this.discardController?.prepare(file, source, data, cache) : undefined
+			const start = action ? action.then(discard => this.startRenameProcess(file, pending.autoRename, source, discard)) : this.startRenameProcess(file, pending.autoRename, source)
+			void start.catch(error => {
 				console.error('Attachment rename failed', error)
 				new Notice(`Attachment left unchanged or rename incomplete: ${error}`)
 			})
 		}
 	}
 
-	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile()) {
+	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile(), discard?: DiscardAction) {
+		if (this.unloaded || this.app.vault.getAbstractFileByPath(file.path) !== file) { discard?.cancel(); return }
 		if (!activeFile || this.isExcluded(file, activeFile)) return
 		const reason = this.sourceProtectionReason(activeFile)
 		if (reason) { new Notice(reason); return }
@@ -211,7 +227,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		debugLog('generated newName:', newName, isMeaningful)
 
 		if (!isMeaningful || !autoRename) {
-			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path)
+			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path, discard || {reason:'Cancel and Delete requires Obsidian 1.1.1+ and a verified new single-file paste/drop.', cancel:()=>{}})
 			return
 		}
 		await this.renameFile(file, newName, activeFile.path, true)
@@ -290,7 +306,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (!this.settings.disableRenameNotice) new Notice(`Renamed ${originName} to ${newName}`)
 	}
 
-	openRenameModal(file: TFile, newName: string, sourcePath: string) {
+	openRenameModal(file: TFile, newName: string, sourcePath: string, discard?: DiscardAction) {
 		const source = this.app.vault.getAbstractFileByPath(sourcePath)
 		try { this.assertRenameSource(sourcePath) } catch (error) { new Notice(String(error)); return }
 		const modal = new ImageRenameModal(
@@ -304,7 +320,12 @@ export default class PasteImageRenamePlugin extends Plugin {
 				const index = this.modals.indexOf(modal)
 				if (index >= 0) this.modals.splice(index, 1)
 			},
-			this.settings.nameInputPosition
+			this.settings.nameInputPosition,
+			discard ? {...discard, execute: discard.execute ? () => {
+				const operation = (this.renameQueue || Promise.resolve()).then(() => discard.execute())
+				this.renameQueue = operation.catch(() => {})
+				return operation
+			} : undefined} : undefined
 		)
 		this.modals.push(modal)
 		modal.open()
@@ -471,6 +492,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	onunload() {
 		this.unloaded = true
+		this.discardController?.stop()
 		for (const file of this.pendingAttachments.keys()) this.cancelPendingAttachment(file)
 		const modals = [...this.modals]
 		modals.forEach(modal => modal.close())
@@ -534,12 +556,13 @@ function isImage(file: TAbstractFile): boolean {
 }
 
 class ImageRenameModal extends Modal {
+	private closed = false
 	src: TFile
 	stem: string
 	renameFunc: (path: string) => Promise<void>
 	onCloseExtra: () => void
 
-	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => Promise<void>, onClose: () => void, private inputPosition: NameInputPosition = 'end') {
+	constructor(app: App, src: TFile, stem: string, renameFunc: (path: string) => Promise<void>, onClose: () => void, private inputPosition: NameInputPosition = 'end', private discard?: DiscardAction) {
 		super(app);
 		this.src = src
 		this.stem = stem
@@ -600,9 +623,11 @@ class ImageRenameModal extends Modal {
 			]
 		})
 
-		let renaming = false
+		let renaming = false, renameStarted = false, discardStarted = false
+		let disableDiscard = () => {}
+		let disableRename = () => {}
 		const doRename = async () => {
-			if (renaming) return
+			if (renaming || this.closed || discardStarted) return
 			if (!stem.trim()) {
 				errorEl.innerText = 'Error: "New name" could not be empty'
 				errorEl.style.display = 'block'
@@ -611,6 +636,8 @@ class ImageRenameModal extends Modal {
 			renaming = true
 			try {
 				assertFilenameOnly(rawStem)
+				renameStarted = true
+				disableDiscard()
 				await this.renameFunc(getNewName(stem))
 				this.close()
 			} catch (error) {
@@ -670,8 +697,24 @@ class ImageRenameModal extends Modal {
 			}
 		})
 
+		if (this.discard) {
+			contentEl.createEl('p', {text: this.discard.reason || 'Cancel and Delete removes only this newly inserted link and moves the image into the vault .trash folder. Editor Undo does not restore the image. Verification expires 30 seconds after paste/drop; unsupported containers or shared references refuse deletion.'})
+			new Setting(contentEl).addButton(button => {
+				disableDiscard = () => { button.buttonEl.disabled = true }
+				button.buttonEl.disabled = !this.discard.execute
+				return button.setButtonText('Cancel and Delete').onClick(async () => {
+				if (renaming || this.closed || renameStarted || discardStarted || !this.discard.execute) return
+				discardStarted = true; renaming = true; button.buttonEl.disabled = true; disableRename()
+				try { await this.discard.execute(); new Notice('New attachment moved to vault .trash and its inserted link removed. Editor Undo does not restore the file.'); this.close() }
+				catch (error) { if (this.closed) new Notice(String(error)); else { errorEl.innerText = String(error); errorEl.style.display = 'block' } }
+				finally { renaming = false }
+			})
+			})
+		}
+
 		new Setting(contentEl)
 			.addButton(button => {
+				disableRename = () => { button.buttonEl.disabled = true }
 				button
 					.setButtonText('Rename')
 					.onClick(() => {
@@ -686,6 +729,8 @@ class ImageRenameModal extends Modal {
 	}
 
 	onClose() {
+		this.closed = true
+		this.discard?.cancel()
 		const { contentEl } = this;
 		contentEl.empty();
 		this.onCloseExtra()

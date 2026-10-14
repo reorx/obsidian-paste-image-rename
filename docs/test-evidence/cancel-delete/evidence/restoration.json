@@ -1,0 +1,14 @@
+{
+  "app_closed_native_window_inventory": true,
+  "isolated_config_equals_initial": {
+    "app.json": true,
+    "community-plugins.json": true
+  },
+  "candidate_removed_from_active_vault": true,
+  "original_main_vault_config_unchanged": true,
+  "original_main_vault_config_file_count": 14,
+  "native_result": "PASS",
+  "tested_sha256": "cb5d2cacb7b4c091923939852b82ed1d114611ca0aea6204f1c7e1a53330630a",
+  "all_seven_raster_hashes_match_inputs": true,
+  "trash_file_count": 1
+}

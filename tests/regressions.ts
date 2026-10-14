@@ -1,3 +1,5 @@
+import './discard-controller-regressions';
+import './discard-regressions';
 import './link-conversion-regressions';
 import './creation-regressions';
 import './batch-regressions';
@@ -467,4 +469,18 @@ test('unsaved source marker in a background Markdown leaf blocks queued rename a
     f.app.vault.adapter.list = async()=>{text='---\nexcalidraw-plugin: parsed\n---\n![[old.png]]';active={file:file('Other.md'),editor:{getValue:()=>''}};return {files:[],folders:[]};};
     await assert.rejects(f.plugin.renameFile(f.files[0],'new.png',f.note.path),/drawing sources/);
     assert.deepEqual(f.renamed,[]);
+});
+
+test('discard modal serializes both actions and leaves ordinary Cancel non-destructive',async()=>{
+    for(const mode of ['cancel','delete','rename']){
+        const f=fixture();f.app.vault.getResourcePath=()=>'';let deleted=0,cancelled=0;
+        let finish:()=>void;const pending=new Promise<void>(resolve=>{finish=resolve;});
+        const rename=f.app.fileManager.renameFile;f.app.fileManager.renameFile=async(...args:any[])=>{await pending;await rename(...args);};
+        f.plugin.openRenameModal(f.files[0],'new',f.note.path,{execute:async()=>{deleted++;await pending;},cancel:()=>{cancelled++;}});
+        const modal=f.plugin.modals[0] as any,button=modal.contentEl.find('button','Cancel and Delete'),renameButton=modal.contentEl.find('button','Rename');
+        if(mode==='cancel'){await modal.contentEl.find('button','Cancel').emit('click');await button.emit('click');assert.equal(deleted,0);}
+        if(mode==='delete'){const first=button.emit('click');await Promise.resolve();await renameButton.emit('click');const second=button.emit('click');finish!();await first;await second;assert.equal(deleted,1);assert.deepEqual(f.renamed,[]);}
+        if(mode==='rename'){await renameButton.emit('click');await button.emit('click');assert.equal(deleted,0);finish!();await new Promise(resolve=>setTimeout(resolve,0));}
+        assert.ok(cancelled>=1);
+    }
 });

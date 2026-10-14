@@ -48,7 +48,7 @@ export class Setting {
     setClass() { return this; }
     addText(fn: Function) { const inputEl = new MockElement('input'); this.controlEl.children.push(inputEl); const component = { inputEl, setValue(v: string) { inputEl.value = v; return this; }, setPlaceholder() { return this; }, onChange(cb: Function) { inputEl.addEventListener('change', () => cb(inputEl.value)); return this; } }; fn(component); return this; }
     addTextArea(fn: Function) { return this.addText(fn); }
-    addButton(fn: Function) { const buttonEl = new MockElement('button'); this.controlEl.children.push(buttonEl); const component = { buttonEl, setButtonText(v: string) { buttonEl.innerText = v; return this; }, setClass() { return this; }, onClick(cb: Function) { buttonEl.addEventListener('click', cb); return this; } }; fn(component); return this; }
+    addButton(fn: Function) { const buttonEl = new MockElement('button'); this.controlEl.children.push(buttonEl); const component = { buttonEl, setButtonText(v: string) { buttonEl.innerText = v; return this; }, setClass() { return this; }, setDisabled(value: boolean) { (buttonEl as any).disabled = value; return this; }, onClick(cb: Function) { buttonEl.addEventListener('click', cb); return this; } }; fn(component); return this; }
 }
 export class TAbstractFile {
 }
@@ -59,3 +59,5 @@ export class Notice {
 }
 // Test-only YAML implementation; production uses Obsidian's public parseYaml.
 export const parseYaml = (text: string) => require('js-yaml').load(text);
+
+export const requireApiVersion = () => false;
