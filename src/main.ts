@@ -24,7 +24,7 @@ import {
 
 import { ImageBatchRenameModal } from './batch';
 import { filenameTemplateStem, renderTemplate, TemplateDate } from './template';
-import { headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
+import { assertFilenameOnly, headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
 import {
   createElementTree,
   getVaultConfig,
@@ -196,8 +196,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (getVaultConfig(this.app)?.alwaysUpdateLinks === false) {
 			throw new Error('Enable Obsidian’s Automatically update internal links setting before renaming attachments, so shared references remain valid.')
 		}
-		const target = splitRelativeFilename(inputNewName)
-		if (target.directory) throw new Error('Folder paths in names are not supported safely yet. Use a filename; configure the attachment folder in Obsidian.')
+		splitRelativeFilename(inputNewName)
 		const { name: newName } = await this.deduplicateNewName(inputNewName, file)
 		if (this.unloaded) return
 		if (file.path !== expectedPath || this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment moved while this rename was waiting. Try again from its current location.')
@@ -359,7 +358,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// Keep the modal stem-only and append the actual extension exactly once.
 		// Never infer this from rendered data, which may itself contain ".png".
 		const stem = filenameTemplateStem(this.settings.imageNamePattern, rendered, file.extension)
-		const safeStem = stem.split('/').map(segment => sanitizer.filename(segment)).join('/')
+		assertFilenameOnly(stem)
+		const safeStem = sanitizer.filename(stem)
 		const meaninglessRegex = new RegExp(`[${escapeRegExp(this.settings.dupNumberDelimiter)}\\s]`, 'g')
 
 		return {
@@ -373,7 +373,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	async deduplicateNewName(newName: string, file: TFile): Promise<NameObj> {
 		const {directory, filename} = splitRelativeFilename(newName)
 		const destinationDirectory = path.join(file.parent.path, directory)
-		if (directory) throw new Error('Folder paths require a separate destination policy. Use a filename only.')
+		assertFilenameOnly(newName)
 		const listed = await this.app.vault.adapter.list(destinationDirectory)
 		const currentName = destinationDirectory === path.join(file.parent.path) ? file.name : undefined
 		const name = allocateName(filename, [...listed.files, ...(listed.folders || [])].map(sibling => path.basename(sibling)), currentName, this.settings)
@@ -485,6 +485,7 @@ class ImageRenameModal extends Modal {
 		})
 
 		let stem = this.stem
+		let rawStem = this.stem
 		const ext = this.src.extension
 		const getNewName = (stem: string) => stem + '.' + ext
 		const getNewPath = (stem: string) => path.join(this.src.parent.path, getNewName(stem))
@@ -532,6 +533,7 @@ class ImageRenameModal extends Modal {
 			}
 			renaming = true
 			try {
+				assertFilenameOnly(rawStem)
 				await this.renameFunc(getNewName(stem))
 				this.close()
 			} catch (error) {
@@ -544,10 +546,11 @@ class ImageRenameModal extends Modal {
 
 		const nameSetting = new Setting(contentEl)
 			.setName('New name')
-			.setDesc('Please input the new name for the image (without extension)')
+			.setDesc('Filename only, without extension. Directory names, relative paths (such as folder/name or ../name), and absolute paths are not supported. Choose attachment locations in Obsidian Settings → Files and links.')
 			.addText(text => text
 				.setValue(stem)
 				.onChange(async (value) => {
+					rawStem = value
 					stem = sanitizer.filename(value)
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
 				}
@@ -563,7 +566,8 @@ class ImageRenameModal extends Modal {
 			.addButton(button => button
 				.setButtonText('Use original name')
 				.onClick(() => {
-					stem = sanitizer.filename(this.src.basename)
+					rawStem = this.src.basename
+					stem = sanitizer.filename(rawStem)
 					nameInputEl.value = stem
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
 					focusNameInput()

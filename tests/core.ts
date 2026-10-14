@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allocateName, compileExtensionPattern, isExcludedPath, isTemporaryAttachment, updateEmbedDestination } from '../src/rename-core';
+import { assertFilenameOnly, allocateName, compileExtensionPattern, isExcludedPath, isTemporaryAttachment, updateEmbedDestination } from '../src/rename-core';
 import { sanitizer } from '../src/utils';
 const options = { dupNumberAtStart: false, dupNumberDelimiter: '-', dupNumberAlways: false };
 test('folder exclusion boundaries, descendants, slashes and empty lines', () => { assert.equal(isExcludedPath('Telegram/photos/a.png', '/Telegram/\nZotero'), true); assert.equal(isExcludedPath('Telegram2/a.png', 'Telegram'), false); assert.equal(isExcludedPath('a.png', '\n'), false); });
@@ -34,4 +34,9 @@ test('shared counters support prefix numbering, escaped delimiters and huge valu
     const shared = {...options, dupNumberAcrossExtensions: true, dupNumberAtStart: true, dupNumberAlways: true, dupNumberDelimiter: ' + '};
     assert.equal(allocateName('Note.jpg', ['9007199254740992 + Note.png'], undefined, shared), '9007199254740993 + Note.jpg');
     assert.equal(allocateName('Note.jpg', ['1 + Note.jpg', '001 + Note.png'], '1 + Note.jpg', shared), '2 + Note.jpg');
+});
+
+test('filename-only boundary rejects both path syntaxes and unbounded parent traversal', () => {
+    for (const value of ['folder/name.png', '../name.png', '/name.png', 'C:\\folder\\name.png', 'C:name.png', ' C:name.png', '\tC:name.png', '\\\\server\\share\\name.png', '../'.repeat(1000) + 'name.png']) assert.throws(() => assertFilenameOnly(value), /filename only/);
+    for (const value of ['Note', 'Note.png', '测试 name', '2026-10-14T10:00']) assert.doesNotThrow(() => assertFilenameOnly(value));
 });

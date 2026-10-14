@@ -331,3 +331,23 @@ test('heading extraction is lazy, memoized and never triggered by replacement da
     f.plugin.settings.imageNamePattern='{{nearestHeading}}-{{headerName:-}}';
     assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName,'Section-Section-.png'); assert.equal(resolutions,1);
 });
+
+test('typed directory paths fail before rename instead of being silently sanitized', async () => {
+    const f = fixture(); f.app.vault.getResourcePath = () => ''; let calls = 0;
+    f.plugin.renameFile = async () => {calls++;};
+    f.plugin.openRenameModal(f.files[0], 'Note', f.note.path); const modal = f.plugin.modals[0] as any;
+    const input = modal.contentEl.find('input');
+    for (const value of ['folder/name', '../name', '/name', 'C:\\name', 'C:name', ' C:name', '\tC:name', '../'.repeat(1000)+'name']) {
+        input.value=value; await input.emit('change'); await modal.contentEl.find('button','Rename').emit('click'); await new Promise(resolve=>setImmediate(resolve)); assert.equal(calls,0);
+    }
+    await modal.contentEl.find('button','Use original name').emit('click');
+    await modal.contentEl.find('button','Rename').emit('click'); await new Promise(resolve=>setImmediate(resolve)); assert.equal(calls,1);
+});
+test('template paths and direct allocator paths are rejected before filesystem mutation', async () => {
+    const f = fixture();
+    for (const pattern of ['folder/{{fileName}}', '../{{fileName}}', 'C:\\{{fileName}}', '/{{fileName}}', 'C:{{fileName}}', ' C:{{fileName}}', '\tC:{{fileName}}']) {
+        f.plugin.settings.imageNamePattern=pattern; assert.throws(()=>f.plugin.generateNewName(f.files[0],f.note), /filename only/);
+    }
+    for (const name of ['folder/Note.png','C:\\Note.png','../'.repeat(1000)+'Note.png']) await assert.rejects(f.plugin.deduplicateNewName(name,f.files[0]), /filename only/);
+    assert.deepEqual(f.renamed,[]);
+});

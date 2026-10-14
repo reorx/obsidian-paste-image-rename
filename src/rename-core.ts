@@ -66,10 +66,18 @@ export function allocateName(desiredName: string, siblings: string[], currentNam
 	return options.dupNumberAtStart ? `${number}${delimiter}${stem}.${extension}` : `${stem}${delimiter}${number}.${extension}`
 }
 
+/** Attachment placement belongs to Obsidian; rename inputs never select a directory. */
+export function assertFilenameOnly(input: string): void {
+	if (/[\\/]/.test(input) || /^[a-z]:/i.test(input.trimStart())) {
+		throw new Error('Enter a filename only, without directory paths. Configure attachment locations in Obsidian Settings → Files and links.')
+	}
+}
+
 export function splitRelativeFilename(input: string): {directory: string, filename: string} {
+	assertFilenameOnly(input)
 	const segments = input.split('/')
 	if (!input.trim() || input.startsWith('/') || input.includes('\\') || segments.some(part => !part || part === '.' || part === '..')) {
-		throw new Error('Use a relative filename or subfolder path without empty, dot, or parent segments.')
+		throw new Error('Use a nonempty filename only; directory paths and parent segments are not supported.')
 	}
 	const filename = segments.pop()
 	if (filename.startsWith('.') || !filename.includes('.') || filename.endsWith('.')) throw new Error('A nonempty filename and extension are required.')
