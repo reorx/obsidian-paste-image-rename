@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 42 issues
+## Open issue index — 41 issues
 
-Current GitHub status checked on 2026-10-14 04:48 UTC: **42 open issues**.
-The 31 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 04:56 UTC: **41 open issues**.
+The 32 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -59,8 +59,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Paused</td><td>Public cache lacks paired current text outside change events; safe conversion needs a proven parser and alt/path semantics.</td><td><a href="#issue-77">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td>Paused</td><td>Suffix insertion shares #95 native merge race; PR75 also deletes empty suffix links and restores old targets.</td><td><a href="#issue-62">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td>Paused</td><td>Requested default/prompt width depends on the #95 native merge race; PR75 has additional link-integrity defects.</td><td><a href="#issue-57">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/45">#45</a></td><td>default/alternative values in variables</td><td>Template feature</td><td>Doing</td><td>Read exact feature request and assess safe scope.</td><td><a href="#issue-45">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/44">#44</a></td><td>trim dashes from empty variables</td><td>Template feature</td><td></td><td></td><td><a href="#issue-44">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/44">#44</a></td><td>trim dashes from empty variables</td><td>Template feature</td><td>Doing</td><td>Read original request and compare implemented template behavior.</td><td><a href="#issue-44">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td></td><td></td><td><a href="#issue-38">Details</a></td></tr>
 <tr><th colspan="6">P4</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/94">#94</a></td><td>Add option to, while batch renaming, moving the picture to [[subfolder name]]</td><td>Attachment lifecycle feature</td><td></td><td></td><td><a href="#issue-94">Details</a></td></tr>
@@ -718,7 +717,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#45 default/alternative values in variables](https://github.com/reorx/obsidian-paste-image-rename/issues/45)
 - Category: Template feature
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/45#issuecomment-6161218295).
 - Reproduction / request: Fallback expression imageNameKey|dirName|literal.
 - Acceptance / disposition: Shared template-extension design #44; test missing, false, zero and empty values.
 
@@ -1311,3 +1310,9 @@ Implemented the requested ordered named-variable fallback, e.g. {{imageNameKey|d
 ### #45 — native fallback and zero-value verification passed (04:55 UTC)
 
 Linux Obsidian1.14.4 tested the reviewed aaf58c59 bundle with the exact requested chain. Root-level missing-key note produced my_default_value-Issue45 Fallback.png; YAML imageNameKey:0 produced 0-Issue45 Zero.png. Both persisted correct embeds and retained original PNG SHA256 bytes. Ready for publication.
+
+### #45 — Solved/published/closed; #44 selected next (04:56 UTC)
+
+Published [2b5f3bb](https://github.com/reorx/obsidian-paste-image-rename/commit/2b5f3bbbd9a3105a7a253d0e9f884692adfa71c8) by non-force expected-head update. Remote tree8a079818b4489385d3fd8ee76c782376642bf4a9 matches reviewed candidate, fetched changed files identical. [Native receipt](test-evidence/sequential-issue45-native.json) records fallback/zero passes. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/45#issuecomment-6161218295) verified; row removed,41 open. No release.
+
+#44 is Doing: inspect the original request and avoid treating partial token support as full resolution.
