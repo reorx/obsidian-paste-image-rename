@@ -1,16 +1,16 @@
 # Maintenance plan and progress
 
-Updated: 2026-10-13. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
-Branch: `maintenance/issue-backlog-20261013`. Published maintenance branch; 25 verified issue closures. No release or default-branch merge.
+Updated: 2026-10-14. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
+Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 25 verified issue closures; no release.
 
-## Current result — accepted preview published; 25 issues closed
+## Current result — accepted maintenance merged into master; 25 issues closed
 
-Updated 2026-10-13 23:58 UTC. Publication commit: [`7e7a70d`](https://github.com/reorx/obsidian-paste-image-rename/commit/7e7a70dce910f9c716f10ad698555143624cb8f1), exactly matching accepted snapshot `19c50908`. Latest tested source commit:
+Updated 2026-10-14 00:06 UTC. Merge checkpoint: `88cdb1d2555cda28d77f85efdba97b3f3540742c` fast-forwarded onto `master`. Publication commit: [`7e7a70d`](https://github.com/reorx/obsidian-paste-image-rename/commit/7e7a70dce910f9c716f10ad698555143624cb8f1), exactly matching accepted snapshot `19c50908`. Latest tested source commit:
 `ffd813ec49de8c5172ea2792d9aae467a9e839d2`.
 Final plugin `main.js` SHA256:
 `652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51`.
 
-- Six code checkpoints completed and accepted. Published to the maintenance branch; 25 issues closed after individual scope/evidence review (23 code requests and 2 existing-capability documentation cases). 48 of the original 73 issues remain open. No default-branch merge, tag, release, version bump or ownership change.
+- Six code checkpoints completed and accepted. Published to the maintenance branch; 25 issues closed after individual scope/evidence review (23 code requests and 2 existing-capability documentation cases). 48 of the original 73 issues remain open. Merged into `master` by fast-forward on 2026-10-14 after explicit approval. No tag, release, version bump or ownership change.
 - 73/73 automated tests, production build/typecheck, lint and whitespace checks passed; independent review reran the checks.
 - Original inventory: 27 candidate implementations, 16 partial/reproduction/platform cases, 5 existing-capability documentation, 24 broader design/integration decisions, and 1 governance item. Closure review retained 4 prior candidates (#25, #38, #81, #111) and 3 documentation cases (#98, #103, #109). The publication audit below supersedes candidate counts as a resolution claim. Test count is not an assertion that all issues are fixed.
 - Native Obsidian 1.14.4 testing verified mixed batches/shared references/aliases, idempotence, unchanged image bytes, actual multi-file clipboard paste, synthetic Docxer-style ordered mapping, and controlled delayed source-note switching on the exact builds in [the report](real-app-test-report.md). The final artifact also passed manual original-name fill/confirm and Unicode-slug/three-digit native pair-paste checks; the filesystem-move stale-preflight regression passed on the preceding feature snapshot.
@@ -696,3 +696,9 @@ Closure receipts:
 - [#116](https://github.com/reorx/obsidian-paste-image-rename/issues/116#issuecomment-6157724381) — comment and completed closure verified.
 - [#120](https://github.com/reorx/obsidian-paste-image-rename/issues/120#issuecomment-6157726373) — comment and completed closure verified.
 - [#121](https://github.com/reorx/obsidian-paste-image-rename/issues/121#issuecomment-6157725504) — comment and completed closure verified.
+
+## Master merge and future workflow — 2026-10-14
+
+The maintainer explicitly approved merging the maintenance work and requested that future changes default directly to `master`. Remote heads were read immediately before the operation: `master` was still baseline `3801513c406a86ad90c94a1bd7c95c6b837e063d`, and the maintenance branch was `88cdb1d2555cda28d77f85efdba97b3f3540742c`. Ancestry was verified, then master was advanced with a non-force, expected-head-checked update. A remote read confirmed the target, and the local working checkout was switched safely to `master`; existing branches were preserved.
+
+The merge checkpoint has the exact maintenance tree. Relative to the accepted snapshot `19c50908`, only `docs/maintenance-plan.md` differs; all code, tests, configuration and evidence remain byte-identical. This follow-up updates only the plan to record the merge and branch preference. The earlier publication audit accurately describes the state at its own timestamp and is superseded by this section for the current branch state. No release, tag or version bump was made.
