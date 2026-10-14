@@ -3,6 +3,95 @@
 Updated: 2026-10-14. Baseline: `3801513c406a86ad90c94a1bd7c95c6b837e063d`.
 Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 25 verified issue closures; no release.
 
+<a id="issue-index"></a>
+
+## Issue index — all 73 tracked issues
+
+Current GitHub status checked on 2026-10-14 UTC: **25 closed, 48 open**.
+This table covers every issue from the original 2026-10-13 maintenance inventory,
+including those subsequently closed. Priorities and categories retain the original
+triage; priorities are proposed, not GitHub labels. `G` denotes governance.
+Issue numbers open GitHub; **Details** jumps to that issue's individual section below.
+Closed means completed on GitHub, not included in an official release. Historical
+checkpoints remain below; later verification and closure records supersede earlier
+candidate dispositions.
+
+| Issue | Title | Category | Priority | Current status | Details |
+| --- | --- | --- | --- | --- | --- |
+| [#107](https://github.com/reorx/obsidian-paste-image-rename/issues/107) | Orphaned images during rename | Data integrity | P0 | Open | [Details](#issue-107) |
+| [#58](https://github.com/reorx/obsidian-paste-image-rename/issues/58) | Sometimes file link isn't renamed after the image file is renamed. | Data integrity | P0 | Closed (completed) | [Details](#issue-58) |
+| [#121](https://github.com/reorx/obsidian-paste-image-rename/issues/121) | Exclude folders from automatic attachment renaming\* | Compatibility / integrity | P1 | Closed (completed) | [Details](#issue-121) |
+| [#120](https://github.com/reorx/obsidian-paste-image-rename/issues/120) | The images located after a pdf or mp4 are not renamed. | Batch bug | P1 | Closed (completed) | [Details](#issue-120) |
+| [#119](https://github.com/reorx/obsidian-paste-image-rename/issues/119) | attachment rename limitations in a note | Batch bug | P1 | Open | [Details](#issue-119) |
+| [#115](https://github.com/reorx/obsidian-paste-image-rename/issues/115) | Allow Exclude By Directory | Compatibility / integrity | P1 | Closed (completed) | [Details](#issue-115) |
+| [#112](https://github.com/reorx/obsidian-paste-image-rename/issues/112) | Stopped working some time ago | Platform compatibility | P1 | Open | [Details](#issue-112) |
+| [#108](https://github.com/reorx/obsidian-paste-image-rename/issues/108) | pasting in an image create duplicate named images | Data integrity investigation | P1 | Open | [Details](#issue-108) |
+| [#99](https://github.com/reorx/obsidian-paste-image-rename/issues/99) | “.tmp” Files Misidentified as Attachments | Compatibility / integrity | P1 | Closed (completed) | [Details](#issue-99) |
+| [#96](https://github.com/reorx/obsidian-paste-image-rename/issues/96) | Better integration with git plugin | Compatibility / integrity | P1 | Open | [Details](#issue-96) |
+| [#91](https://github.com/reorx/obsidian-paste-image-rename/issues/91) | Paste does not work anymore in Obsidian 1.5.12 | Platform compatibility | P1 | Open | [Details](#issue-91) |
+| [#89](https://github.com/reorx/obsidian-paste-image-rename/issues/89) | Attachment by taking a photo sometimes crashes on iOS | Crash / mobile | P1 | Open | [Details](#issue-89) |
+| [#68](https://github.com/reorx/obsidian-paste-image-rename/issues/68) | the plugin can't work on mobile phones if the image is large | Platform compatibility | P1 | Open | [Details](#issue-68) |
+| [#61](https://github.com/reorx/obsidian-paste-image-rename/issues/61) | A naming conflict occurs when used with Local images plus | Compatibility / integrity | P1 | Open | [Details](#issue-61) |
+| [#56](https://github.com/reorx/obsidian-paste-image-rename/issues/56) | Exclude automatic paste image rename for selected user folders | Compatibility / integrity | P1 | Closed (completed) | [Details](#issue-56) |
+| [#55](https://github.com/reorx/obsidian-paste-image-rename/issues/55) | Rename failed, Destination file already exists | Path / collision bug | P1 | Open | [Details](#issue-55) |
+| [#46](https://github.com/reorx/obsidian-paste-image-rename/issues/46) | Embeded heading from other file stops "batch rename all images instantly" command. | Batch bug | P1 | Closed (completed) | [Details](#issue-46) |
+| [#25](https://github.com/reorx/obsidian-paste-image-rename/issues/25) | Pasted image not prompting a dialog | Platform compatibility | P1 | Open | [Details](#issue-25) |
+| [#117](https://github.com/reorx/obsidian-paste-image-rename/issues/117) | Image sizes change | Rendering investigation | P2 | Open | [Details](#issue-117) |
+| [#113](https://github.com/reorx/obsidian-paste-image-rename/issues/113) | Hope to add support for the AVIF format. | Format feature | P2 | Closed (completed) | [Details](#issue-113) |
+| [#109](https://github.com/reorx/obsidian-paste-image-rename/issues/109) | Chinese file names containing spaces are escaped | Link compatibility / docs | P2 | Open | [Details](#issue-109) |
+| [#101](https://github.com/reorx/obsidian-paste-image-rename/issues/101) | Can't rename pasted image on canvas | Canvas compatibility | P2 | Open | [Details](#issue-101) |
+| [#97](https://github.com/reorx/obsidian-paste-image-rename/issues/97) | \[Bug\] Some punctuation marks disapear after rename images. | Filename compatibility | P2 | Closed (completed) | [Details](#issue-97) |
+| [#93](https://github.com/reorx/obsidian-paste-image-rename/issues/93) | Can have setting to remove forbid character in original filename keeping? | Filename / integrity | P2 | Closed (completed) | [Details](#issue-93) |
+| [#92](https://github.com/reorx/obsidian-paste-image-rename/issues/92) | Support for Emojis and Symbols in file name | Filename compatibility | P2 | Closed (completed) | [Details](#issue-92) |
+| [#87](https://github.com/reorx/obsidian-paste-image-rename/issues/87) | Using en dash and em dash | Filename compatibility | P2 | Closed (completed) | [Details](#issue-87) |
+| [#83](https://github.com/reorx/obsidian-paste-image-rename/issues/83) | \[Feature\]Allow folder creation. | Path feature / bug | P2 | Open | [Details](#issue-83) |
+| [#82](https://github.com/reorx/obsidian-paste-image-rename/issues/82) | Option for file location | Path compatibility / feature | P2 | Open | [Details](#issue-82) |
+| [#81](https://github.com/reorx/obsidian-paste-image-rename/issues/81) | Multiple use of DATE: variable | Template bug | P2 | Open | [Details](#issue-81) |
+| [#80](https://github.com/reorx/obsidian-paste-image-rename/issues/80) | Can't put space at beginning of 'Duplicate number delimiter' | Settings bug | P2 | Closed (completed) | [Details](#issue-80) |
+| [#79](https://github.com/reorx/obsidian-paste-image-rename/issues/79) | When I drag an image into a document, it can't be renamed | Compatibility / docs | P2 | Open | [Details](#issue-79) |
+| [#78](https://github.com/reorx/obsidian-paste-image-rename/issues/78) | When there are too many pictures in an article, such as 30, they cannot be effectively renamed. | Batch / numbering | P2 | Open | [Details](#issue-78) |
+| [#76](https://github.com/reorx/obsidian-paste-image-rename/issues/76) | It doesn't effect when pictures are “webp” format | Format compatibility | P2 | Open | [Details](#issue-76) |
+| [#74](https://github.com/reorx/obsidian-paste-image-rename/issues/74) | It doesn't work in Excalidraw | Excalidraw compatibility | P2 | Open | [Details](#issue-74) |
+| [#66](https://github.com/reorx/obsidian-paste-image-rename/issues/66) | amazing! yet it does not seem to respect the obsidian subfolder name option for attachment saving? | Path compatibility | P2 | Open | [Details](#issue-66) |
+| [#64](https://github.com/reorx/obsidian-paste-image-rename/issues/64) | Cannot enable plugin.  Have never encountered this before with any plugin. | Install investigation | P2 | Open | [Details](#issue-64) |
+| [#63](https://github.com/reorx/obsidian-paste-image-rename/issues/63) | Hope to support gif files | Format compatibility / docs | P2 | Open | [Details](#issue-63) |
+| [#60](https://github.com/reorx/obsidian-paste-image-rename/issues/60) | Specifiying directory when renaming | Path feature | P2 | Open | [Details](#issue-60) |
+| [#54](https://github.com/reorx/obsidian-paste-image-rename/issues/54) | Do not rename files that are already "well-named" when using "batch rename instantly" command. | Batch bug | P2 | Closed (completed) | [Details](#issue-54) |
+| [#49](https://github.com/reorx/obsidian-paste-image-rename/issues/49) | Create parent folder when it does not exist | Path feature / bug | P2 | Open | [Details](#issue-49) |
+| [#41](https://github.com/reorx/obsidian-paste-image-rename/issues/41) | Batch renaming not working on my side | UX / documentation | P2 | Closed (completed) | [Details](#issue-41) |
+| [#29](https://github.com/reorx/obsidian-paste-image-rename/issues/29) | pasting to a canvas doesn't trigger the plugin | Canvas compatibility | P2 | Open | [Details](#issue-29) |
+| [#116](https://github.com/reorx/obsidian-paste-image-rename/issues/116) | Add pattern option: {{headerName}} | Template feature | P3 | Closed (completed) | [Details](#issue-116) |
+| [#111](https://github.com/reorx/obsidian-paste-image-rename/issues/111) | Add pattern option: {{FileNameSlug}} | Template feature | P3 | Open | [Details](#issue-111) |
+| [#105](https://github.com/reorx/obsidian-paste-image-rename/issues/105) | Heading variable improved | Template feature | P3 | Closed (completed) | [Details](#issue-105) |
+| [#103](https://github.com/reorx/obsidian-paste-image-rename/issues/103) | hope to rename using permalink | Documentation / existing capability | P3 | Open | [Details](#issue-103) |
+| [#100](https://github.com/reorx/obsidian-paste-image-rename/issues/100) | Issue: Add Support for File Extensions in Rename Patterns | Template feature / clarification | P3 | Open | [Details](#issue-100) |
+| [#98](https://github.com/reorx/obsidian-paste-image-rename/issues/98) | Allow DATETIME variable | Documentation / existing capability | P3 | Open | [Details](#issue-98) |
+| [#95](https://github.com/reorx/obsidian-paste-image-rename/issues/95) | \[Feature\] Add Input Field and Presets for Image Width During Insertion | Embed feature | P3 | Open | [Details](#issue-95) |
+| [#88](https://github.com/reorx/obsidian-paste-image-rename/issues/88) | Add Field for Source of the image | Embed feature | P3 | Open | [Details](#issue-88) |
+| [#84](https://github.com/reorx/obsidian-paste-image-rename/issues/84) | Button to copy original name in rename field | Modal UX feature | P3 | Closed (completed) | [Details](#issue-84) |
+| [#77](https://github.com/reorx/obsidian-paste-image-rename/issues/77) | Is it possible to convert MD Links to wikilinks? | Link-format feature | P3 | Open | [Details](#issue-77) |
+| [#71](https://github.com/reorx/obsidian-paste-image-rename/issues/71) | Support putting the cursor at the beginning of the image name pattern | Modal UX feature | P3 | Closed (completed) | [Details](#issue-71) |
+| [#65](https://github.com/reorx/obsidian-paste-image-rename/issues/65) | Colon is added between {{fileName}}-{{DATE::YYMMDDHHmmss}} | Documentation / validation | P3 | Closed (completed) | [Details](#issue-65) |
+| [#62](https://github.com/reorx/obsidian-paste-image-rename/issues/62) | Allow for templated suffix | Embed feature | P3 | Open | [Details](#issue-62) |
+| [#59](https://github.com/reorx/obsidian-paste-image-rename/issues/59) | Add a time variable similar to the DATE: variable. | Documentation / existing capability | P3 | Closed (completed) | [Details](#issue-59) |
+| [#57](https://github.com/reorx/obsidian-paste-image-rename/issues/57) | Add an option to set width for pictures | Embed feature | P3 | Open | [Details](#issue-57) |
+| [#53](https://github.com/reorx/obsidian-paste-image-rename/issues/53) | Files (of different types) shouldn't end up with the same name. | Numbering feature | P3 | Open | [Details](#issue-53) |
+| [#48](https://github.com/reorx/obsidian-paste-image-rename/issues/48) | Add the ability to set a counter with leading zeros in the plugin settings | Numbering feature | P3 | Closed (completed) | [Details](#issue-48) |
+| [#47](https://github.com/reorx/obsidian-paste-image-rename/issues/47) | I would like to use the file name without spaces | Template feature | P3 | Closed (completed) | [Details](#issue-47) |
+| [#45](https://github.com/reorx/obsidian-paste-image-rename/issues/45) | default/alternative values in variables | Template feature | P3 | Open | [Details](#issue-45) |
+| [#44](https://github.com/reorx/obsidian-paste-image-rename/issues/44) | trim dashes from empty variables | Template feature | P3 | Open | [Details](#issue-44) |
+| [#38](https://github.com/reorx/obsidian-paste-image-rename/issues/38) | Keep original filename of attachment | Template feature | P3 | Open | [Details](#issue-38) |
+| [#37](https://github.com/reorx/obsidian-paste-image-rename/issues/37) | Add a {{attachmentName} for file. | Template feature | P3 | Closed (completed) | [Details](#issue-37) |
+| [#22](https://github.com/reorx/obsidian-paste-image-rename/issues/22) | Hex or UUID mode | Template feature | P3 | Closed (completed) | [Details](#issue-22) |
+| [#94](https://github.com/reorx/obsidian-paste-image-rename/issues/94) | Add option to, while batch renaming, moving the picture to \[\[subfolder name\]\] | Attachment lifecycle feature | P4 | Open | [Details](#issue-94) |
+| [#73](https://github.com/reorx/obsidian-paste-image-rename/issues/73) | Batch rename embeded files (whole vault) | Bulk feature / high risk | P4 | Open | [Details](#issue-73) |
+| [#72](https://github.com/reorx/obsidian-paste-image-rename/issues/72) | Option for cancel button to delete file | Deletion UX feature / high risk | P4 | Open | [Details](#issue-72) |
+| [#70](https://github.com/reorx/obsidian-paste-image-rename/issues/70) | Add Png to Jpeg option | Compression feature | P4 | Open | [Details](#issue-70) |
+| [#39](https://github.com/reorx/obsidian-paste-image-rename/issues/39) | Move attachments with note | Attachment lifecycle feature | P4 | Open | [Details](#issue-39) |
+| [#33](https://github.com/reorx/obsidian-paste-image-rename/issues/33) | Support image optimization while renaming | Compression feature | P4 | Open | [Details](#issue-33) |
+| [#1](https://github.com/reorx/obsidian-paste-image-rename/issues/1) | auto move image by name-dest rules | Attachment routing feature | P4 | Open | [Details](#issue-1) |
+| [#122](https://github.com/reorx/obsidian-paste-image-rename/issues/122) | Request to take over plugin/repository | Governance | G | Open | [Details](#issue-122) |
+
 ## Current result — accepted maintenance merged into master; 25 issues closed
 
 Updated 2026-10-14 00:06 UTC. Merge checkpoint: `88cdb1d2555cda28d77f85efdba97b3f3540742c` fast-forwarded onto `master`. Publication commit: [`7e7a70d`](https://github.com/reorx/obsidian-paste-image-rename/commit/7e7a70dce910f9c716f10ad698555143624cb8f1), exactly matching accepted snapshot `19c50908`. Latest tested source commit:
@@ -20,7 +109,8 @@ Final plugin `main.js` SHA256:
 candidate's multi-paste failure was reproduced in the real app, then fixed and retested
 in candidate 2. The old timestamp heuristic described in checkpoint 1 was replaced in
 checkpoint 2. Historical pending items below are not the current status; this summary,
-the disposition ledger, and latest native report are authoritative for this pass.
+the dated issue statuses, publication/closure audit, and latest native report are
+authoritative for this pass.
 
 ### Material safety/behavior changes
 
@@ -104,7 +194,7 @@ Implemented locally; these are candidate fixes, not upstream closures:
 
 ## Complete issue and PR inventory
 
-# Obsidian Paste Image Rename: complete open-backlog inventory
+### Original open-backlog snapshot — 2026-10-13
 
 Snapshot: 2026-10-13 UTC. Repository: https://github.com/reorx/obsidian-paste-image-rename
 
@@ -130,370 +220,594 @@ Snapshot: 2026-10-13 UTC. Repository: https://github.com/reorx/obsidian-paste-im
 - PR90 excludes active-note paths, while #121/#115 require attachment-path protection. Do not call all three solved by merging PR90 unchanged.
 - #112 bundles multiple root causes: ctime=0, native file copy not matching Pasted image prefix, and other plugin conflicts.
 
-## All open issues, highest priority first
+## All 73 tracked issues, highest priority first
+
+Each section retains the original reproduction/request and acceptance criteria.
+The dated current-status line reflects the closure audit; historical descriptions
+of defects or pending work must be read with the later verification checkpoints.
+[Back to the full issue index](#issue-index)
+
+<a id="issue-107"></a>
 
 ### P0 · [#107 Orphaned images during rename](https://github.com/reorx/obsidian-paste-image-rename/issues/107)
 - Category: Data integrity
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Batch-rename Docxer-imported images; note paths change while physical files reportedly do not.
 - Acceptance / disposition: Every resulting embed resolves to the intended unchanged-content file; inject rename errors and retain original links. Root cause not reproduced.
 
+<a id="issue-58"></a>
+
 ### P0 · [#58 Sometimes file link isn't renamed after the image file is renamed.](https://github.com/reorx/obsidian-paste-image-rename/issues/58)
 - Category: Data integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/58#issuecomment-6157700114).
 - Reproduction / request: Paste two or more images simultaneously; only last link updates (comments confirm).
 - Acceptance / disposition: All links resolve after multi-insert, slow I/O, cursor movement and note switches. Review PR86; cursor snapshot alone is not complete transaction safety.
 
+<a id="issue-121"></a>
+
 ### P1 · [#121 Exclude folders from automatic attachment renaming*](https://github.com/reorx/obsidian-paste-image-rename/issues/121)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/121#issuecomment-6157725504).
 - Reproduction / request: Another plugin creates Telegram/photos/photo_123.jpg then inserts its saved path; automatic rename wins race.
 - Acceptance / disposition: Exclude attachment folders before any rename; Telegram/ excludes descendants but not Telegram2/. Shares #115/#56; PR90 checks wrong path for this case.
 
+<a id="issue-120"></a>
+
 ### P1 · [#120 The images located after a pdf or mp4 are not renamed.](https://github.com/reorx/obsidian-paste-image-rename/issues/120)
 - Category: Batch bug
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/120#issuecomment-6157726373).
 - Reproduction / request: Put PDF/MP4 before image; instant batch stops.
 - Acceptance / disposition: Images after unsupported embeds rename. Same confirmed code defect as #46.
 
+<a id="issue-119"></a>
+
 ### P1 · [#119 attachment rename limitations in a note](https://github.com/reorx/obsidian-paste-image-rename/issues/119)
 - Category: Batch bug
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Windows 10 / Obsidian 1.11.4, many images; batch stops silently.
 - Acceptance / disposition: Mixed 30+ image fixture completes eligible unique images and reports failures. Likely #46/#120, not proven duplicate.
 
+<a id="issue-115"></a>
+
 ### P1 · [#115 Allow Exclude By Directory](https://github.com/reorx/obsidian-paste-image-rename/issues/115)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/115#issuecomment-6157723733).
 - Reproduction / request: Handle all attachments renames another plugin's incrementing CSV backups in protected folder.
 - Acceptance / disposition: Protected attachment directories are untouched; same extensions elsewhere still rename. Duplicate capability of #121.
 
+<a id="issue-112"></a>
+
 ### P1 · [#112 Stopped working some time ago](https://github.com/reorx/obsidian-paste-image-rename/issues/112)
 - Category: Platform compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: No prompt on 1.8.10; macOS CleanShot/Finder and Windows JPG reports; Linux confirmed PR67 workaround.
 - Acceptance / disposition: Test native clipboard and file copy with Handle all attachments both ways; avoid claiming single universal fix.
 
+<a id="issue-108"></a>
+
 ### P1 · [#108 pasting in an image create duplicate named images](https://github.com/reorx/obsidian-paste-image-rename/issues/108)
 - Category: Data integrity investigation
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Copy image file from folder, paste once; duplicate files and skipped counters appear.
 - Acceptance / disposition: One imported file per intended paste; establish interfering plugins and event traces. No sufficient repro environment supplied.
 
+<a id="issue-99"></a>
+
 ### P1 · [#99 “.tmp” Files Misidentified as Attachments](https://github.com/reorx/obsidian-paste-image-rename/issues/99)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/99#issuecomment-6157715977).
 - Reproduction / request: Syncthing .tmp file creation triggers rename; reported extension exclusion ineffective.
 - Acceptance / disposition: Ignore temp/system files; extension exclusions apply consistently to every automatic path; document extension-only regex.
 
+<a id="issue-96"></a>
+
 ### P1 · [#96 Better integration with git plugin](https://github.com/reorx/obsidian-paste-image-rename/issues/96)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Git pull creates files; rename prompts/auto-renames cause merge conflicts.
 - Acceptance / disposition: Background sync/import does not mutate unrelated attachments. Folder exclusion mitigates but does not establish paste provenance.
 
+<a id="issue-91"></a>
+
 ### P1 · [#91 Paste does not work anymore in Obsidian 1.5.12](https://github.com/reorx/obsidian-paste-image-rename/issues/91)
 - Category: Platform compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: macOS 14.3.1, Obsidian 1.5.12, sandbox PNG paste doesn't trigger.
 - Acceptance / disposition: Reproduce current clean-vault clipboard cases; linked Imgur duplicate paste report informs #108.
 
+<a id="issue-89"></a>
+
 ### P1 · [#89 Attachment by taking a photo sometimes crashes on iOS](https://github.com/reorx/obsidian-paste-image-rename/issues/89)
 - Category: Crash / mobile
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: iOS 17.3.1 / Obsidian 1.5.11: attach > take photo > add crashes app intermittently.
 - Acceptance / disposition: Physical iOS repro and large-photo test; attachment saved, linked, prompt handled without crash. Cause unconfirmed.
 
+<a id="issue-68"></a>
+
 ### P1 · [#68 the plugin can't work on mobile phones if the image is large](https://github.com/reorx/obsidian-paste-image-rename/issues/68)
 - Category: Platform compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Mobile camera photo too large to auto-rename, small screenshots work.
 - Acceptance / disposition: Large slow imports supported without renaming unrelated startup/sync files; likely creation-time heuristic.
 
+<a id="issue-61"></a>
+
 ### P1 · [#61 A naming conflict occurs when used with Local images plus](https://github.com/reorx/obsidian-paste-image-rename/issues/61)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Local images plus Download all images with auto-rename enabled breaks MD5-based import naming.
 - Acceptance / disposition: Importer-created attachments retain valid links; isolation/exclusion test. Related #121, not exact duplicate.
 
+<a id="issue-56"></a>
+
 ### P1 · [#56 Exclude automatic paste image rename for selected user folders](https://github.com/reorx/obsidian-paste-image-rename/issues/56)
 - Category: Compatibility / integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/56#issuecomment-6157699502).
 - Reproduction / request: Zotero-imported images trigger 10+ unwanted rename dialogs.
 - Acceptance / disposition: Folder exclusions must distinguish note folders and attachment folders. Same capability #115/#121; PR90 checks note only.
 
+<a id="issue-55"></a>
+
 ### P1 · [#55 Rename failed, Destination file already exists](https://github.com/reorx/obsidian-paste-image-rename/issues/55)
 - Category: Path / collision bug
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Pattern Notes/Image/{{fileName}}, auto-rename + always-number, paste two images.
 - Acceptance / disposition: Deduplicate in actual destination folder; no overwrite; consecutive unique names. Coupled with path feature semantics.
 
+<a id="issue-46"></a>
+
 ### P1 · [#46 Embeded heading from other file stops "batch rename all images instantly" command.](https://github.com/reorx/obsidian-paste-image-rename/issues/46)
 - Category: Batch bug
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/46#issuecomment-6157689431).
 - Reproduction / request: Images before and after ![[Embedded_file#Heading 4]]; instant batch stops at note embed.
 - Acceptance / disposition: Skip non-image and unresolved embeds, process later images, preserve note embeds. Master return statements confirm defect.
 
+<a id="issue-25"></a>
+
 ### P1 · [#25 Pasted image not prompting a dialog](https://github.com/reorx/obsidian-paste-image-rename/issues/25)
 - Category: Platform compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Linux filesystem ctime=0; network-drive paste takes >1s; no prompt.
 - Acceptance / disposition: ctime=0 handled (PR67 confirmed by users); slow network paths and startup scans tested separately.
 
+<a id="issue-117"></a>
+
 ### P2 · [#117 Image sizes change](https://github.com/reorx/obsidian-paste-image-rename/issues/117)
 - Category: Rendering investigation
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: 1.10.3 / plugin 1.6.1: images reportedly become square/cropped after rename.
 - Acceptance / disposition: Preserve embed aliases/width metadata and bytes; distinguish CSS/other plugin vs link rewriting before claiming fix.
 
+<a id="issue-113"></a>
+
 ### P2 · [#113 Hope to add support for the AVIF format.](https://github.com/reorx/obsidian-paste-image-rename/issues/113)
 - Category: Format feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/113#issuecomment-6157724934).
 - Reproduction / request: Paste/batch AVIF images.
 - Acceptance / disposition: Add AVIF detection where Obsidian supports it; safe preview fallback; no transcoding implied.
 
+<a id="issue-109"></a>
+
 ### P2 · [#109 Chinese file names containing spaces are escaped](https://github.com/reorx/obsidian-paste-image-rename/issues/109)
 - Category: Link compatibility / docs
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Batch rename image in 中 文 abc.md yields percent-encoded spaces in Markdown link.
 - Acceptance / disposition: Link resolves and preserves correct syntax. %20 is valid Markdown URL encoding; clarify expected representation rather than blindly remove escaping.
 
+<a id="issue-101"></a>
+
 ### P2 · [#101 Can't rename pasted image on canvas](https://github.com/reorx/obsidian-paste-image-rename/issues/101)
 - Category: Canvas compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Paste image on canvas gives no active file error.
 - Acceptance / disposition: Same #29 acceptance; duplicate report.
 
+<a id="issue-97"></a>
+
 ### P2 · [#97 [Bug] Some punctuation marks disapear after rename images.](https://github.com/reorx/obsidian-paste-image-rename/issues/97)
 - Category: Filename compatibility
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/97#issuecomment-6157714614).
 - Reproduction / request: Rename with CJK punctuation 「」！？（）／; characters disappear.
 - Acceptance / disposition: Preserve filesystem-valid Unicode, strip only forbidden path/link characters under explicit policy. Same sanitizer cluster #92/#87.
 
+<a id="issue-93"></a>
+
 ### P2 · [#93 Can have setting to remove forbid character in original filename keeping?](https://github.com/reorx/obsidian-paste-image-rename/issues/93)
 - Category: Filename / integrity
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/93#issuecomment-6157715274).
 - Reproduction / request: Keep original filename containing # or other delimiters; resulting link reportedly broken.
 - Acceptance / disposition: Safe filename/link handling; optional original-name editing; no silent destructive stripping of valid Unicode. Related #84.
 
+<a id="issue-92"></a>
+
 ### P2 · [#92 Support for Emojis and Symbols in file name](https://github.com/reorx/obsidian-paste-image-rename/issues/92)
 - Category: Filename compatibility
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/92#issuecomment-6157713896).
 - Reproduction / request: Note names with ✅ and ▶ lose symbols in image name.
 - Acceptance / disposition: Emoji/symbols survive safe filename generation; cross-platform invalid chars remain rejected.
 
+<a id="issue-87"></a>
+
 ### P2 · [#87 Using en dash and em dash](https://github.com/reorx/obsidian-paste-image-rename/issues/87)
 - Category: Filename compatibility
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/87#issuecomment-6157712877).
 - Reproduction / request: Enter en dash or em dash in rename dialog.
 - Acceptance / disposition: Both dashes preserved; shared allowlist defect with #92/#97.
 
+<a id="issue-83"></a>
+
 ### P2 · [#83 [Feature]Allow folder creation.](https://github.com/reorx/obsidian-paste-image-rename/issues/83)
 - Category: Path feature / bug
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Use imageNameKey folder path that doesn't exist.
 - Acceptance / disposition: Same #49 folder creation capability, with nested-directory tests.
 
+<a id="issue-82"></a>
+
 ### P2 · [#82 Option for file location](https://github.com/reorx/obsidian-paste-image-rename/issues/82)
 - Category: Path compatibility / feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Several plugins manage attachment location; user asks rename without moving.
 - Acceptance / disposition: Plain-name rename must preserve parent; define explicit optional path behavior. Mixed comments also request custom destination.
 
+<a id="issue-81"></a>
+
 ### P2 · [#81 Multiple use of DATE: variable](https://github.com/reorx/obsidian-paste-image-rename/issues/81)
 - Category: Template bug
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Pattern _Journal/{{DATE:YYYY}}/{{DATE:YYYY-MM}}/{{fileName}} leaves second variable.
 - Acceptance / disposition: All DATE and frontmatter occurrences rendered, including repeated calls; global regex lastIndex is stateful in master.
 
+<a id="issue-80"></a>
+
 ### P2 · [#80 Can't put space at beginning of 'Duplicate number delimiter'](https://github.com/reorx/obsidian-paste-image-rename/issues/80)
 - Category: Settings bug
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/80#issuecomment-6157702427).
 - Reproduction / request: Set delimiter to leading-space ' - IMG'; leading space disappears.
 - Acceptance / disposition: Preserve intentional delimiter whitespace while safely validating characters and empty fallback.
 
+<a id="issue-79"></a>
+
 ### P2 · [#79 When I drag an image into a document, it can't be renamed](https://github.com/reorx/obsidian-paste-image-rename/issues/79)
 - Category: Compatibility / docs
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: macOS built-in screenshot dragged/copied from Finder not renamed.
 - Acceptance / disposition: Document file-copy vs clipboard prefix behavior; verify Handle all attachments works. Related #112.
 
+<a id="issue-78"></a>
+
 ### P2 · [#78 When there are too many pictures in an article, such as 30, they cannot be effectively renamed.](https://github.com/reorx/obsidian-paste-image-rename/issues/78)
 - Category: Batch / numbering
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: 30+ images with DATE seconds/milliseconds and mixed formats produce surprising counters.
 - Acceptance / disposition: Stable per-batch timestamp; unique file identities; deterministic numbering policy. Contains #53/#73 requests too.
 
+<a id="issue-76"></a>
+
 ### P2 · [#76 It doesn't effect when pictures are “webp” format](https://github.com/reorx/obsidian-paste-image-rename/issues/76)
 - Category: Format compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Copy multiple web images; WEBP downloads fail rename while single PNG works.
 - Acceptance / disposition: WEBP recognized for paste/batch/preview; batch already includes webp, so investigate creation route rather than assume unsupported.
 
+<a id="issue-74"></a>
+
 ### P2 · [#74 It doesn't work in Excalidraw](https://github.com/reorx/obsidian-paste-image-rename/issues/74)
 - Category: Excalidraw compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Title only: doesn't work in Excalidraw.
 - Acceptance / disposition: Determine Excalidraw embedded-file representation and supported integration; don't apply Markdown rewrite blindly.
 
+<a id="issue-66"></a>
+
 ### P2 · [#66 amazing! yet it does not seem to respect the obsidian subfolder name option for attachment saving?](https://github.com/reorx/obsidian-paste-image-rename/issues/66)
 - Category: Path compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Obsidian attachment subfolder assets configured; reported images end up beside note (also iPad).
 - Acceptance / disposition: Keep original Obsidian-chosen folder for ordinary rename; test root, same folder and subfolder. Master appears to retain file.parent, so needs repro.
 
+<a id="issue-64"></a>
+
 ### P2 · [#64 Cannot enable plugin.  Have never encountered this before with any plugin.](https://github.com/reorx/obsidian-paste-image-rename/issues/64)
 - Category: Install investigation
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Installed from community browser but cannot enable (screenshot only).
 - Acceptance / disposition: Collect actual console/version errors and reproduce current clean install; insufficient text evidence for code fix.
 
+<a id="issue-63"></a>
+
 ### P2 · [#63 Hope to support gif files](https://github.com/reorx/obsidian-paste-image-rename/issues/63)
 - Category: Format compatibility / docs
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Title requests GIF support; no body/repro.
 - Acceptance / disposition: GIF already in batch regex and preview list; verify creation-route behavior before closing as supported.
 
+<a id="issue-60"></a>
+
 ### P2 · [#60 Specifiying directory when renaming](https://github.com/reorx/obsidian-paste-image-rename/issues/60)
 - Category: Path feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Enter foo/bar.png to save under attachment folder/foo.
 - Acceptance / disposition: Clearly documented relative/vault-root paths; modal sanitization preserves allowed separators; traversal rejected.
 
+<a id="issue-54"></a>
+
 ### P2 · [#54 Do not rename files that are already "well-named" when using "batch rename instantly" command.](https://github.com/reorx/obsidian-paste-image-rename/issues/54)
 - Category: Batch bug
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/54#issuecomment-6157691224).
 - Reproduction / request: Run instant batch twice over already conforming filenames.
 - Acceptance / disposition: Idempotent repeated runs; existing current file excluded from collision list; stable links/content.
 
+<a id="issue-49"></a>
+
 ### P2 · [#49 Create parent folder when it does not exist](https://github.com/reorx/obsidian-paste-image-rename/issues/49)
 - Category: Path feature / bug
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Pattern {{fileName}}.assets/image-{{DATE:YYYYMMDD-HHmmssSSS}} with missing folder errors.
 - Acceptance / disposition: Create authorized vault-relative parent folders safely; deduplicate at destination. Review PR52/#106/#85, don't merge wholesale.
 
+<a id="issue-41"></a>
+
 ### P2 · [#41 Batch renaming not working on my side](https://github.com/reorx/obsidian-paste-image-rename/issues/41)
 - Category: UX / documentation
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/41#issuecomment-6157688924).
 - Reproduction / request: Batch dialog appears not to match regex until pressing Enter.
 - Acceptance / disposition: Visible Preview button or explicit Enter hint; stale previews cannot accidentally execute outdated tasks. Comments confirm workaround.
 
+<a id="issue-29"></a>
+
 ### P2 · [#29 pasting to a canvas doesn't trigger the plugin](https://github.com/reorx/obsidian-paste-image-rename/issues/29)
 - Category: Canvas compatibility
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Create canvas and paste web image; no rename / no active file.
 - Acceptance / disposition: Canvas rename updates canvas JSON file references; creating canvas must not itself prompt in Handle all attachments. PR110 candidate.
 
+<a id="issue-116"></a>
+
 ### P3 · [#116 Add pattern option: {{headerName}}](https://github.com/reorx/obsidian-paste-image-rename/issues/116)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/116#issuecomment-6157724381).
 - Reproduction / request: Request nearest previous heading as {{headerName}}.
 - Acceptance / disposition: Find heading at paste/embed position, fallback defined, no heading above produces safe result. Duplicate #105.
 
+<a id="issue-111"></a>
+
 ### P3 · [#111 Add pattern option: {{FileNameSlug}}](https://github.com/reorx/obsidian-paste-image-rename/issues/111)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request file-name slug with case and separators.
 - Acceptance / disposition: Add deliberate slug variable/options, Unicode policy, preserve existing fileName. Duplicate capability #47.
 
+<a id="issue-105"></a>
+
 ### P3 · [#105 Heading variable improved](https://github.com/reorx/obsidian-paste-image-rename/issues/105)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/105#issuecomment-6157723121).
 - Reproduction / request: firstHeading insufficient for multi-section notes; request nearestHeading.
 - Acceptance / disposition: Same #116 requirement; preserve firstHeading semantics.
 
+<a id="issue-103"></a>
+
 ### P3 · [#103 hope to rename using permalink](https://github.com/reorx/obsidian-paste-image-rename/issues/103)
 - Category: Documentation / existing capability
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Rename using permalink metadata.
 - Acceptance / disposition: Document {{frontmatter:permalink}} already supported, ensure filename-safe values and repeated replacement fix #81.
 
+<a id="issue-100"></a>
+
 ### P3 · [#100 Issue: Add Support for File Extensions in Rename Patterns](https://github.com/reorx/obsidian-paste-image-rename/issues/100)
 - Category: Template feature / clarification
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request fileExt placeholder, example ends .{{fileExt}}.
 - Acceptance / disposition: Clarify extension is already appended; if exposing ext, avoid .png.png and define whether template is stem or full filename.
 
+<a id="issue-98"></a>
+
 ### P3 · [#98 Allow DATETIME variable](https://github.com/reorx/obsidian-paste-image-rename/issues/98)
 - Category: Documentation / existing capability
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request DATETIME with date+time tokens.
 - Acceptance / disposition: Document existing DATE:YYYY-MM-DDTHH-mm-ss and filename-safe tokens; no new DATETIME needed unless compatibility alias desired.
 
+<a id="issue-95"></a>
+
 ### P3 · [#95 [Feature] Add Input Field and Presets for Image Width During Insertion](https://github.com/reorx/obsidian-paste-image-rename/issues/95)
 - Category: Embed feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request image-width field, remembered value and presets.
 - Acceptance / disposition: Preserve existing width; valid wiki/Markdown syntax, optional default/presets. Superset of #57.
 
+<a id="issue-88"></a>
+
 ### P3 · [#88 Add Field for Source of the image](https://github.com/reorx/obsidian-paste-image-rename/issues/88)
 - Category: Embed feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Optional image-source field appended as caption.
 - Acceptance / disposition: Non-destructive caption insertion, escape untrusted text, support insertion context and undo.
 
+<a id="issue-84"></a>
+
 ### P3 · [#84 Button to copy original name in rename field](https://github.com/reorx/obsidian-paste-image-rename/issues/84)
 - Category: Modal UX feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/84#issuecomment-6157712270).
 - Reproduction / request: Want original filename copied into editable rename field.
 - Acceptance / disposition: Use original name button keeps editable stem and extension correct; safe validation. Related #93.
 
+<a id="issue-77"></a>
+
 ### P3 · [#77 Is it possible to convert MD Links to wikilinks?](https://github.com/reorx/obsidian-paste-image-rename/issues/77)
 - Category: Link-format feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request Markdown links converted to Wikilinks.
 - Acceptance / disposition: Provide deliberate conversion option that preserves aliases, size and paths; no implicit format churn during rename.
 
+<a id="issue-71"></a>
+
 ### P3 · [#71 Support putting the cursor at the beginning of the image name pattern](https://github.com/reorx/obsidian-paste-image-rename/issues/71)
 - Category: Modal UX feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/71#issuecomment-6157701815).
 - Reproduction / request: Pattern acts as suffix; want initial cursor at start.
 - Acceptance / disposition: Configurable cursor/selection placement respecting IME and current defaults.
 
+<a id="issue-65"></a>
+
 ### P3 · [#65 Colon is added between {{fileName}}-{{DATE::YYMMDDHHmmss}}](https://github.com/reorx/obsidian-paste-image-rename/issues/65)
 - Category: Documentation / validation
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/65#issuecomment-6157701283).
 - Reproduction / request: Pattern {{DATE::YYMMDDHHmmss}} has extra colon and Windows rename fails.
 - Acceptance / disposition: Explain correct single colon; validate forbidden generated names consistently and actionable error.
 
+<a id="issue-62"></a>
+
 ### P3 · [#62 Allow for templated suffix](https://github.com/reorx/obsidian-paste-image-rename/issues/62)
 - Category: Embed feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request arbitrary suffix for width/alignment after | plus dimensions.
 - Acceptance / disposition: Safe configurable suffix for supported syntax, no link deletion when empty. PR75 not merge-ready.
 
+<a id="issue-59"></a>
+
 ### P3 · [#59 Add a time variable similar to the DATE: variable.](https://github.com/reorx/obsidian-paste-image-rename/issues/59)
 - Category: Documentation / existing capability
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/59#issuecomment-6157700702).
 - Reproduction / request: Request TIME variable; user comment points to Moment formats.
 - Acceptance / disposition: Document DATE supports HHmmss; verify examples and link current code.
 
+<a id="issue-57"></a>
+
 ### P3 · [#57 Add an option to set width for pictures](https://github.com/reorx/obsidian-paste-image-rename/issues/57)
 - Category: Embed feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request optional width field/default with keyboard tab navigation.
 - Acceptance / disposition: Shared with #95/#62; PR75 only suffix candidate and has correctness risks.
 
+<a id="issue-53"></a>
+
 ### P3 · [#53 Files (of different types) shouldn't end up with the same name.](https://github.com/reorx/obsidian-paste-image-rename/issues/53)
 - Category: Numbering feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: PNG/JPG receive same counter despite different types.
 - Acceptance / disposition: Optional cross-extension counter with clear compatibility policy; distinct extensions are not actual path collision. Related #78.
 
+<a id="issue-48"></a>
+
 ### P3 · [#48 Add the ability to set a counter with leading zeros in the plugin settings](https://github.com/reorx/obsidian-paste-image-rename/issues/48)
 - Category: Numbering feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/48#issuecomment-6157690635).
 - Reproduction / request: Want fileName-001.png through 021.png for sorting/publication.
 - Acceptance / disposition: Configurable minimum digit width; parsing existing padded/nonpadded names collision-safe.
 
+<a id="issue-47"></a>
+
 ### P3 · [#47 I would like to use the file name without spaces](https://github.com/reorx/obsidian-paste-image-rename/issues/47)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/47#issuecomment-6157689996).
 - Reproduction / request: Request spaces replaced by hyphens or underscores.
 - Acceptance / disposition: Same slug feature as #111.
 
+<a id="issue-45"></a>
+
 ### P3 · [#45 default/alternative values in variables](https://github.com/reorx/obsidian-paste-image-rename/issues/45)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Fallback expression imageNameKey|dirName|literal.
 - Acceptance / disposition: Shared template-extension design #44; test missing, false, zero and empty values.
 
+<a id="issue-44"></a>
+
 ### P3 · [#44 trim dashes from empty variables](https://github.com/reorx/obsidian-paste-image-rename/issues/44)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Empty variables leave leading/repeated separators.
 - Acceptance / disposition: Define explicit optional-group/filter grammar; preserve compatibility. Don't trim intentional literal punctuation globally.
 
+<a id="issue-38"></a>
+
 ### P3 · [#38 Keep original filename of attachment](https://github.com/reorx/obsidian-paste-image-rename/issues/38)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: {{fileName}}-{{originalAttachmentFileName}} desired for actual file imports.
 - Acceptance / disposition: Expose original attachment stem, avoid doubled extension; preserve original before rename. Duplicate #37.
 
+<a id="issue-37"></a>
+
 ### P3 · [#37 Add a {{attachmentName} for file. ](https://github.com/reorx/obsidian-paste-image-rename/issues/37)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/37#issuecomment-6157688381).
 - Reproduction / request: Preserve original mail/attachment date filename as part of renamed file.
 - Acceptance / disposition: Same original-attachment variable as #38.
 
+<a id="issue-22"></a>
+
 ### P3 · [#22 Hex or UUID mode](https://github.com/reorx/obsidian-paste-image-rename/issues/22)
 - Category: Template feature
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure record](https://github.com/reorx/obsidian-paste-image-rename/issues/22#issuecomment-6157680878).
 - Reproduction / request: Request random hex / UUID variables.
 - Acceptance / disposition: Document length/collision properties; per-file values stable through one operation, no silent rerender changes.
 
+<a id="issue-94"></a>
+
 ### P4 · [#94 Add option to, while batch renaming, moving the picture to [[subfolder name]]](https://github.com/reorx/obsidian-paste-image-rename/issues/94)
 - Category: Attachment lifecycle feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Move note to new folder; want batch rename also relocate attachments.
 - Acceptance / disposition: Explicit opt-in move plan; shared attachments and links across notes preserved. Same wider feature #39.
 
+<a id="issue-73"></a>
+
 ### P4 · [#73 Batch rename embeded files (whole vault)](https://github.com/reorx/obsidian-paste-image-rename/issues/73)
 - Category: Bulk feature / high risk
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Want whole-vault batch rename rather than one note at a time.
 - Acceptance / disposition: Defer until single-note safe/idempotent; preview, backup/recovery plan, shared-attachment ownership and cancellation.
 
+<a id="issue-72"></a>
+
 ### P4 · [#72 Option for cancel button to delete file](https://github.com/reorx/obsidian-paste-image-rename/issues/72)
 - Category: Deletion UX feature / high risk
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Cancel should optionally delete newly pasted file.
 - Acceptance / disposition: Separate explicit discard control with recoverable trash and link cleanup; never delete shared/existing file.
 
+<a id="issue-70"></a>
+
 ### P4 · [#70 Add Png to Jpeg option](https://github.com/reorx/obsidian-paste-image-rename/issues/70)
 - Category: Compression feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: PNG-to-JPEG with quality slider.
 - Acceptance / disposition: Subset #33; don't remove transparency or original bytes silently.
 
+<a id="issue-39"></a>
+
 ### P4 · [#39 Move attachments with note](https://github.com/reorx/obsidian-paste-image-rename/issues/39)
 - Category: Attachment lifecycle feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Move a note; attachments remain in old folder.
 - Acceptance / disposition: Shared with #94; avoid guessing ownership from basename alone.
 
+<a id="issue-33"></a>
+
 ### P4 · [#33 Support image optimization while renaming](https://github.com/reorx/obsidian-paste-image-rename/issues/33)
 - Category: Compression feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Request lossy/lossless image optimization.
 - Acceptance / disposition: Opt-in only; byte backup/recovery, transparency/orientation/animation preserved or warned; review PR114 separately.
 
+<a id="issue-1"></a>
+
 ### P4 · [#1 auto move image by name-dest rules](https://github.com/reorx/obsidian-paste-image-rename/issues/1)
 - Category: Attachment routing feature
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Move images via name/destination rules; comment asks tags considered.
 - Acceptance / disposition: Define ordered explicit routing rules and safe previews; broader than rename maintenance.
 
+<a id="issue-122"></a>
+
 ### G · [#122 Request to take over plugin/repository](https://github.com/reorx/obsidian-paste-image-rename/issues/122)
 - Category: Governance
+- Current GitHub status (2026-10-14): Open.
 - Reproduction / request: Jalad25 asks fork/transfer/plugin-id takeover.
 - Acceptance / disposition: Owner reply confirmed in comments; no transfer approved. Handle separately from code backlog.
 
@@ -571,7 +885,7 @@ clock/validation/docs corrections. Candidate 2 native pair-paste mapping passed 
 with matching image-content hashes. Deterministic immediate-note-switch UI coverage
 is not claimed; the isolated race regression passes.
 
-## Current disposition ledger (all 73 open issues)
+## Historical disposition ledger (all 73 originally open issues)
 
 As of 2026-10-13 17:13 UTC. These are local dispositions, not GitHub closure claims.
 Native verification applies only to explicitly recorded scenarios; platform reports and broad feature requests remain open.
