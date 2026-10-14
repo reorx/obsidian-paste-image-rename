@@ -7,7 +7,6 @@
  * - [ ] add button for use the current file name, imageNameKey, last input name,
  *       segments of last input name
  * - [x] batch rename all pasted images in a file
- * - [ ] add rules for moving matched images to destination folder
  */
 import {
   App,
@@ -15,6 +14,7 @@ import {
   MarkdownView,
   Modal,
   Notice,
+  parseYaml,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -80,6 +80,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	private renameQueue: Promise<void> = Promise.resolve()
 	private pendingAttachments = new Map<TFile, {source: TFile, autoRename: boolean, timer: number}>()
 	private unloaded = false
+	private drawingSources = new WeakSet<TFile>()
 
 	async onload() {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -97,7 +98,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 					if (attachment === file || pending.source === file) this.cancelPendingAttachment(attachment)
 				}
 			}))
-			this.registerEvent(this.app.metadataCache.on('changed', source => this.processPendingAttachments(source)))
+			this.registerEvent(this.app.metadataCache.on('changed', source => { this.sourceProtectionReason(source); this.processPendingAttachments(source) }))
 		})
 
 		const startBatchRenameProcess = () => {
@@ -131,6 +132,33 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	}
 
+	/** Drawing ownership is retained for this plugin session, including cache gaps. */
+	sourceProtectionReason(source: TFile): string | undefined {
+		this.drawingSources ??= new WeakSet<TFile>()
+		const cache = this.app.metadataCache.getFileCache(source)
+		if (/\.(?:canvas|excalidraw)(?:\.md)?$/i.test(source.path) || cache?.frontmatter?.['excalidraw-plugin']) this.drawingSources.add(source)
+		const active = this.app.workspace.getActiveViewOfType(MarkdownView)
+		const leaves = typeof this.app.workspace.getLeavesOfType === 'function' ? this.app.workspace.getLeavesOfType('markdown') : []
+		const views = new Set([active, ...leaves.map(leaf => leaf.view as MarkdownView)])
+		for (const view of views) {
+			const text = view?.file === source && typeof view.editor?.getValue === 'function' ? view.editor.getValue() : undefined
+			if (typeof text !== 'string' || !/^(?:\uFEFF)?---[ \t]*\r?\n/.test(text)) continue
+			const front = /^(?:\uFEFF)?---[ \t]*\r?\n([\s\S]*?)^(?:---|\.\.\.)[ \t]*\r?$/m.exec(text)
+			if (!front || front[1].length > 256_000 || typeof parseYaml !== 'function') return 'Source frontmatter cannot be checked safely. Wait for indexing or correct the frontmatter.'
+			try { if (parseYaml(front[1])?.['excalidraw-plugin']) this.drawingSources.add(source) }
+			catch { return 'Source frontmatter cannot be checked safely. Correct the frontmatter first.' }
+		}
+		if (this.drawingSources.has(source)) return 'Canvas and Excalidraw drawing sources are excluded. Use an ordinary Markdown note.'
+		if (!cache) return 'Source metadata is not available yet. Wait for indexing and try again.'
+	}
+
+	private assertRenameSource(sourcePath: string, expectedSource?: TAbstractFile) {
+		const source = this.app.vault.getAbstractFileByPath(sourcePath)
+		if (!(source instanceof TFile) || source.path !== sourcePath || (expectedSource && source !== expectedSource)) throw new Error('The original source note is no longer available.')
+		const reason = this.sourceProtectionReason(source)
+		if (reason) throw new Error(reason)
+	}
+
 	private sourceReferencesAttachment(source: TFile, attachment: TFile): boolean {
 		const cache = this.app.metadataCache.getFileCache(source)
 		return [...(cache?.embeds || []), ...(cache?.links || [])].some(embed =>
@@ -141,7 +169,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (this.unloaded || !(file instanceof TFile) || isMarkdownFile(file)) return
 		if (!isPastedImage(file) && !this.settings.handleAllAttachments) return
 		const source = this.getActiveFile()
-		if (!source || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
+		if (!source || this.sourceProtectionReason(source) || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
 		// A restored/synced file resolving an existing embed is not a new insertion.
 		if (this.sourceReferencesAttachment(source, file) || this.pendingAttachments.has(file)) return
 		const timer = window.setTimeout(() => {
@@ -159,6 +187,10 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	processPendingAttachments(source: TFile) {
 		if (this.unloaded) return
+		if (this.sourceProtectionReason(source)) {
+			for (const [file, pending] of this.pendingAttachments) if (pending.source === source) this.cancelPendingAttachment(file)
+			return
+		}
 		for (const [file, pending] of this.pendingAttachments) {
 			if (pending.source !== source || !this.sourceReferencesAttachment(source, file)) continue
 			this.cancelPendingAttachment(file)
@@ -172,6 +204,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile()) {
 		if (!activeFile || this.isExcluded(file, activeFile)) return
+		const reason = this.sourceProtectionReason(activeFile)
+		if (reason) { new Notice(reason); return }
 
 		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile)
 		debugLog('generated newName:', newName, isMeaningful)
@@ -187,22 +221,25 @@ export default class PasteImageRenamePlugin extends Plugin {
 	// otherwise choose the same free destination before either rename completes.
 	renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine = false): Promise<void> {
 		const expectedPath = file.path
+		const expectedSource = this.app.vault.getAbstractFileByPath(sourcePath)
 		const operation = (this.renameQueue || Promise.resolve()).then(() =>
-			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath))
+			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath, expectedSource))
 		// A failed rename must not poison subsequent requests.
 		this.renameQueue = operation.catch(() => {})
 		return operation
 	}
 
-	private async performRename(file: TFile, inputNewName: string, sourcePath: string, replaceSourceLinks: boolean, expectedPath: string) {
+	private async performRename(file: TFile, inputNewName: string, sourcePath: string, replaceSourceLinks: boolean, expectedPath: string, expectedSource: TAbstractFile) {
 		if (this.unloaded) return
 		if (this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment was replaced or deleted before this rename.')
+		this.assertRenameSource(sourcePath, expectedSource)
 		if (getVaultConfig(this.app)?.alwaysUpdateLinks === false) {
 			throw new Error('Enable Obsidian’s Automatically update internal links setting before renaming attachments, so shared references remain valid.')
 		}
 		splitRelativeFilename(inputNewName)
 		const { name: newName } = await this.deduplicateNewName(inputNewName, file)
 		if (this.unloaded) return
+		this.assertRenameSource(sourcePath, expectedSource)
 		if (file.path !== expectedPath || this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment moved while this rename was waiting. Try again from its current location.')
 		const originName = file.name
 		const newPath = path.join(file.parent.path, newName)
@@ -229,7 +266,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// Obsidian owns link updates. Only repair a still-present exact old link in
 		// the original source note; never overwrite a cursor line in another note.
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
-		if (replaceSourceLinks && view?.file === sourceFile && view.editor) {
+		if (!this.unloaded && replaceSourceLinks && sourceFile && view?.file === sourceFile && view.editor && this.app.vault.getAbstractFileByPath(sourcePath) === sourceFile && !this.sourceProtectionReason(sourceFile)) {
 			const editor = view.editor
 			const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 			const changes = []
@@ -254,10 +291,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	openRenameModal(file: TFile, newName: string, sourcePath: string) {
+		const source = this.app.vault.getAbstractFileByPath(sourcePath)
+		try { this.assertRenameSource(sourcePath) } catch (error) { new Notice(String(error)); return }
 		const modal = new ImageRenameModal(
 			this.app, file as TFile, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
+				this.assertRenameSource(sourcePath, source)
 				return this.renameFile(file, confirmedName, sourcePath, true)
 			},
 			() => {
@@ -274,6 +314,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 	openImageLinkConversion() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
 		if (!view?.file || !view.editor) { new Notice('Open an editable Markdown note first.'); return }
+		const reason = this.sourceProtectionReason(view.file)
+		if (reason) { new Notice(reason); return }
 		if (typeof view.editor.transaction !== 'function' || typeof view.editor.offsetToPos !== 'function') { new Notice('This conversion command requires the editor transaction API available in Obsidian 0.13.0 or newer.'); return }
 		const source = view.file, sourcePath = source.path, editor = view.editor, original = editor.getValue()
 		try {
@@ -285,6 +327,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 				if (this.unloaded || this.app.workspace.getActiveViewOfType(MarkdownView) !== view || view.file !== source || view.editor !== editor || source.path !== sourcePath || this.app.vault.getAbstractFileByPath(sourcePath) !== source || editor.getValue() !== original) {
 					throw new Error('The note changed since preview. Cancel and run the command again.')
 				}
+				const reason = this.sourceProtectionReason(source)
+				if (reason) throw new Error(reason)
 				const changes = plan.filter(item => item.replacement !== undefined)
 				for (const item of changes) if (!(item.target instanceof TFile) || item.target.path !== item.targetPath || this.app.vault.getAbstractFileByPath(item.targetPath) !== item.target) throw new Error('An image changed since preview. Cancel and run the command again.')
 				editor.transaction({changes: changes.map(item => ({from: editor.offsetToPos(item.from), to: editor.offsetToPos(item.to), text: item.replacement}))})
@@ -300,10 +344,13 @@ export default class PasteImageRenamePlugin extends Plugin {
 			new Notice('No active Markdown file found.')
 			return
 		}
+		const reason = this.sourceProtectionReason(activeFile)
+		if (reason) { new Notice(reason); return }
 		const modal = new ImageBatchRenameModal(
 			this.app,
 			activeFile,
 			async (file: TFile, name: string) => {
+				this.assertRenameSource(activeFile.path, activeFile)
 				await this.renameFile(file, name, activeFile.path)
 			},
 			() => {
@@ -321,6 +368,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 			new Notice('No active Markdown file found.')
 			return
 		}
+		const reason = this.sourceProtectionReason(activeFile)
+		if (reason) { new Notice(reason); return }
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (!fileCache?.embeds) return
 		// Resolve and de-duplicate before renaming changes cache paths.
@@ -331,6 +380,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		}
 		const now = window.moment()
 		for (const file of files) {
+			this.assertRenameSource(activeFile.path, activeFile)
 			const { newName, isMeaningful } = this.generateNewName(file, activeFile, now)
 			if (!isMeaningful) {
 				new Notice('Failed to batch rename images: the generated name is not meaningful')

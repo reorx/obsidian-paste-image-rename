@@ -1,0 +1,45 @@
+{
+  "result": "PASS",
+  "app": "Obsidian 1.14.4",
+  "platform": "Linux",
+  "excalidraw_version": "2.29.0",
+  "tested_bundle_sha256": "0d343d70c34b5f8856c6e6baed79e39bb7288d1690147efedec7b847903a73e2",
+  "drawing": "Excalidraw/Drawing Guard QA.md",
+  "classification": "plain .md filename with excalidraw-plugin: parsed",
+  "both_plugins_enabled_during_test": true,
+  "autoRename": true,
+  "handleAllAttachments": true,
+  "auto_paste": {
+    "no_prompt_or_rename": true,
+    "physical_path": "Excalidraw/assets/Pasted image 202610140901.png",
+    "saved_embed": "![[Pasted image 202610140901.png]]",
+    "sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098"
+  },
+  "manual_entry_points": {
+    "interactive_batch": "refused; full drawing unchanged",
+    "instant_batch": "refused; full drawing unchanged",
+    "markdown_image_conversion": "refused; full drawing unchanged"
+  },
+  "refusal_notice": "Canvas and Excalidraw drawing sources are excluded. Use an ordinary Markdown note.",
+  "scene_suffix_byte_identical": true,
+  "scene_three_images_render_on_reopen": true,
+  "existing_wiki_references_present": true,
+  "positive_ordinary_note": {
+    "auto_rename": "Drawing Guard QA/assets/Guard Control.png",
+    "sha256": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971",
+    "conversion": "![[Issue77/assets/a.png]]",
+    "saved_links_correct": true
+  },
+  "preexisting_vault_files_checked": 89,
+  "preexisting_vault_files_changed": 0,
+  "app_close_verified": true,
+  "prior_config_files_restored_byte_for_byte": 14,
+  "generated_config_files_preserved_elsewhere": 0,
+  "restored_bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51",
+  "native_limits": [
+    "parsed marker tested; legacy locked not separately exercised",
+    "one desktop Linux host; not mobile/cross-platform certification",
+    "protective exclusion only, not drawing asset support"
+  ],
+  "verified_at": "2026-10-14T04:14:59.970579-07:00"
+}

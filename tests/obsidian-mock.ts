@@ -57,3 +57,5 @@ export class TFile extends TAbstractFile {
 export class Notice {
     constructor(public message: string) { }
 }
+// Test-only YAML implementation; production uses Obsidian's public parseYaml.
+export const parseYaml = (text: string) => require('js-yaml').load(text);

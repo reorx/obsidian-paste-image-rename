@@ -17,7 +17,7 @@ function fixture(names = ['old.png']) {
     const files = names.map(file);
     const note = file('Note.md');
     const renamed: string[] = [];
-    const app: any = { metadataCache: { getFileCache: () => ({ embeds: files.map(f => ({ link: f.path })) }), getFirstLinkpathDest: (p: string) => files.find(f => f.path === p) }, vault: { getAbstractFileByPath: (p: string) => files.find(f => f.path === p), adapter: { list: async () => ({ files: files.map(f => f.path), folders: [] }) } }, fileManager: { generateMarkdownLink: (f: TFile) => `[[${f.name}]]`, renameFile: async (f: TFile, p: string) => { assert.ok(!files.some(o => o !== f && o.path === p), 'collision'); renamed.push(p); f.path = p; f.name = p; f.basename = p.split('.').slice(0, -1).join('.'); } }, workspace: { getActiveViewOfType: () => ({ file: note, editor: null }) } };
+    const app: any = { metadataCache: { getFileCache: () => ({ embeds: files.map(f => ({ link: f.path })) }), getFirstLinkpathDest: (p: string) => files.find(f => f.path === p) }, vault: { getAbstractFileByPath: (p: string) => [note, ...files].find(f => f.path === p), adapter: { list: async () => ({ files: files.map(f => f.path), folders: [] }) } }, fileManager: { generateMarkdownLink: (f: TFile) => `[[${f.name}]]`, renameFile: async (f: TFile, p: string) => { assert.ok(!files.some(o => o !== f && o.path === p), 'collision'); renamed.push(p); f.path = p; f.name = p; f.basename = p.split('.').slice(0, -1).join('.'); } }, workspace: { getActiveViewOfType: () => ({ file: note, editor: null }) } };
     plugin.app = app;
     return { plugin, files, note, app, renamed };
 }
@@ -378,4 +378,93 @@ test('conversion with only skipped images offers no apply action',()=>{
 
 test('conversion capability guard keeps older editors unchanged',()=>{
     const f=conversionFixture();delete (f.editor as any).transaction;f.plugin.openImageLinkConversion();assert.equal(f.plugin.modals.length,0);assert.equal(f.content(),'before ![](old.png) after');assert.deepEqual(f.renamed,[]);
+});
+
+test('drawing source detection covers legacy paths and all truthy marker values', () => {
+    for (const marker of ['parsed', 'locked', 'raw', true, 1, {}]) {
+        const f = fixture(); f.app.metadataCache.getFileCache = () => ({frontmatter: {'excalidraw-plugin': marker}});
+        assert.match(f.plugin.sourceProtectionReason(f.note) || '', /drawing sources/);
+    }
+    for (const path of ['Drawing.excalidraw', 'Drawing.excalidraw.md', 'Drawing.canvas']) {
+        const f = fixture(); f.note.path = path; f.app.metadataCache.getFileCache = () => null;
+        assert.match(f.plugin.sourceProtectionReason(f.note) || '', /drawing sources/);
+    }
+    for (const marker of [undefined, false, '', 0, null]) {
+        const f = fixture(); f.app.metadataCache.getFileCache = () => ({frontmatter: {'excalidraw-plugin': marker}});
+        assert.equal(f.plugin.sourceProtectionReason(f.note), undefined);
+    }
+});
+test('drawing detection persists through cache gaps and marker removal until reload', () => {
+    const f = fixture(); f.app.metadataCache.getFileCache = () => ({frontmatter: {'excalidraw-plugin': 'locked'}});
+    assert.ok(f.plugin.sourceProtectionReason(f.note)); f.app.metadataCache.getFileCache = () => null;
+    assert.match(f.plugin.sourceProtectionReason(f.note) || '', /drawing sources/);
+    f.app.metadataCache.getFileCache = () => ({}); assert.ok(f.plugin.sourceProtectionReason(f.note));
+    const fresh = fixture(); fresh.app.metadataCache.getFileCache = () => null;
+    assert.match(fresh.plugin.sourceProtectionReason(fresh.note) || '', /metadata/);
+    fresh.app.metadataCache.getFileCache = () => ({}); assert.equal(fresh.plugin.sourceProtectionReason(fresh.note), undefined);
+});
+test('live unsaved YAML drawing markers and malformed frontmatter fail closed', () => {
+    for (const text of ['---\nexcalidraw-plugin: parsed\n---\nbody', '---\n"excalidraw-plugin": locked\n---', '---\nexcalidraw-plugin: [broken\n---', '---\nunterminated']) {
+        const f = fixture(); f.app.workspace.getActiveViewOfType = () => ({file:f.note, editor:{getValue:() => text}});
+        assert.ok(f.plugin.sourceProtectionReason(f.note));
+    }
+    const f = fixture(); f.app.workspace.getActiveViewOfType = () => ({file:f.note, editor:{getValue:() => '---\ntitle: normal\n---\nbody'}});
+    assert.equal(f.plugin.sourceProtectionReason(f.note), undefined);
+});
+test('both batch entry points and rename prompts skip drawing sources', async () => {
+    const f = fixture(); f.app.metadataCache.getFileCache = () => ({frontmatter:{'excalidraw-plugin':'parsed'}, embeds:[{link:'old.png'}]});
+    f.plugin.openBatchRenameModal(); await f.plugin.batchRenameAllImages(); f.plugin.openRenameModal(f.files[0], 'new', f.note.path);
+    await f.plugin.startRenameProcess(f.files[0], true, f.note);
+    assert.deepEqual(f.renamed, []); assert.deepEqual(f.plugin.modals, []);
+});
+test('queued rename rechecks drawing classification before and after allocation', async () => {
+    for (const atAllocation of [false, true]) {
+        const f = fixture(); let drawing = false;
+        f.app.metadataCache.getFileCache = () => drawing ? {frontmatter:{'excalidraw-plugin':'parsed'}} : {};
+        if (atAllocation) f.app.vault.adapter.list = async () => { drawing = true; return {files:[], folders:[]}; };
+        const operation = f.plugin.renameFile(f.files[0], 'new.png', f.note.path);
+        if (!atAllocation) drawing = true;
+        await assert.rejects(operation, /drawing sources/); assert.deepEqual(f.renamed, []);
+    }
+});
+test('conversion refuses drawing sources at preview and confirmation', async () => {
+    for (const afterPreview of [false, true]) {
+        const f = conversionFixture(); let drawing = !afterPreview;
+        f.app.metadataCache.getFileCache = () => drawing ? {frontmatter:{'excalidraw-plugin':'parsed'}} : {};
+        f.plugin.openImageLinkConversion();
+        if (!afterPreview) assert.equal(f.plugin.modals.length, 0);
+        else { drawing = true; await (f.plugin.modals[0] as any).contentEl.find('button','Convert supported images').emit('click'); }
+        assert.equal(f.transactions(), 0);
+    }
+});
+test('source replacement while queued or allocating cannot rename an attachment', async () => {
+    for (const duringAllocation of [false,true]) {
+        const f = fixture(); let replaced = false; const replacement = file(f.note.path);
+        f.app.vault.getAbstractFileByPath = (path:string) => path === f.note.path ? (replaced ? replacement : f.note) : f.files.find(file=>file.path===path);
+        if(duringAllocation) f.app.vault.adapter.list = async()=>{replaced=true;return {files:[],folders:[]};};
+        const pending = f.plugin.renameFile(f.files[0], 'new.png', f.note.path); if(!duringAllocation) replaced=true;
+        await assert.rejects(pending,/original source note/); assert.deepEqual(f.renamed,[]);
+    }
+});
+test('drawing classification during host rename suppresses plugin fallback editor changes', async () => {
+    for (const change of ['drawing','missing-cache','source-replaced','unload']) {
+        const f = embedFixture(); const rename = f.app.fileManager.renameFile;
+        f.app.fileManager.renameFile = async(...args:any[])=>{
+            await rename(...args);
+            if(change==='drawing') f.app.metadataCache.getFileCache = ()=>({frontmatter:{'excalidraw-plugin':'parsed'}});
+            if(change==='missing-cache') f.app.metadataCache.getFileCache = ()=>null;
+            if(change==='source-replaced') f.app.vault.getAbstractFileByPath = (path:string)=>path===f.note.path?file(f.note.path):f.files.find(file=>file.path===path);
+            if(change==='unload') (f.plugin as any).unloaded=true;
+        };
+        await f.plugin.renameFile(f.files[0], 'new.png', f.note.path, true);
+        assert.deepEqual(f.renamed,['new.png']); assert.deepEqual(f.changes,[]); assert.equal(f.lines[0],'![[old.png|200]]');
+    }
+});
+test('unsaved source marker in a background Markdown leaf blocks queued rename after tab switch', async () => {
+    const f = fixture(); let text = '![[old.png]]'; const sourceView = {file:f.note,editor:{getValue:()=>text}};
+    let active = sourceView; f.app.workspace.getActiveViewOfType = ()=>active;
+    f.app.workspace.getLeavesOfType = ()=>[{view:sourceView}];
+    f.app.vault.adapter.list = async()=>{text='---\nexcalidraw-plugin: parsed\n---\n![[old.png]]';active={file:file('Other.md'),editor:{getValue:()=>''}};return {files:[],folders:[]};};
+    await assert.rejects(f.plugin.renameFile(f.files[0],'new.png',f.note.path),/drawing sources/);
+    assert.deepEqual(f.renamed,[]);
 });

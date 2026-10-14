@@ -51,3 +51,23 @@ test('metadata change for a different source cannot release pending rename', () 
 test('exclusions are evaluated before tracking a new attachment', () => { const f = fixture(); f.plugin.settings.excludedFolders = 'assets'; f.plugin.trackAttachment(f.file); f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0); });
 test('ordinary non-embedded attachment links release pending rename', () => { const f = fixture(); f.file.path = 'assets/archive.zip'; f.file.name = 'archive.zip'; f.file.extension = 'zip'; f.plugin.trackAttachment(f.file); f.setOrdinaryLinks([f.file.path]); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 1); });
 test('already-linked non-embedded sync restoration stays unchanged', () => { const f = fixture(); f.setOrdinaryLinks([f.file.path]); f.plugin.trackAttachment(f.file); f.plugin.processPendingAttachments(f.source); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0); });
+
+test('drawing source blocks tracking and cancels existing pending insertion', () => {
+    for (const initiallyDrawing of [true, false]) {
+        const f = fixture(); let drawing = initiallyDrawing;
+        const cache = f.plugin.app.metadataCache.getFileCache;
+        f.plugin.app.metadataCache.getFileCache = ((file: TFile) => ({...cache(file), frontmatter: drawing ? {'excalidraw-plugin':'parsed'} : {}})) as any;
+        f.plugin.trackAttachment(f.file); drawing = true; f.setLinks([f.file.path]); f.plugin.processPendingAttachments(f.source);
+        assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0);
+    }
+});
+test('metadata event remembers drawing identity even without pending attachments', async () => {
+    const f = fixture(); let ready: () => void; let changed: (file: TFile) => void; let cache: any = {frontmatter:{'excalidraw-plugin':'locked'}};
+    Object.assign(f.plugin, {loadData:async()=>f.plugin.settings, registerEvent:()=>{}, addCommand:()=>{}, addSettingTab:()=>{}});
+    Object.assign(f.plugin.app, {vault:{on:()=>{}}});
+    Object.assign(f.plugin.app.workspace, {onLayoutReady:(fn:()=>void)=>{ready=fn;}});
+    Object.assign(f.plugin.app.metadataCache, {getFileCache:()=>cache, on:(_event:string,fn:any)=>{changed=fn;}});
+    await f.plugin.onload(); ready!(); changed!(f.source); cache = null;
+    assert.match(f.plugin.sourceProtectionReason(f.source) || '', /drawing sources/);
+    f.plugin.trackAttachment(f.file); assert.equal(f.timers.size,0);
+});
