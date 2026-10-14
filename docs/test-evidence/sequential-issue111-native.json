@@ -1,0 +1,27 @@
+{
+  "bundle_sha256": "01b84f220fe1fe68a40a892519d12bdde63852dabbaaf498acf2a36c057096a0",
+  "pattern": "{{FileNameSlug:preserve:underscore}}",
+  "expected_filename": "Obsidian_Plugin_Test_File.png",
+  "image_sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+  "issue": 111,
+  "obsidian": "1.14.4",
+  "platform": "Linux",
+  "native_method": "Thunar file copy and native Obsidian Control+V",
+  "note_path": "Issue 111/Obsidian Plugin Test File.md",
+  "image_path": "Issue 111/assets/Obsidian_Plugin_Test_File.png",
+  "saved_markdown": "# Obsidian Plugin Test File\n\nPaste below:\n\n![[Obsidian_Plugin_Test_File.png]]",
+  "settings": {
+    "imageNamePattern": "{{FileNameSlug:preserve:underscore}}",
+    "dupNumberAtStart": false,
+    "dupNumberDelimiter": "-",
+    "dupNumberAlways": false,
+    "autoRename": true,
+    "handleAllAttachments": false,
+    "excludeExtensionPattern": "",
+    "excludedFolders": "",
+    "disableRenameNotice": false,
+    "nameInputPosition": "select",
+    "dupNumberWidth": 1
+  },
+  "passed": true
+}
