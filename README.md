@@ -185,12 +185,13 @@ actual Obsidian testing should use a disposable vault and preserve a baseline co
 - Temporary/hidden files are ignored automatically. An invalid extension exclusion pauses
   automatic renaming until corrected; only its first line is used.
 - In batch rename, click **Preview** after changing an input, then **Rename all**.
-- **Filename only:** this plugin changes an attachment’s name, never its directory.
+- **Filename only:** rename operations change an attachment’s name and preserve its directory.
   Directory names, relative paths (including `folder/name` and `../name`), absolute paths,
   Windows drive paths and traversal sequences are unsupported and rejected before renaming.
   This is a permanent scope boundary, not a planned destination-routing feature.
   Configure attachment placement in **Obsidian Settings → Files and links → Default location
-  for new attachments**. See the [official attachment-location guide](https://help.obsidian.md/attachments#Change%20default%20attachment%20location). Existing attachments remain in their current folder.
+  for new attachments**. See the [official attachment-location guide](https://help.obsidian.md/attachments#Change%20default%20attachment%20location). Renaming keeps existing attachments in their current folder. The separate, explicitly selected
+  **Cancel and Delete** action moves an eligible new attachment to recoverable vault `.trash`.
 
 ### Automatic insertion timing
 
