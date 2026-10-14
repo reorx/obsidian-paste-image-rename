@@ -1,0 +1,70 @@
+{
+  "issue": 63,
+  "date": "2026-10-14",
+  "platform": "Linux",
+  "obsidian": "1.14.4",
+  "bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51",
+  "plugin_settings": {
+    "imageNamePattern": "{{fileName}}",
+    "dupNumberAtStart": false,
+    "dupNumberDelimiter": "-",
+    "dupNumberAlways": false,
+    "autoRename": true,
+    "handleAllAttachments": true,
+    "excludeExtensionPattern": "",
+    "excludedFolders": "",
+    "disableRenameNotice": false,
+    "nameInputPosition": "select",
+    "dupNumberWidth": 1
+  },
+  "app_settings": {
+    "alwaysUpdateLinks": true
+  },
+  "cases": [
+    {
+      "method": "native clipboard automatic rename",
+      "note": "Issue 63/GIF native paste.md",
+      "physical_path": "GIF native paste.gif",
+      "saved_markdown": "# GIF native paste\n\nPaste animation below:\n\n![[GIF native paste.gif]]",
+      "output": {
+        "sha256": "15d374a667f3e896e891a51525274e1173ebcc2afb00248a1fbd7aba78222e92",
+        "extension": ".gif",
+        "frames": 3,
+        "dimensions": [
+          16,
+          16
+        ],
+        "durations_ms": [
+          120,
+          200,
+          280
+        ],
+        "loop": 0
+      },
+      "passed": true
+    },
+    {
+      "method": "native instant batch rename",
+      "note": "Issue 63/GIF native batch.md",
+      "physical_path": "Issue 63/assets/GIF native batch.gif",
+      "saved_markdown": "# GIF native batch\n\n![[GIF native batch.gif]]\n",
+      "output": {
+        "sha256": "15d374a667f3e896e891a51525274e1173ebcc2afb00248a1fbd7aba78222e92",
+        "extension": ".gif",
+        "frames": 3,
+        "dimensions": [
+          16,
+          16
+        ],
+        "durations_ms": [
+          120,
+          200,
+          280
+        ],
+        "loop": 0
+      },
+      "passed": true
+    }
+  ],
+  "limitations": "No assertion about all source applications or platforms; file-copy clipboard, not pixel-only clipboard."
+}
