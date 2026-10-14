@@ -52,16 +52,8 @@ export function formatDateTime(pattern: string, now: TemplateDate): string {
 
 export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
 	let uuid: string | undefined
-	// Interpret only tokens present in the pattern. Replacement values are data,
-	// not additional template source (filenames can legitimately contain braces).
-	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
-		const slug = /^(?:fileNameSlug|FileNameSlug):(lower|preserve):(hyphen|underscore)$/.exec(token)
-		if (slug) return filenameSlug(data.fileName, slug[1] as 'lower' | 'preserve', slug[2] as 'hyphen' | 'underscore')
-		if (token.startsWith('DATETIME:') && token.length > 9) return formatDateTime(token.slice(9), now)
-		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
-		if (token.startsWith('frontmatter:') && token.length > 12) {
-			return frontmatter ? String(frontmatter[token.slice(12)] ?? '') : match
-		}
+	const namedTokens = new Set(['imageNameKey', 'fileName', 'fileExt', 'dirName', 'firstHeading', 'nearestHeading', 'headerName', 'UUID', 'HEX', 'attachmentName', 'originalAttachmentFileName', 'fileNameSlug', 'FileNameSlug'])
+	const namedValue = (token: string): string | undefined => {
 		switch (token) {
 			case 'imageNameKey': return String(data.imageNameKey)
 			case 'fileName': return data.fileName
@@ -80,7 +72,28 @@ export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: F
 			case 'originalAttachmentFileName': return data.attachmentName || ''
 			case 'fileNameSlug':
 			case 'FileNameSlug': return filenameSlug(data.fileName)
-			default: return match
+			default: return undefined
 		}
+	}
+	// Interpret only tokens present in the pattern. Replacement values are data,
+	// not additional template source (filenames can legitimately contain braces).
+	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
+		const slug = /^(?:fileNameSlug|FileNameSlug):(lower|preserve):(hyphen|underscore)$/.exec(token)
+		if (slug) return filenameSlug(data.fileName, slug[1] as 'lower' | 'preserve', slug[2] as 'hyphen' | 'underscore')
+		if (token.startsWith('DATETIME:') && token.length > 9) return formatDateTime(token.slice(9), now)
+		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
+		if (token.startsWith('frontmatter:') && token.length > 12) {
+			return frontmatter ? String(frontmatter[token.slice(12)] ?? '') : match
+		}
+		const choices = token.split('|')
+		if (choices.length > 1 && choices.slice(0, -1).every(choice => namedTokens.has(choice))) {
+			for (let index = 0; index < choices.length; index++) {
+				const choice = choices[index]
+				const value = namedValue(choice) ?? (index === choices.length - 1 ? choice : '')
+				if (value.trim()) return value
+			}
+			return ''
+		}
+		return namedValue(token) ?? match
 	})
 }

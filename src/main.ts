@@ -324,7 +324,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (fileCache) {
 			debugLog('frontmatter', fileCache.frontmatter)
 			frontmatter = fileCache.frontmatter
-			imageNameKey = frontmatter?.imageNameKey || ''
+			imageNameKey = frontmatter?.imageNameKey ?? ''
 			firstHeading = getFirstHeading(fileCache.headings)
 			if (/{{(?:nearestHeading|headerName)}}/.test(this.settings.imageNamePattern)) {
 				const referenceLines = [...(fileCache.embeds || []), ...(fileCache.links || [])]

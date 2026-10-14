@@ -240,3 +240,42 @@ test('queued cross-extension renames allocate unique stems', async () => {
     await Promise.all(f.files.map(image => f.plugin.renameFile(image, `Note.${image.extension}`, f.note.path)));
     assert.deepEqual(f.renamed, ['Note.png','Note-1.jpg']);
 });
+
+test('named template fallbacks select the first nonblank value or final literal', () => {
+    const base = {imageNameKey: '', dirName: '', fileName: 'file_name', firstHeading: ''};
+    const pattern = '{{imageNameKey|dirName|my_default_value}}-{{fileName}}';
+    assert.equal(renderTemplate(pattern, {...base, imageNameKey: 'image_name_key', dirName: 'dir_name'}), 'image_name_key-file_name');
+    assert.equal(renderTemplate(pattern, {...base, dirName: 'dir_name'}), 'dir_name-file_name');
+    assert.equal(renderTemplate(pattern, base), 'my_default_value-file_name');
+    assert.equal(renderTemplate(pattern, {...base, imageNameKey: '  ', dirName: '\t'}), 'my_default_value-file_name');
+    assert.equal(renderTemplate('{{imageNameKey|dirName}}', base), '');
+    assert.equal(renderTemplate('{{imageNameKey|}}', base), '');
+});
+test('fallbacks do not rescan replacement data or reinterpret existing formatted tokens', () => {
+    const data = {imageNameKey: '{{UUID}}', dirName: '', fileName: 'Note', firstHeading: ''};
+    assert.equal(renderTemplate('{{imageNameKey|dirName|default}}', data), '{{UUID}}');
+    assert.equal(renderTemplate('{{imageNameKey|typo|default}}', data), '{{imageNameKey|typo|default}}');
+    assert.equal(renderTemplate('{{unknown|default}}', data), '{{unknown|default}}');
+    assert.equal(renderTemplate('{{DATE:YYYY|MM}}', data, undefined, {format: p => p}), 'YYYY|MM');
+    assert.equal(renderTemplate('{{frontmatter:a|b}}', data, {'a|b': 'literal property'}), 'literal property');
+});
+test('fallbacks share UUID identity and filename generation keeps sanitization', () => {
+    const data = {imageNameKey: '', dirName: '', fileName: 'Note', firstHeading: '', uuid: '12345678-1234-4234-8234-123456789012'};
+    assert.equal(renderTemplate('{{imageNameKey|UUID}}-{{HEX}}', data), '12345678-1234-4234-8234-123456789012-12345678123442348234123456789012');
+    const f = fixture(); f.plugin.settings.imageNamePattern = '{{imageNameKey|dirName|safe:default}}-{{fileName}}';
+    assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, 'safedefault-Note.png');
+});
+
+test('fallback filename generation retains zero and false but skips nullish or blank imageNameKey', () => {
+    const f = fixture(); f.note.parent.name = 'Folder';
+    for (const [value, expected] of [[undefined,'Folder'],[null,'Folder'],[false,'false'],[0,'0'],['','Folder'],['  ','Folder'],['0','0'],['false','false']]) {
+        f.app.metadataCache.getFileCache = () => ({frontmatter: {imageNameKey: value}});
+        f.plugin.settings.imageNamePattern = '{{imageNameKey|dirName|default}}';
+        assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, `${expected}.png`);
+    }
+    for (const value of [0, false]) {
+        f.app.metadataCache.getFileCache = () => ({frontmatter: {imageNameKey: value}});
+        f.plugin.settings.imageNamePattern = '{{imageNameKey}}';
+        assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, `${value}.png`);
+    }
+});

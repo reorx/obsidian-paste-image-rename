@@ -277,3 +277,11 @@ uses one clock snapshot for both DATE and DATETIME tokens.
 ### Sharing duplicate numbers across file types
 
 Enable **Share duplicate numbers across extensions** to use one filename-stem namespace within the existing attachment folder. For example, a mixed batch can become `Note.png`, `Note-1.jpg`, and `Note-2.webp`. The default remains separate numbering per extension. Original extensions and file bytes are unchanged; files are not moved. Existing matching numbers remain stable unless another extension already occupies that same number (leading-zero variants count as the same number). Conflicts are resolved only when a file is processed, and repeated batches are stable. Prefix numbering, delimiters, minimum digits and **Always add duplicate number** still apply.
+
+### Fallback names
+
+Use `{{imageNameKey|dirName|my_default_value}}-{{fileName}}` to select the first nonblank named variable, falling back to the final literal text. This example uses `imageNameKey`, then `dirName`, then `my_default_value`. Whitespace-only values are treated as blank; a selected value is otherwise retained unchanged until ordinary filename sanitization. The final item may itself be a named variable; if all named values are blank, the result is empty. An empty final item is also allowed.
+
+Fallback operands support the plain named variables listed above (including `attachmentName`, `firstHeading`, `UUID` and `HEX`). Unknown intermediate names keep the whole token unchanged, helping reveal typos. Existing `DATE:`, `DATETIME:`, `frontmatter:` and slug-option tokens retain their own syntax, including literal pipes; they are not fallback operands. Inserted values are never interpreted as new template tokens.
+
+Frontmatter `imageNameKey: 0` and `imageNameKey: false` are nonblank values and produce `0` and `false`, just like their quoted forms. Missing/null/empty values fall through. This also corrects bare `{{imageNameKey}}` handling of zero and false.

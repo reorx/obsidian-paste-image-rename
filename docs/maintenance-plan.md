@@ -1301,3 +1301,13 @@ Linux Obsidian1.14.4 tested the exact reviewed bundle with the opt-in enabled. N
 Published [ea79573](https://github.com/reorx/obsidian-paste-image-rename/commit/ea79573d547716b4c3d24efb9c03fd53cb7d6dfc) with expected-head non-force update. Remote tree92344c79526f8a1bfced56c3d83d0ff9e2800c4e exactly matches the reviewed candidate; fetched changed files compare byte-for-byte. [Native receipt](test-evidence/sequential-issue53-native.json) records mixed-format and repeat passes. [Comment and completed closure](https://github.com/reorx/obsidian-paste-image-rename/issues/53#issuecomment-6161124215) verified. Row removed;42 open. No remote check runs reported; no release.
 
 #45 is Doing: inspect the original request before determining its bounded implementation scope.
+
+### #45 — fallback grammar reviewed; native check pending (04:52 UTC)
+
+Implemented the requested ordered named-variable fallback, e.g. {{imageNameKey|dirName|my_default_value}}-{{fileName}}. Select first nonblank named value; final unknown item is literal, unknown intermediate names preserve the original token. Existing DATE/DATETIME/frontmatter/slug-option grammar keeps precedence, including literal pipes, and inserted data is never rescanned. Review found and corrected existing truthy extraction that dropped YAML imageNameKey zero/false; nullish extraction preserves both as nonblank strings, also for bare tokens, with README disclosure.
+
+93 tests, typecheck, lint, build and whitespace checks pass. Independent review passed784 compatibility/fallback assertions and18 plugin-level falsy/root-folder checks. Frozen SHA256aaf58c59be133d1500b4ec8cc379772ef897022e67e8c330248a2fb4d4c0fde4 awaits native verification before publication.
+
+### #45 — native fallback and zero-value verification passed (04:55 UTC)
+
+Linux Obsidian1.14.4 tested the reviewed aaf58c59 bundle with the exact requested chain. Root-level missing-key note produced my_default_value-Issue45 Fallback.png; YAML imageNameKey:0 produced 0-Issue45 Zero.png. Both persisted correct embeds and retained original PNG SHA256 bytes. Ready for publication.
