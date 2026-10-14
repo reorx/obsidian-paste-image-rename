@@ -27,8 +27,8 @@ not a closed issue.
 <tr><th colspan="6">P0</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td>Paused</td><td>Source collision/failure mapping passes; actual importer attempt blocked twice by native GTK accessibility. Original Windows DOCX missing.</td><td><a href="#issue-107">Details</a></td></tr>
 <tr><th colspan="6">P1</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td>Doing</td><td>Inspect batch-limit report and exercise large mixed-note fixtures.</td><td><a href="#issue-119">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td></td><td></td><td><a href="#issue-112">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td>Paused</td><td>500-image mixed batch passes; original Windows note, files and error log needed to reproduce random stop.</td><td><a href="#issue-119">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td>Doing</td><td>Separate filename-prefix filtering, zero-ctime and platform/plugin-interaction reports.</td><td><a href="#issue-112">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/108">#108</a></td><td>pasting in an image create duplicate named images</td><td>Data integrity investigation</td><td></td><td></td><td><a href="#issue-108">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/96">#96</a></td><td>Better integration with git plugin</td><td>Compatibility / integrity</td><td></td><td></td><td><a href="#issue-96">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/91">#91</a></td><td>Paste does not work anymore in Obsidian 1.5.12</td><td>Platform compatibility</td><td></td><td></td><td><a href="#issue-91">Details</a></td></tr>
@@ -1045,3 +1045,9 @@ Attempt 2: official Docxer 2.1.2 and a synthetic four-image DOCX were prepared i
 ### #119 — Doing (02:54 UTC)
 
 Next row selected in table order. Fresh issue/comments review and a large mixed-embed batch probe will distinguish a real attachment limit from the already-fixed early-return behavior.
+
+### #119 — Paused; #112 selected next (02:56 UTC)
+
+The stopping screenshot shows suffix 303, not a fixed small limit. Fresh 500-image test includes an occupied destination, missing/non-image embeds, repeated references and a repeat batch; all 500 ordered identities remain correct. Focused 35-image and skip regressions also pass. No original note/attachments/errors or comments are supplied, and Windows 10/Obsidian 1.11.4 is unavailable. Leave open pending a minimal failing note and attachment set.
+
+#112 is Doing: fresh comments describe several different cases (macOS CleanShot/Finder, filename prefix, Linux zero ctime, Windows, Custom Attachment Location). Check these independently rather than closing the aggregate on one passing case.
