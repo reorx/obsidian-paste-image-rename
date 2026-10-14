@@ -1,0 +1,47 @@
+{
+  "issue": 66,
+  "date": "2026-10-14",
+  "platform": "Linux cloud desktop",
+  "obsidian": "1.14.4",
+  "bundle_sha256": "652dd495227de410789e0848a5a7706cc9c0a70d921bc4625d6abbd51afa6b51",
+  "test_app_settings": {
+    "alwaysUpdateLinks": true,
+    "attachmentFolderPath": "./assets"
+  },
+  "test_plugin_settings": {
+    "imageNamePattern": "{{fileName}}",
+    "dupNumberAtStart": false,
+    "dupNumberDelimiter": "-",
+    "dupNumberAlways": false,
+    "autoRename": true,
+    "handleAllAttachments": true,
+    "excludeExtensionPattern": "",
+    "excludedFolders": "",
+    "disableRenameNotice": false,
+    "nameInputPosition": "select",
+    "dupNumberWidth": 1
+  },
+  "initial_names_observed_after_paste": [
+    "Issue 66/Notes/assets/Pasted image 202610130001.png",
+    "Issue 66/Notes/assets/Pasted image 202610130002.png"
+  ],
+  "initial_names_evidence": "Immediate filesystem listing after native paste; final rename happened asynchronously before next read.",
+  "mapping": [
+    {
+      "ordinal": 1,
+      "saved_embed": "Native assets paste.png",
+      "physical_path": "Issue 66/Notes/assets/Native assets paste.png",
+      "sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+      "matches_original": true
+    },
+    {
+      "ordinal": 2,
+      "saved_embed": "Native assets paste-1.png",
+      "physical_path": "Issue 66/Notes/assets/Native assets paste-1.png",
+      "sha256": "68d56c7d74e2ec2cf7661d97bb5b957da737e1171381ac067aef557e18ac7971",
+      "matches_original": true
+    }
+  ],
+  "passed": true,
+  "limit": "Not macOS/iPad, not all user configurations."
+}
