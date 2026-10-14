@@ -1,0 +1,30 @@
+{
+  "bundle_sha256": "f6fdb72ac31b2340cee99957ac621375f539832adb4316103f4c2abcab2af81e",
+  "pattern": "{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}",
+  "image_sha256": "f19fdba651c1c02b196ce5cf202740023f9cec9d5064b86774188d0c4d27a098",
+  "superseded_candidate": "b40facc8c145ab9e4323d815d82fd4d84d57baddbb8eef695de849e45bb7346f installed but not pasted/tested",
+  "issue": 98,
+  "obsidian": "1.14.4",
+  "platform": "Linux",
+  "host_time_before": "2026-10-13T20:52:13.831010-07:00",
+  "host_time_after": "2026-10-13T20:52:40.645378-07:00",
+  "filename_timestamp": "2026-10-13T20:52:18-07:00",
+  "timestamp_within_native_paste_window": true,
+  "image_path": "Issue 98/assets/2026-10-13T205218.png",
+  "saved_markdown": "# DATETIME Example\n\nPaste below:\n\n![[2026-10-13T205218.png]]",
+  "settings": {
+    "imageNamePattern": "{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}",
+    "dupNumberAtStart": false,
+    "dupNumberDelimiter": "-",
+    "dupNumberAlways": false,
+    "autoRename": true,
+    "handleAllAttachments": false,
+    "excludeExtensionPattern": "",
+    "excludedFolders": "",
+    "disableRenameNotice": false,
+    "nameInputPosition": "select",
+    "dupNumberWidth": 1
+  },
+  "filename_colons_removed": true,
+  "passed": true
+}
