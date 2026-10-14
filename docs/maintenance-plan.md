@@ -5,10 +5,10 @@ Current branch: `master`. The accepted maintenance branch was fast-forward merge
 
 <a id="issue-index"></a>
 
-## Open issue index — 46 issues
+## Open issue index — 45 issues
 
-Current GitHub status checked on 2026-10-14 03:25 UTC: **46 open issues**.
-The 27 closed issues have been removed from this table; all 73 individual detail
+Current GitHub status checked on 2026-10-14 03:33 UTC: **45 open issues**.
+The 28 closed issues have been removed from this table; all 73 individual detail
 sections and their historical evidence remain below. Priorities and categories
 retain the original triage; priorities are proposed, not GitHub labels. `G` denotes
 governance. Issue numbers open GitHub; **Details** jumps to the individual section.
@@ -53,8 +53,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/49">#49</a></td><td>Create parent folder when it does not exist</td><td>Path feature / bug</td><td>Paused</td><td>Auto-created note.assets destination can nest on repeat with current-parent logic; stable routing/creation policy not implemented.</td><td><a href="#issue-49">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/29">#29</a></td><td>pasting to a canvas doesn't trigger the plugin</td><td>Canvas compatibility</td><td>Paused</td><td>Canvas naming/source-node support remains absent; startup/no-source guards pass but do not implement live Canvas references.</td><td><a href="#issue-29">Details</a></td></tr>
 <tr><th colspan="6">P3</th></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/111">#111</a></td><td>Add pattern option: {{FileNameSlug}}</td><td>Template feature</td><td>Doing</td><td>All4 slug variants implemented with explicit options;76tests and independent review pass;native preserve/underscore paste passes.</td><td><a href="#issue-111">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td></td><td></td><td><a href="#issue-103">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td>Doing</td><td>Clarify whether permalink means safe frontmatter stem or URL/path-derived routing.</td><td><a href="#issue-103">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/100">#100</a></td><td>Issue: Add Support for File Extensions in Rename Patterns</td><td>Template feature / clarification</td><td></td><td></td><td><a href="#issue-100">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/98">#98</a></td><td>Allow DATETIME variable</td><td>Documentation / existing capability</td><td></td><td></td><td><a href="#issue-98">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-95">Details</a></td></tr>
@@ -586,7 +585,7 @@ of defects or pending work must be read with the later verification checkpoints.
 
 ### P3 · [#111 Add pattern option: {{FileNameSlug}}](https://github.com/reorx/obsidian-paste-image-rename/issues/111)
 - Category: Template feature
-- Current GitHub status (2026-10-14): Open.
+- Current GitHub status (2026-10-14): Closed (completed); [verified closure](https://github.com/reorx/obsidian-paste-image-rename/issues/111#issuecomment-6160263394).
 - Reproduction / request: Request file-name slug with case and separators.
 - Acceptance / disposition: Add deliberate slug variable/options, Unicode policy, preserve existing fileName. Duplicate capability #47.
 
@@ -1209,3 +1208,9 @@ P2 completed in table order; #82 and #63 closed as independently reviewed suppor
 Added optional lower/preserve casing and hyphen/underscore arguments to both fileNameSlug aliases. Bare tokens retain lowercase-hyphen behavior; invalid combinations remain literal, Unicode is preserved before ordinary sanitization, and inserted values are never rescanned. All four requested outputs and filename-extension integration are tested. 76/76 tests, production build/typecheck, lint and whitespace checks pass; independent reviewer reran these plus53 supplemental assertions.
 
 Native Linux Obsidian1.14.4, frozen bundle SHA25601b84f220fe1fe68a40a892519d12bdde63852dabbaaf498acf2a36c057096a0: {{FileNameSlug:preserve:underscore}} with note Obsidian Plugin Test File yields assets/Obsidian_Plugin_Test_File.png, correct persisted embed, unchanged original image hash. Defaults unchanged; no release/version bump.
+
+### #111 — Solved/published/closed; #103 selected next (03:33 UTC)
+
+Published [3e17222](https://github.com/reorx/obsidian-paste-image-rename/commit/3e172227371d2b24efbfae7207f81e3984282ad0) directly to master with non-force expected-head update. Remote tree24cefc459c4d191784af33e4ff4497a7a9373669 exactly matches the reviewed local candidate. [Native receipt](test-evidence/sequential-issue111-native.json) records the exact tested build/settings/link/hash. [Explanatory comment and closed/completed state](https://github.com/reorx/obsidian-paste-image-rename/issues/111#issuecomment-6160263394) verified. Removed row;45 open.
+
+#103 is Doing: title/body ask renaming by permalink without an example or frontmatter/URL schema. Evaluate existing frontmatter token capability without inventing URL-to-folder rules.
