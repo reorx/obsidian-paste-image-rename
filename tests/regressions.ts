@@ -195,3 +195,37 @@ test('fileExt suffix recognition follows actual parser boundaries without trunca
     f.plugin.settings.imageNamePattern = '{{fileName}}.{{fileExt}}  ';
     assert.equal(f.plugin.generateNewName(f.files[0], f.note).stem, 'MeaningfulNote');
 });
+
+test('DATETIME supports the requested mixed format and all bounded time padding modes', () => {
+    const moment = require('moment'); const now = moment.utc('2026-10-14T03:04:05Z');
+    const data = {fileName: 'Note', dirName: '', firstHeading: '', imageNameKey: ''};
+    assert.equal(renderTemplate('{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}', data, undefined, now), '2026-10-14T 3:04:05');
+    assert.equal(renderTemplate('{{DATETIME:%H|%M|%S|%_H|%_M|%_S|%-H|%-M|%-S|%0H|%0M|%0S}}', data, undefined, now), '03|04|05| 3| 4| 5|3|4|5|03|04|05');
+    assert.equal(renderTemplate('{{DATETIME:YYYY-MM-DD_HH-mm-ss}}', data, undefined, now), '2026-10-14_03-04-05');
+});
+test('DATETIME preserves Moment literals, explicit percent, unknown directives and DATE behavior', () => {
+    const moment = require('moment'); const now = moment.utc('2026-10-14T13:24:35Z');
+    const data = {fileName: '{{DATETIME:%H}}', dirName: '', firstHeading: '', imageNameKey: ''};
+    assert.equal(renderTemplate('{{DATETIME:[%H] %% %Q %_Y %H}}', data, undefined, now), '%H % %Q %_Y 13');
+    assert.equal(renderTemplate('{{DATETIME:[literal] \\H [%M] %S}}', data, undefined, now), 'literal H %M 35');
+    assert.equal(renderTemplate('{{DATE:YYYY-MM-DDT%_H:%M:%S}}', data, undefined, now), now.format('YYYY-MM-DDT%_H:%M:%S'));
+    assert.equal(renderTemplate('{{fileName}} {{DATETIME:}}', data, undefined, now), '{{DATETIME:%H}} {{DATETIME:}}');
+});
+test('DATE and DATETIME share batch clock and retain filename sanitization', async () => {
+    const moment = require('moment'); const now = moment.utc('2026-10-14T03:04:05Z');
+    const f = fixture(['a.png', 'b.png']); f.plugin.settings.imageNamePattern = '{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}';
+    const proposed = f.plugin.generateNewName(f.files[0], f.note, now);
+    assert.equal(proposed.newName, '2026-10-14T 30405.png');
+    let calls = 0; const previous = (globalThis as any).window.moment;
+    (globalThis as any).window.moment = () => { calls++; return now; };
+    try { f.plugin.settings.imageNamePattern = '{{DATE:YYYY}}-{{DATETIME:MM-DD_HH-mm-ss}}'; await f.plugin.batchRenameAllImages(); assert.equal(calls, 1); assert.deepEqual(f.renamed, ['2026-10-14_03-04-05.png', '2026-10-14_03-04-05-1.png']); }
+    finally { (globalThis as any).window.moment = previous; }
+});
+
+test('DATETIME protects Moment greedy bracket-literal boundaries', () => {
+    const moment = require('moment'); const now = moment.utc('2026-10-14T03:04:05Z');
+    const data = {fileName: '', dirName: '', firstHeading: '', imageNameKey: ''};
+    for (const pattern of ['[foo] %H]', '[%H\\]%M]', '[outer[inner %H] %M]', '[%H] [%M]']) {
+        assert.equal(renderTemplate(`{{DATETIME:${pattern}}}`, data, undefined, now), now.format(pattern));
+    }
+});

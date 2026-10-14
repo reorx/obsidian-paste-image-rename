@@ -34,6 +34,22 @@ export function filenameTemplateStem(tmpl: string, rendered: string, extension: 
 	return rendered
 }
 
+/** Moment syntax plus a small, explicit time-only strftime compatibility layer. */
+export function formatDateTime(pattern: string, now: TemplateDate): string {
+	const translated = pattern.replace(/\[[^[]*\]|\\.|%[_0-]?[A-Za-z%]/g, part => {
+		// Bracket literals and backslash escapes belong to Moment, unchanged.
+		if (!part.startsWith('%')) return part
+		if (part === '%%') return '[%]'
+		const directive = /^%([_0-]?)([HMS])$/.exec(part)
+		if (!directive) return `[${part}]`
+		const unit = {H: 'H', M: 'm', S: 's'}[directive[2]]
+		const value = now.format(unit)
+		const padded = directive[1] === '-' ? value : value.padStart(2, directive[1] === '_' ? ' ' : '0')
+		return `[${padded}]`
+	})
+	return now.format(translated)
+}
+
 export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
 	let uuid: string | undefined
 	// Interpret only tokens present in the pattern. Replacement values are data,
@@ -41,6 +57,7 @@ export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: F
 	return tmpl.replace(/{{([^}]+)}}/g, (match, token: string) => {
 		const slug = /^(?:fileNameSlug|FileNameSlug):(lower|preserve):(hyphen|underscore)$/.exec(token)
 		if (slug) return filenameSlug(data.fileName, slug[1] as 'lower' | 'preserve', slug[2] as 'hyphen' | 'underscore')
+		if (token.startsWith('DATETIME:') && token.length > 9) return formatDateTime(token.slice(9), now)
 		if (token.startsWith('DATE:') && token.length > 5) return now.format(token.slice(5))
 		if (token.startsWith('frontmatter:') && token.length > 12) {
 			return frontmatter ? String(frontmatter[token.slice(12)] ?? '') : match

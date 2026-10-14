@@ -246,6 +246,19 @@ Used elsewhere, the token is ordinary stem text: `{{fileExt}}-{{fileName}}` prod
 `png-Note.png`. Original extension casing is retained. Existing patterns without a
 terminal `.{{fileExt}}` keep their previous stem-plus-extension behavior.
 
+`{{DATETIME:format}}` supports Moment date/time formatting, like `{{DATE:format}}`,
+plus a small compatibility layer for `%H` (24-hour), `%M` (minute), and `%S` (second).
+These directives use two zero-padded digits; `_` space-pads, `-` omits padding, and
+`0` explicitly zero-pads (for example `%_H`, `%-M`, `%0S`). `%%` means a literal
+percent, and unknown percent-letter directives remain literal. This is not a full
+strftime implementation. Moment bracket literals such as `[%H]` and backslash
+escapes are preserved. `DATE` behavior is unchanged.
+
+For example, `{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}` renders a date/time using the local
+clock. Ordinary filename sanitization still removes forbidden characters such as
+colons; prefer `{{DATETIME:YYYY-MM-DD_HH-mm-ss}}` for a portable filename. One batch
+uses one clock snapshot for both DATE and DATETIME tokens.
+
 ### Optional naming controls
 
 - **Rename input selection** can put the caret at the start, at the end (default), or
