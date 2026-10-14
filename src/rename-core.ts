@@ -22,6 +22,7 @@ export interface DuplicateOptions {
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
 	dupNumberAlways: boolean
+	dupNumberAcrossExtensions?: boolean
 	dupNumberWidth?: number
 }
 
@@ -32,16 +33,26 @@ export function allocateName(desiredName: string, siblings: string[], currentNam
 	const stem = desiredName.slice(0, dot)
 	const extension = desiredName.slice(dot + 1)
 	const delimiter = options.dupNumberDelimiter
-	const numberPattern = options.dupNumberAtStart
-		? `^(\\d+)${escapeRegex(delimiter)}${escapeRegex(stem)}\\.${escapeRegex(extension)}$`
-		: `^${escapeRegex(stem)}${escapeRegex(delimiter)}(\\d+)\\.${escapeRegex(extension)}$`
-	const numbered = new RegExp(numberPattern)
-	// Keep an existing conforming name stable on repeated batches.
-	if (currentName && (currentName === desiredName && !options.dupNumberAlways || numbered.test(currentName))) return currentName
+	const pattern = (suffix: string) => options.dupNumberAtStart
+		? `^(\\d+)${escapeRegex(delimiter)}${escapeRegex(stem)}\\.${suffix}$`
+		: `^${escapeRegex(stem)}${escapeRegex(delimiter)}(\\d+)\\.${suffix}$`
+	const numbered = new RegExp(pattern(escapeRegex(extension)))
+	const counterPattern = options.dupNumberAcrossExtensions ? new RegExp(pattern('[^.]+')) : numbered
+	const normalizeCounter = (value: string) => value.replace(/^0+(?=\d)/, '')
 	const otherNames = siblings.filter(name => name !== currentName)
-	if (!otherNames.includes(desiredName) && !options.dupNumberAlways) return desiredName
-	const numbers = otherNames.map(name => numbered.exec(name)).filter(Boolean)
-		.map(match => match[1].replace(/^0+(?=\d)/, ''))
+	const basename = (name: string) => name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name
+	const occupies = (name: string) => options.dupNumberAcrossExtensions
+		? otherNames.some(other => basename(other) === basename(name)) : otherNames.includes(name)
+	const currentCounter = currentName && numbered.exec(currentName)
+	const counterConflict = currentCounter && options.dupNumberAcrossExtensions && otherNames.some(name => {
+		const match = counterPattern.exec(name)
+		return match && normalizeCounter(match[1]) === normalizeCounter(currentCounter[1])
+	})
+	// Keep conforming names stable unless the opt-in namespace has a conflict.
+	if (currentName && (currentName === desiredName && !options.dupNumberAlways && !occupies(currentName) || currentCounter && !counterConflict)) return currentName
+	if (!occupies(desiredName) && !options.dupNumberAlways) return desiredName
+	const numbers = otherNames.map(name => counterPattern.exec(name)).filter(Boolean)
+		.map(match => normalizeCounter(match[1]))
 	const largest = numbers.reduce((max, value) => value.length > max.length || value.length === max.length && value > max ? value : max, '0')
 	// Decimal-string arithmetic also handles imported counters above MAX_SAFE_INTEGER.
 	const digits = largest.split('')

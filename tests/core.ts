@@ -16,3 +16,22 @@ test('large imported counters increment exactly without selecting an occupied na
     assert.equal(allocateName('Note.png', ['Note.png', 'Note-9007199254740992.png'], undefined, options), 'Note-9007199254740993.png');
     assert.equal(allocateName('Note.png', ['Note.png', 'Note-999999999999999999999.png'], undefined, options), 'Note-1000000000000000000000.png');
 });
+
+test('cross-extension numbering is opt-in and preserves the original extension', () => {
+    assert.equal(allocateName('Note.jpg', ['Note.png'], undefined, options), 'Note.jpg');
+    const shared = {...options, dupNumberAcrossExtensions: true};
+    assert.equal(allocateName('Note.JPG', ['Note.png'], undefined, shared), 'Note-1.JPG');
+    assert.equal(allocateName('Note.webp', ['Note.png', 'Note-1.JPG'], undefined, shared), 'Note-2.webp');
+    assert.equal(allocateName('Note.jpg', ['Note-10.png'], undefined, {...shared, dupNumberAlways: true}), 'Note-11.jpg');
+});
+test('shared counters repair conflicting existing families and stabilize repeat runs', () => {
+    const shared = {...options, dupNumberAcrossExtensions: true, dupNumberWidth: 3};
+    assert.equal(allocateName('Note.png', ['Note-001.png', 'Note-1.jpg', 'Note.png'], 'Note-001.png', shared), 'Note-002.png');
+    assert.equal(allocateName('Note.png', ['Note-002.png', 'Note-1.jpg', 'Note.png'], 'Note-002.png', shared), 'Note-002.png');
+    assert.equal(allocateName('Note.jpg', ['Note.png', 'Note.jpg'], 'Note.jpg', shared), 'Note-001.jpg');
+});
+test('shared counters support prefix numbering, escaped delimiters and huge values', () => {
+    const shared = {...options, dupNumberAcrossExtensions: true, dupNumberAtStart: true, dupNumberAlways: true, dupNumberDelimiter: ' + '};
+    assert.equal(allocateName('Note.jpg', ['9007199254740992 + Note.png'], undefined, shared), '9007199254740993 + Note.jpg');
+    assert.equal(allocateName('Note.jpg', ['1 + Note.jpg', '001 + Note.png'], '1 + Note.jpg', shared), '2 + Note.jpg');
+});

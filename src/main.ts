@@ -42,6 +42,7 @@ interface PluginSettings {
 	imageNamePattern: string
 	dupNumberAtStart: boolean
 	dupNumberDelimiter: string
+	dupNumberAcrossExtensions: boolean
 	dupNumberAlways: boolean
 	dupNumberWidth: number
 	nameInputPosition: NameInputPosition
@@ -56,6 +57,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	imageNamePattern: '{{fileName}}',
 	dupNumberAtStart: false,
 	dupNumberDelimiter: '-',
+	dupNumberAcrossExtensions: false,
 	dupNumberAlways: false,
 	dupNumberWidth: 1,
 	nameInputPosition: 'end',
@@ -679,6 +681,16 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings()
 				}
 				))
+
+		new Setting(containerEl)
+			.setName('Share duplicate numbers across extensions')
+			.setDesc('Use one filename-stem namespace in the attachment folder, so PNG/JPG/etc. receive distinct numbers. Off by default. Existing conflicts are resolved only when those files are renamed.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.dupNumberAcrossExtensions)
+				.onChange(async value => {
+					this.plugin.settings.dupNumberAcrossExtensions = value
+					await this.plugin.saveSettings()
+				}))
 
 		new Setting(containerEl)
 			.setName('Duplicate number minimum digits')

@@ -273,3 +273,7 @@ uses one clock snapshot for both DATE and DATETIME tokens.
   that pattern share a value; `{{HEX}}` is the same 32 hexadecimal digits without
   hyphens. Another operation generates a fresh value, so rerunning a UUID-pattern
   batch intentionally changes names. Random bytes come from the platform Web Crypto API.
+
+### Sharing duplicate numbers across file types
+
+Enable **Share duplicate numbers across extensions** to use one filename-stem namespace within the existing attachment folder. For example, a mixed batch can become `Note.png`, `Note-1.jpg`, and `Note-2.webp`. The default remains separate numbering per extension. Original extensions and file bytes are unchanged; files are not moved. Existing matching numbers remain stable unless another extension already occupies that same number (leading-zero variants count as the same number). Conflicts are resolved only when a file is processed, and repeated batches are stable. Prefix numbering, delimiters, minimum digits and **Always add duplicate number** still apply.

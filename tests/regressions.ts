@@ -229,3 +229,14 @@ test('DATETIME protects Moment greedy bracket-literal boundaries', () => {
         assert.equal(renderTemplate(`{{DATETIME:${pattern}}}`, data, undefined, now), now.format(pattern));
     }
 });
+
+test('mixed-extension batch can share numbering without changing defaults or repeated output', async () => {
+    const f = fixture(['a.png','b.jpg','c.webp']); f.plugin.settings.dupNumberAcrossExtensions = true;
+    await f.plugin.batchRenameAllImages(); assert.deepEqual(f.renamed, ['Note.png','Note-1.jpg','Note-2.webp']);
+    await f.plugin.batchRenameAllImages(); assert.equal(f.renamed.length, 3);
+});
+test('queued cross-extension renames allocate unique stems', async () => {
+    const f = fixture(['a.png','b.jpg']); f.plugin.settings.dupNumberAcrossExtensions = true;
+    await Promise.all(f.files.map(image => f.plugin.renameFile(image, `Note.${image.extension}`, f.note.path)));
+    assert.deepEqual(f.renamed, ['Note.png','Note-1.jpg']);
+});

@@ -56,10 +56,10 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/103">#103</a></td><td>hope to rename using permalink</td><td>Documentation / existing capability</td><td>Paused</td><td>Safe {{frontmatter:permalink}} stem works; no example defines URL/path extraction, routing or permalink property schema.</td><td><a href="#issue-103">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/95">#95</a></td><td>[Feature] Add Input Field and Presets for Image Width During Insertion</td><td>Embed feature</td><td>Paused</td><td>Native Obsidian external-change merge corrupted the width candidate after two review corrections; unpublished patch preserved, source restored.</td><td><a href="#issue-95">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/88">#88</a></td><td>Add Field for Source of the image</td><td>Embed feature</td><td>Paused</td><td>Caption insertion shares the confirmed #95 core-link/editor merge race; safe host transaction coordination is needed first.</td><td><a href="#issue-88">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Doing</td><td>Inspect explicit Markdown-image to wiki-embed conversion and safe standalone command scope.</td><td><a href="#issue-77">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-62">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td></td><td></td><td><a href="#issue-57">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/53">#53</a></td><td>Files (of different types) shouldn't end up with the same name.</td><td>Numbering feature</td><td></td><td></td><td><a href="#issue-53">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/77">#77</a></td><td>Is it possible to convert MD Links to wikilinks?</td><td>Link-format feature</td><td>Paused</td><td>Public cache lacks paired current text outside change events; safe conversion needs a proven parser and alt/path semantics.</td><td><a href="#issue-77">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/62">#62</a></td><td>Allow for templated suffix</td><td>Embed feature</td><td>Paused</td><td>Suffix insertion shares #95 native merge race; PR75 also deletes empty suffix links and restores old targets.</td><td><a href="#issue-62">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/57">#57</a></td><td>Add an option to set width for pictures</td><td>Embed feature</td><td>Paused</td><td>Requested default/prompt width depends on the #95 native merge race; PR75 has additional link-integrity defects.</td><td><a href="#issue-57">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/53">#53</a></td><td>Files (of different types) shouldn't end up with the same name.</td><td>Numbering feature</td><td>Doing</td><td>Reproduce cross-extension duplicate numbering and assess an opt-in allocator policy.</td><td><a href="#issue-53">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/45">#45</a></td><td>default/alternative values in variables</td><td>Template feature</td><td></td><td></td><td><a href="#issue-45">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/44">#44</a></td><td>trim dashes from empty variables</td><td>Template feature</td><td></td><td></td><td><a href="#issue-44">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/38">#38</a></td><td>Keep original filename of attachment</td><td>Template feature</td><td></td><td></td><td><a href="#issue-38">Details</a></td></tr>
@@ -1268,3 +1268,31 @@ The #95 failure persisted in the saved note26 seconds after Rename: ![[Width Pre
 #88 requests an optional source field inserted as a caption below the image. Source inspection confirms no existing caption insertion workflow. Implementing another editor mutation immediately after attachment rename depends on the same host/core-link-update coordination that just failed natively in #95; changing a line below rather than its width does not establish transaction ownership. Pause on that concrete dependency instead of repeating an unsafe timing-based write. No caption code published.
 
 #77 is Doing: inspect the requested behavior and existing file-reference guarantees.
+
+### #77 — Paused after two architecture checks; #62 selected next (04:41 UTC)
+
+Original request converts ![](image.png) to ![[image.png]], without requiring automatic conversion. A standalone command could avoid rename concurrency. Route1: the public getFileCache API provides positions but not the text snapshot they parsed, so it cannot prove current fenced-code/inline-code context for an existing note. Official changed events provide paired data/cache, but requiring a note edit just to use a conversion command is not a satisfactory general workflow. Route2: a maintained CommonMark parser such as @lezer/markdown can parse live text, but adds a new bundled dependency and requires explicit handling of alt text, dimensions, escaping, fragments and link resolution. No parser or conversion code added during this bounded pass. Pause for that tested parsing architecture, rather than a whole-note regex replacement or stale-cache mutation.
+
+#62 is Doing: read the original issue before selecting a bounded behavior change.
+
+### #62 — Paused; #57 selected next (04:41 UTC)
+
+Read original request and both comments: reporter confirmed PR75 for custom alignment/width suffixes. That confirmation does not cover the current native core-link-update race. Existing PR75 inspection found empty-suffix link deletion, original pre-rename target reuse, and wiki-only closing-bracket assumptions. The requested arbitrary suffix/dimensions requires both a safe embed-edit transaction (blocked by the reproduced #95 host merge race) and defined handling of existing aliases/sizes. Pause rather than merge the unsafe PR or reinterpret filename templates as link HTML.
+
+#57 is Doing: inspect original size-template scope before sharing or separating this blocker.
+
+### #57 — Paused; #53 selected next (04:42 UTC)
+
+Read original default-width/manual-field/Tab-navigation request and all five comments, including PR75 suggestion. This is the same post-rename width mutation that failed actual Obsidian testing in #95, with additional Markdown-alt syntax expectations. No independently safe implementation exists in the published code; pause on the demonstrated host merge race, not on lack of user interest.
+
+#53 is Doing: reproduce whether different extensions receive the same duplicate number, then assess backward-compatible opt-in numbering without renaming unrelated files.
+
+### #53 — opt-in shared counters reviewed; native check pending (04:44 UTC)
+
+Reproduced extension-specific numbering in the existing allocator. Added default-off **Share duplicate numbers across extensions**: one stem/counter namespace per current attachment folder, preserving each actual extension and all file bytes. Existing matching names stay stable unless another extension occupies the same counter; leading-zero variants are normalized for counter conflicts. Only processed files are renamed. Prefix/suffix placement, escaped delimiters, minimum digits and decimal-string counters remain supported.
+
+89 tests, typecheck, lint, build and whitespace checks pass. Independent review additionally passed10080 assertions, including default-off equivalence to published code and mixed-extension conflict repair/idempotence. Frozen bundle SHA2560b97d581476a22f529c54013b79f8574776b7f7b125345ec800e72ae5c91a222 awaits native mixed-format batch/repeat/hash verification before publication.
+
+### #53 — native verification passed (04:47 UTC)
+
+Linux Obsidian1.14.4 tested the exact reviewed bundle with the opt-in enabled. Native instant batch produced Note.png, Note-1.jpg and Note-2.webp in source order, with original extensions and SHA256 bytes preserved. A second native batch left saved Markdown byte-identical and all filenames/hashes unchanged. Ready for publication; no release/version bump.
