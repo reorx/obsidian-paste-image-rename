@@ -14,6 +14,7 @@ import {
   requireApiVersion,
   HeadingCache,
   MarkdownView,
+  moment,
   Modal,
   Notice,
   parseYaml,
@@ -407,7 +408,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, activeFile.path)
 			if (file && isImage(file)) files.add(file)
 		}
-		const now = window.moment()
+		const now = moment()
 		for (const file of files) {
 			this.assertRenameSource(activeFile.path, activeFile)
 			const { newName, isMeaningful } = this.generateNewName(file, activeFile, now)
@@ -656,19 +657,20 @@ class ImageRenameModal extends Modal {
 			}
 		}
 
-		const nameSetting = new Setting(contentEl)
+		let nameInputEl: HTMLInputElement
+		new Setting(contentEl)
 			.setName('New name')
 			.setDesc('Filename only, without extension. Directory names, relative paths (such as folder/name or ../name), and absolute paths are not supported. Choose attachment locations in Obsidian Settings → Files and links.')
-			.addText(text => text
-				.setValue(stem)
+			.addText(text => {
+				nameInputEl = text.inputEl
+				text.setValue(stem)
 				.onChange(async (value) => {
 					rawStem = value
 					stem = sanitizer.filename(value)
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
 				}
-				))
-
-		const nameInputEl = nameSetting.controlEl.children[0] as HTMLInputElement
+				)
+			})
 		const focusNameInput = () => {
 			nameInputEl.focus()
 			nameInputEl.setSelectionRange(...nameInputSelection(this.inputPosition, nameInputEl.value.length))

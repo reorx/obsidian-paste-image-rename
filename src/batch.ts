@@ -45,17 +45,19 @@ export class ImageBatchRenameModal extends Modal {
 		const { contentEl, titleEl } = this;
 		titleEl.setText('Batch rename embeded files')
 
-		const namePatternSetting = new Setting(contentEl)
+		let npInputEl: HTMLInputElement
+		new Setting(contentEl)
 			.setName('Name pattern')
 			.setDesc('Please input the name pattern to match files (regex)')
-			.addText(text => text
-				.setValue(this.state.namePattern)
+			.addText(text => {
+				npInputEl = text.inputEl
+				text.setValue(this.state.namePattern)
 				.onChange(async (value) => {
 					this.state.namePattern = value
 					this.state.renameTasks = []
 				}
-				))
-		const npInputEl = namePatternSetting.controlEl.children[0] as HTMLInputElement
+				)
+			})
 		npInputEl.focus()
 		const npInputState = lockInputMethodComposition(npInputEl)
 		npInputEl.addEventListener('keydown', async (e) => {
@@ -70,17 +72,19 @@ export class ImageBatchRenameModal extends Modal {
 			}
 		})
 
-		const extPatternSetting = new Setting(contentEl)
+		let extInputEl: HTMLInputElement
+		new Setting(contentEl)
 			.setName('Extension pattern')
 			.setDesc('Please input the extension pattern to match files (regex)')
-			.addText(text => text
-				.setValue(this.state.extPattern)
+			.addText(text => {
+				extInputEl = text.inputEl
+				text.setValue(this.state.extPattern)
 				.onChange(async (value) => {
 					this.state.extPattern = value
 					this.state.renameTasks = []
 				}
-				))
-		const extInputEl = extPatternSetting.controlEl.children[0] as HTMLInputElement
+				)
+			})
 		extInputEl.addEventListener('keydown', async (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault()
@@ -88,18 +92,19 @@ export class ImageBatchRenameModal extends Modal {
 			}
 		})
 
-		const nameReplaceSetting = new Setting(contentEl)
+		let nrInputEl: HTMLInputElement
+		new Setting(contentEl)
 			.setName('Name replace')
 			.setDesc('Please input the string to replace the matched name (use $1, $2 for regex groups)')
-			.addText(text => text
-				.setValue(this.state.nameReplace)
+			.addText(text => {
+				nrInputEl = text.inputEl
+				text.setValue(this.state.nameReplace)
 				.onChange(async (value) => {
 					this.state.nameReplace = value
 					this.state.renameTasks = []
 				}
-				))
-
-		const nrInputEl = nameReplaceSetting.controlEl.children[0] as HTMLInputElement
+				)
+			})
 		const nrInputState = lockInputMethodComposition(nrInputEl)
 		nrInputEl.addEventListener('keydown', async (e) => {
 			if (e.key === 'Enter' && !nrInputState.lock) {

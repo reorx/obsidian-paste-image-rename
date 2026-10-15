@@ -1,4 +1,4 @@
-import { FrontMatterCache } from 'obsidian';
+import { FrontMatterCache, moment } from 'obsidian';
 import { uuidV4 } from './rename-core';
 
 export interface TemplateDate {
@@ -50,7 +50,7 @@ export function formatDateTime(pattern: string, now: TemplateDate): string {
 	return now.format(translated)
 }
 
-export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = window.moment()) => {
+export const renderTemplate = (tmpl: string, data: TemplateData, frontmatter?: FrontMatterCache, now: TemplateDate = moment()) => {
 	let uuid: string | undefined
 	const namedTokens = new Set(['imageNameKey', 'fileName', 'fileExt', 'dirName', 'firstHeading', 'nearestHeading', 'headerName', 'UUID', 'HEX', 'attachmentName', 'originalAttachmentFileName', 'fileNameSlug', 'FileNameSlug'])
 	const namedValue = (token: string): string | undefined => {

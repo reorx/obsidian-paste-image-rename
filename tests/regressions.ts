@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import Plugin from '../src/main';
 import { renderTemplate } from '../src/template';
 import { TFile } from 'obsidian';
+import { sdkClock } from './obsidian-mock';
 (globalThis as any).window = { moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) };
 const settings = { imageNamePattern: '{{fileName}}', dupNumberAtStart: false, dupNumberDelimiter: '-', dupNumberAlways: false, autoRename: true, handleAllAttachments: false, excludeExtensionPattern: '', excludedFolders: '', disableRenameNotice: true };
 function file(name: string) { return Object.assign(new TFile(), { name, basename: name.split('.').slice(0, -1).join('.'), extension: name.split('.').at(-1), path: name, parent: { path: '', name: '' }, stat: { ctime: Date.now(), mtime: Date.now() } }); }
@@ -124,13 +125,13 @@ test('batch renames 35 mixed images beyond unsupported embeds', async () => { co
 test('deleted source line during rename never throws or edits another line', async () => { const f = embedFixture(); const rename = f.app.fileManager.renameFile; f.app.fileManager.renameFile = async (...a: any[]) => { f.lines.length = 0; await rename(...a); }; await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true); assert.deepEqual(f.changes, []); });
 test('manual batch does not need a source editor even with positioned embeds', async () => { const f = embedFixture(); f.app.workspace.getActiveViewOfType = () => ({ file: f.note, editor: null }); await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, false); assert.deepEqual(f.renamed, ['Note.png']); });
 test('unload during asynchronous destination allocation cancels before mutation', async () => { const f = fixture(); f.app.vault.adapter.list = async () => { (f.plugin as any).unloaded = true; return { files: [], folders: [] }; }; await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path); assert.deepEqual(f.renamed, []); });
-test('all images in one batch use one timestamp snapshot', async () => { const f = fixture(['one.png', 'two.png']); f.plugin.settings.imageNamePattern = '{{DATE:HHmmss}}'; let calls = 0; const previous = (globalThis as any).window.moment; (globalThis as any).window.moment = () => { const value = ++calls; return { format: () => `time${value}` }; }; try {
+test('all images in one batch use one timestamp snapshot', async () => { const f = fixture(['one.png', 'two.png']); f.plugin.settings.imageNamePattern = '{{DATE:HHmmss}}'; let calls = 0; const previous = sdkClock.now; sdkClock.now = () => { const value = ++calls; return { format: () => `time${value}` }; }; try {
     await f.plugin.batchRenameAllImages();
     assert.equal(calls, 1);
     assert.deepEqual(f.renamed, ['time1.png', 'time1-1.png']);
 }
 finally {
-    (globalThis as any).window.moment = previous;
+    sdkClock.now = previous;
 } });
 test('template clock is injectable without an Obsidian window', () => { const previous = (globalThis as any).window; delete (globalThis as any).window; try {
     assert.equal(renderTemplate('{{DATE:YYYY}}', { fileName: '', dirName: '', firstHeading: '', imageNameKey: '' }, undefined, { format: () => '2026' }), '2026');
@@ -141,14 +142,14 @@ finally {
 test('a folder occupying the desired filename is treated as a collision', async () => { const f = fixture(); f.app.vault.adapter.list = async () => ({ files: ['old.png'], folders: ['Note.png'] }); assert.equal((await f.plugin.deduplicateNewName('Note.png', f.files[0])).name, 'Note-1.png'); });
 test('unsafe cross-platform batch names fail before filesystem mutation', async () => { const f = fixture(); for (const name of ['CON.png', 'aux.txt', 'cOm¹.png', 'lPt².more.png', 'COM³.txt', 'bad:name.png', 'bad#link.png', 'bad\nname.png'])
     await assert.rejects(f.plugin.renameFile(f.files[0], name, f.note.path), /not safe/); assert.deepEqual(f.renamed, []); });
-test('separate batches acquire fresh clock snapshots', async () => { const f = fixture(); f.plugin.settings.imageNamePattern = '{{DATE:HHmmss}}'; let calls = 0; const previous = (globalThis as any).window.moment; (globalThis as any).window.moment = () => { const value = ++calls; return { format: () => `run${value}` }; }; try {
+test('separate batches acquire fresh clock snapshots', async () => { const f = fixture(); f.plugin.settings.imageNamePattern = '{{DATE:HHmmss}}'; let calls = 0; const previous = sdkClock.now; sdkClock.now = () => { const value = ++calls; return { format: () => `run${value}` }; }; try {
     await f.plugin.batchRenameAllImages();
     await f.plugin.batchRenameAllImages();
     assert.equal(calls, 2);
     assert.deepEqual(f.renamed, ['run1.png', 'run2.png']);
 }
 finally {
-    (globalThis as any).window.moment = previous;
+    sdkClock.now = previous;
 } });
 test('external file move during allocation rejects a stale rename request', async () => { const f = fixture(); f.app.vault.adapter.list = async () => { f.files[0].path = 'elsewhere/old.png'; return { files: [], folders: [] }; }; await assert.rejects(f.plugin.renameFile(f.files[0], 'Note.png', f.note.path), /moved while/); assert.deepEqual(f.renamed, []); });
 test('unload closes every modal even when close unregisters itself', () => { const f = fixture(); (f.plugin as any).pendingAttachments = new Map(); let closed = 0; f.plugin.modals = Array.from({ length: 3 }, () => ({ close() { closed++; f.plugin.modals.splice(f.plugin.modals.indexOf(this as any), 1); } } as any)); f.plugin.onunload(); assert.equal(closed, 3); assert.deepEqual(f.plugin.modals, []); });
@@ -281,10 +282,10 @@ test('DATE and DATETIME share batch clock and retain filename sanitization', asy
     const f = fixture(['a.png', 'b.png']); f.plugin.settings.imageNamePattern = '{{DATETIME:YYYY-MM-DDT%_H:%M:%S}}';
     const proposed = f.plugin.generateNewName(f.files[0], f.note, now);
     assert.equal(proposed.newName, '2026-10-14T 30405.png');
-    let calls = 0; const previous = (globalThis as any).window.moment;
-    (globalThis as any).window.moment = () => { calls++; return now; };
+    let calls = 0; const previous = sdkClock.now;
+    sdkClock.now = () => { calls++; return now; };
     try { f.plugin.settings.imageNamePattern = '{{DATE:YYYY}}-{{DATETIME:MM-DD_HH-mm-ss}}'; await f.plugin.batchRenameAllImages(); assert.equal(calls, 1); assert.deepEqual(f.renamed, ['2026-10-14_03-04-05.png', '2026-10-14_03-04-05-1.png']); }
-    finally { (globalThis as any).window.moment = previous; }
+    finally { sdkClock.now = previous; }
 });
 
 test('DATETIME protects Moment greedy bracket-literal boundaries', () => {
@@ -545,4 +546,39 @@ test('discard modal serializes both actions and leaves ordinary Cancel non-destr
         if(mode==='rename'){await renameButton.emit('click');await button.emit('click');assert.equal(deleted,0);finish!();await new Promise(resolve=>setTimeout(resolve,0));}
         assert.ok(cancelled>=1);
     }
+});
+
+test('SDK date defaults work without a window and preserve host timezone and format semantics', () => {
+    const previousWindow = (globalThis as any).window, previousClock = sdkClock.now;
+    const hostMoment = require('moment').parseZone('2026-10-15T00:05:06+09:30');
+    let calls = 0;
+    sdkClock.now = () => { calls++; return hostMoment; };
+    delete (globalThis as any).window;
+    try {
+        const data = { fileName: '', dirName: '', firstHeading: '', imageNameKey: '' };
+        assert.equal(renderTemplate('{{DATE:YYYY-MM-DD HH:mm:ss Z}}|{{DATE:}}|{{DATETIME:YYYYMMDD_HHmmss}}', data), '2026-10-15 00:05:06 +09:30|{{DATE:}}|20261015_000506');
+        assert.equal(calls, 1);
+        const f = fixture(['one.png', 'two.png']);
+        assert.equal(f.plugin.generateNewName(f.files[0], f.note).newName, 'Note.png');
+    } finally { sdkClock.now = previousClock; (globalThis as any).window = previousWindow; }
+});
+
+test('batch uses SDK date snapshot before asynchronous renames even without window.moment', async () => {
+    const previousWindow = (globalThis as any).window, previousClock = sdkClock.now;
+    const f = fixture(['one.png', 'two.png']);
+    f.plugin.settings.imageNamePattern = '{{DATE:YYYYMMDD_HHmmss}}';
+    let current = require('moment').parseZone('2026-10-15T23:59:59-05:00'), calls = 0;
+    sdkClock.now = () => { calls++; return current; };
+    (globalThis as any).window = {};
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => {
+        current = current.clone().add(1, 'day');
+        await Promise.resolve();
+        await rename(...args);
+    };
+    try {
+        await f.plugin.batchRenameAllImages();
+        assert.equal(calls, 1);
+        assert.deepEqual(f.renamed, ['20261015_235959.png', '20261015_235959-1.png']);
+    } finally { sdkClock.now = previousClock; (globalThis as any).window = previousWindow; }
 });
