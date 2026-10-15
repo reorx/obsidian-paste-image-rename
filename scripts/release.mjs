@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 export const ASSETS = ['main.js', 'manifest.json', 'styles.css'];
 export const BOOTSTRAP = {
   version: '1.7.0',
-  parent: '39f8cd5c44b924262b2f6dfbcda0fd4e840f6786',
+  parent: '0487fc9acc3cc059edaf8e58e92e0ad5163b7b60',
   subject: 'ci: bootstrap automated release 1.7.0',
 };
 const repository = 'reorx/obsidian-paste-image-rename';

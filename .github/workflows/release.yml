@@ -21,8 +21,6 @@ jobs:
     timeout-minutes: 15
     outputs:
       artifact_id: ${{ steps.upload-release.outputs.artifact-id }}
-    env:
-      RELEASE_DIR: ${{ runner.temp }}/plugin-release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -42,6 +40,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - name: Verify and stage the three release assets
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/plugin-release
         run: node scripts/release.mjs prepare
       - id: upload-release
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -57,8 +57,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-    env:
-      RELEASE_DIR: ${{ runner.temp }}/plugin-release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -73,4 +71,5 @@ jobs:
       - name: Publish or verify the immutable release
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_DIR: ${{ runner.temp }}/plugin-release
         run: node scripts/release.mjs publish

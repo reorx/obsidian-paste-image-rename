@@ -35,7 +35,7 @@ before deciding how to recover them; do not force a release over them.
 The initial automation commit can also start the first release without an
 externally authenticated tag push. This exception is restricted to a non-forced
 push to `master`, version `1.7.0`, exactly one direct parent
-`39f8cd5c44b924262b2f6dfbcda0fd4e840f6786`, matching event `before`/`after` values,
+`0487fc9acc3cc059edaf8e58e92e0ad5163b7b60`, matching event `before`/`after` values,
 and exact commit subject `ci: bootstrap automated release 1.7.0`.
 It builds and verifies that exact event commit, creates the plain `1.7.0` tag at it,
 and publishes through the same guarded path. No other master push is eligible.
