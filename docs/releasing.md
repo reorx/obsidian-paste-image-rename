@@ -37,3 +37,15 @@ was published by [this successful Actions run](https://github.com/reorx/obsidian
 at commit `943eb06b7764fff52475aa86d175bddc6db2d90c`. Its temporary, tightly gated
 master bootstrap has been removed. The current workflow accepts version-tag
 pushes only; branch pushes cannot publish a release.
+
+## Community maintenance release 1.7.1
+
+Version [1.7.1](https://github.com/reorx/obsidian-paste-image-rename/releases/tag/1.7.1)
+uses reviewed source commit `ec796dae3f65e3f0589268d41696858455404dac` and immutable
+release commit `11b7ef17d0f08680793664c3b1031d9236e9befc`.
+[Actions run](https://github.com/reorx/obsidian-paste-image-rename/actions/runs/38763787899)
+performs tests, lint, build, and byte-verified publication using GITHUB_TOKEN.
+The temporary exact-parent/subject/event-gated master bootstrap was removed after
+verification; ordinary branch pushes cannot publish. No new persistent credential
+or permission was introduced. See the [native smoke evidence](test-evidence/community-review-1.7.1.md)
+and [Community review audit](community-review.md) for test scope and remaining advisories.
