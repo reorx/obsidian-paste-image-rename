@@ -665,7 +665,7 @@ class ImageRenameModal extends Modal {
 
 		let nameInputEl: HTMLInputElement
 		new Setting(contentEl)
-			.setName('New name')
+			.then(setting => setting.nameEl.setText('New name'))
 			.setDesc('Filename only, without extension. Directory names, relative paths (such as folder/name or ../name), and absolute paths are not supported. Choose attachment locations in Obsidian Settings → Files and links.')
 			.addText(text => {
 				nameInputEl = text.inputEl
@@ -781,7 +781,7 @@ class SettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Image name pattern')
+			.then(setting => setting.nameEl.setText('Image name pattern'))
 			.setDesc(imageNamePatternDesc)
 			.setClass('long-description-setting-item')
 			.addText(text => text
@@ -794,7 +794,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Duplicate number at start (or end)')
+			.then(setting => setting.nameEl.setText('Duplicate number at start (or end)'))
 			.setDesc(`If enabled, duplicate number will be added at the start as prefix for the image name, otherwise it will be added at the end as suffix for the image name.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.dupNumberAtStart)
@@ -805,7 +805,7 @@ class SettingTab extends PluginSettingTab {
 				))
 
 		new Setting(containerEl)
-			.setName('Duplicate number delimiter')
+			.then(setting => setting.nameEl.setText('Duplicate number delimiter'))
 			.setDesc(`The delimiter to generate the number prefix/suffix for duplicated names. For example, if the value is "-", the suffix will be like "-1", "-2", "-3", and the prefix will be like "1-", "2-", "3-". Only characters that are valid in file names are allowed.`)
 			.addText(text => text
 				.setValue(this.plugin.settings.dupNumberDelimiter)
@@ -816,7 +816,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Always add duplicate number')
+			.then(setting => setting.nameEl.setText('Always add duplicate number'))
 			.setDesc(`If enabled, duplicate number will always be added to the image name. Otherwise, it will only be added when the name is duplicated.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.dupNumberAlways)
@@ -827,7 +827,7 @@ class SettingTab extends PluginSettingTab {
 				))
 
 		new Setting(containerEl)
-			.setName('Share duplicate numbers across extensions')
+			.then(setting => setting.nameEl.setText('Share duplicate numbers across extensions'))
 			.setDesc('Share duplicate numbers between filename extensions in the attachment folder. Off by default. Existing conflicts are resolved only when those files are renamed.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.dupNumberAcrossExtensions)
@@ -837,7 +837,7 @@ class SettingTab extends PluginSettingTab {
 				}))
 
 		new Setting(containerEl)
-			.setName('Duplicate number minimum digits')
+			.then(setting => setting.nameEl.setText('Duplicate number minimum digits'))
 			.setDesc('Minimum digits for new duplicate numbers (1–12). Existing numbered filenames stay unchanged.')
 			.addText(text => text
 				.setValue(String(this.plugin.settings.dupNumberWidth))
@@ -849,7 +849,7 @@ class SettingTab extends PluginSettingTab {
 				}))
 
 		new Setting(containerEl)
-			.setName('Rename input selection')
+			.then(setting => setting.nameEl.setText('Rename input selection'))
 			.setDesc('Choose the caret or selection position in the rename prompt. Also applies when restoring the original name.')
 			.addDropdown(dropdown => dropdown
 				.addOption('end', 'Cursor at end')
@@ -862,7 +862,7 @@ class SettingTab extends PluginSettingTab {
 				}))
 
 		new Setting(containerEl)
-			.setName('Auto rename')
+			.then(setting => setting.nameEl.setText('Auto rename'))
 			.setDesc(`By default, the rename modal will always be shown to confirm before renaming, if this option is set, the image will be auto renamed after pasting.`)
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.autoRename)
@@ -873,7 +873,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Handle all attachments')
+			.then(setting => setting.nameEl.setText('Handle all attachments'))
 			.setDesc(`By default, the plugin only handles images that starts with "Pasted image " in name,
 			which is the prefix Obsidian uses to create images from pasted content.
 			If this option is set, the plugin will handle all attachments that are created in the vault.`)
@@ -886,7 +886,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Exclude extension pattern')
+			.then(setting => setting.nameEl.setText('Exclude extension pattern'))
 			.setDesc(`This option is only useful when "Handle all attachments" is enabled.
 			Write a Regex pattern to exclude certain extensions from being handled. Only the first line will be used.`)
 			.setClass('single-line-textarea')
@@ -900,7 +900,7 @@ class SettingTab extends PluginSettingTab {
 			));
 
 		new Setting(containerEl)
-			.setName('Excluded folders')
+			.then(setting => setting.nameEl.setText('Excluded folders'))
 			.setDesc('Skip automatic renaming when the attachment or its source note is in one of these vault-relative folders. One folder per line; subfolders are included. Manual batch commands are unaffected.')
 			.addTextArea(text => text
 				.setPlaceholder('Telegram\nZotero')
@@ -911,7 +911,7 @@ class SettingTab extends PluginSettingTab {
 				}))
 
 		new Setting(containerEl)
-			.setName('Disable rename notice')
+			.then(setting => setting.nameEl.setText('Disable rename notice'))
 			.setDesc(`Turn off this option if you don't want to see the notice when renaming images.
 			Note that Obsidian may display a notice when a link has changed, this option cannot disable that.`)
 			.addToggle(toggle => toggle

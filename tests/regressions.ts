@@ -1,4 +1,5 @@
 import './community-regressions';
+import './setting-label-regressions';
 import './filesystem-regressions';
 import './discard-controller-regressions';
 import './discard-regressions';
@@ -11,7 +12,7 @@ import assert from 'node:assert/strict';
 import Plugin from '../src/main';
 import { renderTemplate } from '../src/template';
 import { TFile } from 'obsidian';
-import { sdkClock } from './obsidian-mock';
+import { sdkClock, Setting } from './obsidian-mock';
 (globalThis as any).window = { crypto: globalThis.crypto, moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) };
 const settings = { imageNamePattern: '{{fileName}}', dupNumberAtStart: false, dupNumberDelimiter: '-', dupNumberAlways: false, autoRename: true, handleAllAttachments: false, excludeExtensionPattern: '', excludedFolders: '', disableRenameNotice: true };
 function file(name: string) { return Object.assign(new TFile(), { name, basename: name.split('.').slice(0, -1).join('.'), extension: name.split('.').at(-1), path: name, parent: { path: '', name: '' }, stat: { ctime: Date.now(), mtime: Date.now() } }); }
@@ -623,4 +624,16 @@ test('instant batch refuses a replacement object at a later original path', asyn
     };
     await assert.rejects(f.plugin.batchRenameAllImages(), /Batch stopped: second.png moved or was replaced/);
     assert.deepEqual(f.renamed, ['Note.png']);
+});
+
+test('manual rename label and control retain their plain-text rendering and behavior', async () => {
+    const f = fixture(); f.app.vault.getResourcePath = () => '';
+    const first = Setting.created.length;
+    f.plugin.openRenameModal(f.files[0], 'new', f.note.path);
+    assert.deepEqual(Setting.created.slice(first).map(setting => setting.nameEl.innerText).filter(Boolean), ['New name']);
+    const modal = f.plugin.modals[0] as any;
+    assert.equal(modal.contentEl.find('input').value, 'new');
+    await modal.contentEl.find('button', 'Rename').emit('click');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.deepEqual(f.renamed, ['new.png']);
 });

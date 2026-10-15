@@ -43,13 +43,18 @@ export class PluginSettingTab {
 export class MarkdownView {
 }
 export class Setting {
+    static created: Setting[] = [];
+    nameEl = new MockElement('name');
+    then(callback: (setting: this) => unknown) { callback(this); return this; }
     controlEl = new MockElement('control');
-    constructor(parent: MockElement) { parent.children.push(this.controlEl); }
+    constructor(parent: MockElement) { parent.children.push(this.controlEl); Setting.created.push(this); }
     setName() { return this; }
     setDesc() { return this; }
     setClass() { return this; }
     addText(fn: Function) { const inputEl = new MockElement('input'); this.controlEl.children.push(new MockElement('span', 'host decoration'), inputEl); const component = { inputEl, setValue(v: string) { inputEl.value = v; return this; }, setPlaceholder() { return this; }, onChange(cb: Function) { inputEl.addEventListener('change', () => cb(inputEl.value)); return this; } }; fn(component); return this; }
     addTextArea(fn: Function) { return this.addText(fn); }
+    addToggle(fn: Function) { const toggleEl = new MockElement('toggle'); this.controlEl.children.push(toggleEl); const component = { setValue(value: boolean) { (toggleEl as any).checked = value; return this; }, onChange(cb: Function) { toggleEl.addEventListener('change', () => cb((toggleEl as any).checked)); return this; } }; fn(component); return this; }
+    addDropdown(fn: Function) { const selectEl = new MockElement('select'); this.controlEl.children.push(selectEl); const component = { addOption(value: string, label: string) { const option = selectEl.createEl('option', {text: label}); option.value = value; return this; }, setValue(value: string) { selectEl.value = value; return this; }, onChange(cb: Function) { selectEl.addEventListener('change', () => cb(selectEl.value)); return this; } }; fn(component); return this; }
     addButton(fn: Function) { const buttonEl = new MockElement('button'); this.controlEl.children.push(buttonEl); const component = { buttonEl, setButtonText(v: string) { buttonEl.innerText = v; return this; }, setClass() { return this; }, setDisabled(value: boolean) { (buttonEl as any).disabled = value; return this; }, onClick(cb: Function) { buttonEl.addEventListener('click', cb); return this; } }; fn(component); return this; }
 }
 export class TAbstractFile {

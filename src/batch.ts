@@ -47,7 +47,7 @@ export class ImageBatchRenameModal extends Modal {
 
 		let npInputEl: HTMLInputElement
 		new Setting(contentEl)
-			.setName('Name pattern')
+			.then(setting => setting.nameEl.setText('Name pattern'))
 			.setDesc('Please input the name pattern to match files (regex)')
 			.addText(text => {
 				npInputEl = text.inputEl
@@ -74,7 +74,7 @@ export class ImageBatchRenameModal extends Modal {
 
 		let extInputEl: HTMLInputElement
 		new Setting(contentEl)
-			.setName('Extension pattern')
+			.then(setting => setting.nameEl.setText('Extension pattern'))
 			.setDesc('Please input the extension pattern to match files (regex)')
 			.addText(text => {
 				extInputEl = text.inputEl
@@ -94,7 +94,7 @@ export class ImageBatchRenameModal extends Modal {
 
 		let nrInputEl: HTMLInputElement
 		new Setting(contentEl)
-			.setName('Name replace')
+			.then(setting => setting.nameEl.setText('Name replace'))
 			.setDesc('Please input the string to replace the matched name (use $1, $2 for regex groups)')
 			.addText(text => {
 				nrInputEl = text.inputEl

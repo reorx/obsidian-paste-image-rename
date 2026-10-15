@@ -1,8 +1,47 @@
 # Community review maintenance audit
 
+## 1.7.2: plain-string setting labels
+
+The official ESLint 0.4.2 result improves from 51 to **35 warnings**, still **0
+errors**. API warnings fall from 41 to **25**. Stylelint remains at 0 errors and
+0 warnings. No lint configuration, API-version override, or suppression changes.
+
+Sixteen plain-string labels now use public `Setting.then` and
+`Setting.nameEl.setText` instead of the overloaded `Setting.setName` method.
+The string overload is documented since 0.9.7, but the scanner overwrites its
+annotation with the later DocumentFragment overload's 0.12.16. Both the public
+name element (0.9.7) and chaining callback (0.9.20) predate the unchanged 0.12.0
+minimum. Installed Obsidian 1.14.4's implementation of setName performs exactly
+nameEl.setText and returns the setting; this patch uses that same plain-text DOM
+operation, not an alias that hides the original API call. Labels, controls,
+callbacks, defaults, persistence, and order are unchanged.
+
+The remaining API warnings are 11 ButtonComponent.onClick, 8
+MetadataCache.getFirstLinkpathDest, and 6 Editor.transaction references. The first
+owns host callback behavior, the second owns relative/ambiguous link resolution,
+and the third owns atomic editing and undo grouping. Replacing them merely to
+silence the scanner would risk functional changes. Existing capability/version
+guards and legacy fallback remain unchanged. The official rule exposes no
+per-member exception; bypassing its restriction on inline suppression is not used.
+
+Historical SDK declarations corroborate that the signatures are old, but npm SDK
+package versions are not proof of corresponding app-runtime versions. The
+[official API changelog](https://github.com/obsidianmd/obsidian-api/blob/master/CHANGELOG.md)
+distinguishes app versions from available SDK package versions. No native 0.12
+compatibility certification or assertion that every remaining annotation is wrong
+is made here. The other 10 advisories from 1.7.1 are unchanged.
+
+Validation includes 179 runtime/regression tests, covering all sixteen exact label
+strings, settings render order/defaults/repeated display, sanitization, validation,
+persistence, and manual/batch controls; 20 release-policy tests; typecheck; official
+lint/stylelint; and production build. Current SDK declarations and a native modern
+host do not certify all historical or mobile runtimes.
+
+## 1.7.1 audit record
+
 2026-10-15; patch 1.7.1. No whole-vault experimental code is included.
 
-## Reproducible checks
+### Reproducible checks
 
 Use Node 24, `npm ci`, `npm test`, `node --test tests/release-automation.mjs`,
 `npm run typecheck`, `npm run lint`, and `npm run build`.
@@ -22,7 +61,7 @@ the plugin API or require legacy-peer-deps. Clean npm ci is verified. Tooling is
 build-only and not bundled into the plugin. ESLint 9 remains necessary for this
 plugin's declared @eslint/js 9 peer range; npm reports its upstream deprecation.
 
-## Remaining advisory warnings
+### Remaining advisory warnings
 
 Local official-rule scan: 0 errors and 51 warnings, not a claim of a warning-free
 Community review. Stylelint: 0 errors and 0 warnings.
@@ -64,7 +103,7 @@ It remains unchanged. Optional build attestations are not introduced: they would
 require additional Actions permissions/access and are not necessary to fix the
 reported error. Publication still uses the existing job-scoped GITHUB_TOKEN only.
 
-## Scope of verification
+### Scope of verification
 
 175 automated runtime/regression cases, 20 release-automation policy cases,
 typecheck, official lint/stylelint, production build, and exact release-asset
