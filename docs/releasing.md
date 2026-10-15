@@ -49,3 +49,17 @@ The temporary exact-parent/subject/event-gated master bootstrap was removed afte
 verification; ordinary branch pushes cannot publish. No new persistent credential
 or permission was introduced. See the [native smoke evidence](test-evidence/community-review-1.7.1.md)
 and [Community review audit](community-review.md) for test scope and remaining advisories.
+
+## Legacy label API cleanup 1.7.2
+
+Version [1.7.2](https://github.com/reorx/obsidian-paste-image-rename/releases/tag/1.7.2)
+uses reviewed source commit `c47b4342f30b18978d6e2be4c143e6d86dd8f80b` and release
+commit `f1cf54ebe04fbda094cf361e9ead2e3d02bb3ee0`.
+[Actions run](https://github.com/reorx/obsidian-paste-image-rename/actions/runs/38770030320)
+succeeded, including tests, lint, build and byte-verified publication. The three public
+assets were independently downloaded and matched the locally tested SHA256 hashes.
+The temporary exact-parent/subject/event-gated master bootstrap was then removed,
+restoring the version-tag-only workflow without adding persistent credentials or
+permissions. See [native smoke evidence](test-evidence/community-review-1.7.2.md)
+and the [audit](community-review.md): API warnings decreased from 41 to 25; this
+does not certify old native runtimes or predict Community service approval.
