@@ -1,3 +1,4 @@
+import './filesystem-regressions';
 import './discard-controller-regressions';
 import './discard-regressions';
 import './link-conversion-regressions';
@@ -581,4 +582,44 @@ test('batch uses SDK date snapshot before asynchronous renames even without wind
         assert.equal(calls, 1);
         assert.deepEqual(f.renamed, ['20261015_235959.png', '20261015_235959-1.png']);
     } finally { sdkClock.now = previousClock; (globalThis as any).window = previousWindow; }
+});
+
+
+test('instant batch does not follow a later attachment moved during an earlier rename', async () => {
+    const f = fixture(['first.png', 'second.png', 'third.png']);
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => {
+        await rename(...args);
+        f.files[1].path = 'elsewhere/second.png';
+        f.files[1].parent = {path: 'elsewhere', name: 'elsewhere'} as any;
+    };
+    await assert.rejects(f.plugin.batchRenameAllImages(), /Batch stopped: second.png moved/);
+    assert.deepEqual(f.renamed, ['Note.png']);
+    assert.equal(f.files[1].path, 'elsewhere/second.png');
+    assert.equal(f.files[2].path, 'third.png');
+});
+
+test('instant batch stops when source note is renamed instead of mixing template stems', async () => {
+    const f = fixture(['first.png', 'second.png', 'third.png']);
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => {
+        await rename(...args);
+        f.note.path = 'Changed.md'; f.note.name = 'Changed.md'; f.note.basename = 'Changed';
+    };
+    await assert.rejects(f.plugin.batchRenameAllImages(), /original source note is no longer available/);
+    assert.deepEqual(f.renamed, ['Note.png']);
+    assert.deepEqual(f.files.slice(1).map(file => file.path), ['second.png', 'third.png']);
+});
+
+test('instant batch refuses a replacement object at a later original path', async () => {
+    const f = fixture(['first.png', 'second.png']);
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => {
+        await rename(...args);
+        const originalLookup = f.app.vault.getAbstractFileByPath;
+        const replacement = file('second.png');
+        f.app.vault.getAbstractFileByPath = (path: string) => path === 'second.png' ? replacement : originalLookup(path);
+    };
+    await assert.rejects(f.plugin.batchRenameAllImages(), /Batch stopped: second.png moved or was replaced/);
+    assert.deepEqual(f.renamed, ['Note.png']);
 });

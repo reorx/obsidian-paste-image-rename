@@ -402,21 +402,27 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (reason) { new Notice(reason); return }
 		const fileCache = this.app.metadataCache.getFileCache(activeFile)
 		if (!fileCache?.embeds) return
-		// Resolve and de-duplicate before renaming changes cache paths.
-		const files = new Set<TFile>()
+		// Capture command scope before any asynchronous rename. TFile objects are
+		// mutable: following their later paths could rename a moved attachment or
+		// derive a different filename template from a renamed source note.
+		const sourcePath = activeFile.path
+		const files = new Map<TFile, string>()
 		for (const embed of fileCache.embeds) {
 			const file = this.app.metadataCache.getFirstLinkpathDest(embed.link, activeFile.path)
-			if (file && isImage(file)) files.add(file)
+			if (file && isImage(file)) files.set(file, file.path)
 		}
 		const now = moment()
-		for (const file of files) {
-			this.assertRenameSource(activeFile.path, activeFile)
+		for (const [file, originalPath] of files) {
+			this.assertRenameSource(sourcePath, activeFile)
+			if (file.path !== originalPath || this.app.vault.getAbstractFileByPath(originalPath) !== file) {
+				throw new Error(`Batch stopped: ${originalPath} moved or was replaced/deleted. Run the command again to review the current attachments.`)
+			}
 			const { newName, isMeaningful } = this.generateNewName(file, activeFile, now)
 			if (!isMeaningful) {
 				new Notice('Failed to batch rename images: the generated name is not meaningful')
 				break
 			}
-			await this.renameFile(file, newName, activeFile.path, false)
+			await this.renameFile(file, newName, sourcePath, false)
 		}
 	}
 
