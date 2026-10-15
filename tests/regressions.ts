@@ -51,11 +51,73 @@ function embedFixture(original = '![[old.png|200]]') {
     const editor = { getLine: (i: number) => lines[i], transaction: (t: any) => { changes.push(...t.changes); for (const c of [...t.changes].reverse())
             lines[c.from.line] = lines[c.from.line].slice(0, c.from.ch) + c.text + lines[c.to.line].slice(c.to.ch); } };
     f.app.workspace.getActiveViewOfType = () => ({ file: f.note, editor });
-    return { ...f, lines, changes, embed };
+    return { ...f, lines, changes, embed, editor };
 }
 test('metadata-scoped fallback preserves width and never edits code examples', async () => { const f = embedFixture(); await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true); assert.deepEqual(f.lines, ['![[Note.png|200]]', '`![[old.png]]`']); });
 test('fallback skips stale positions after user edits during rename', async () => { const f = embedFixture(); const rename = f.app.fileManager.renameFile; f.app.fileManager.renameFile = async (...a: any[]) => { f.lines[0] = 'User edited this'; await rename(...a); }; await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true); assert.equal(f.lines[0], 'User edited this'); assert.deepEqual(f.changes, []); });
 test('fallback ignores same-text embed resolving to another attachment', async () => { const f = embedFixture(); f.app.metadataCache.getFirstLinkpathDest = () => file('other/old.png'); await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true); assert.deepEqual(f.changes, []); });
+function legacyEmbedFixture() {
+    const f = embedFixture();
+    const editor = {
+        getLine: f.editor.getLine,
+        replaceRange: (text: string, from: {line: number, ch: number}, to: {line: number, ch: number}) => {
+            assert.equal(from.line, to.line);
+            f.changes.push({text, from, to});
+            f.lines[from.line] = f.lines[from.line].slice(0, from.ch) + text + f.lines[to.line].slice(to.ch);
+        },
+    };
+    f.app.workspace.getActiveViewOfType = () => ({file: f.note, editor});
+    return {...f, editor};
+}
+test('legacy editor repairs repeated embeds last-to-first without changing code examples', async () => {
+    const f = legacyEmbedFixture();
+    f.lines.splice(0, f.lines.length, 'prefix ![[old.png|200]] and ![[old.png|caption]] suffix', '`![[old.png]]`', '![[old.png]] tail');
+    const embeds = [
+        {line: 0, original: '![[old.png|200]]'},
+        {line: 2, original: '![[old.png]]'},
+        {line: 0, original: '![[old.png|caption]]'},
+    ].map(({line, original}) => {
+        const col = f.lines[line].indexOf(original);
+        const offset = f.lines.slice(0, line).reduce((sum, text) => sum + text.length + 1, 0) + col;
+        return {link: 'old.png', original, position: {start: {line, col, offset}, end: {line, col: col + original.length, offset: offset + original.length}}};
+    });
+    f.app.metadataCache.getFileCache = () => ({embeds});
+    await f.plugin.renameFile(f.files[0], 'Much Longer Name.png', f.note.path, true);
+    assert.deepEqual(f.lines, ['prefix ![[Much Longer Name.png|200]] and ![[Much Longer Name.png|caption]] suffix', '`![[old.png]]`', '![[Much Longer Name.png]] tail']);
+    assert.deepEqual(f.changes.map(change => change.from), [{line: 2, ch: 0}, {line: 0, ch: embeds[2].position.start.col}, {line: 0, ch: 7}]);
+    assert.deepEqual(f.renamed, ['Much Longer Name.png']);
+});
+test('legacy editor skips stale metadata after edits during rename', async () => {
+    const f = legacyEmbedFixture();
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => { f.lines[0] = 'User edited this'; await rename(...args); };
+    await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true);
+    assert.deepEqual(f.lines, ['User edited this', '`![[old.png]]`']);
+    assert.deepEqual(f.changes, []);
+});
+test('legacy editor never repairs a different note after a tab switch', async () => {
+    const f = legacyEmbedFixture();
+    let active = f.note;
+    f.app.workspace.getActiveViewOfType = () => ({file: active, editor: f.editor});
+    const rename = f.app.fileManager.renameFile;
+    f.app.fileManager.renameFile = async (...args: any[]) => { active = file('Other.md'); await rename(...args); };
+    await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true);
+    assert.deepEqual(f.lines, ['![[old.png|200]]', '`![[old.png]]`']);
+    assert.deepEqual(f.changes, []);
+});
+test('legacy editor ignores identical text resolving to another attachment', async () => {
+    const f = legacyEmbedFixture();
+    f.app.metadataCache.getFirstLinkpathDest = () => file('other/old.png');
+    await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true);
+    assert.deepEqual(f.changes, []);
+});
+test('modern editor keeps transaction repair instead of legacy replaceRange', async () => {
+    const f = embedFixture();
+    (f.editor as any).replaceRange = () => assert.fail('Modern editor must use its transaction API');
+    await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true);
+    assert.deepEqual(f.lines, ['![[Note.png|200]]', '`![[old.png]]`']);
+    assert.equal(f.changes.length, 1);
+});
 test('folder exclusions match attachment and source note independently', () => { const f = fixture(); f.plugin.settings.excludedFolders = 'Telegram\nPrivate'; f.files[0].path = 'Telegram/photos/a.png'; assert.equal(f.plugin.isExcluded(f.files[0], f.note), true); f.files[0].path = 'Telegram2/a.png'; assert.equal(f.plugin.isExcluded(f.files[0], f.note), false); f.note.path = 'Private/Note.md'; assert.equal(f.plugin.isExcluded(f.files[0], f.note), true); });
 test('invalid extension exclusion fails closed', () => { const f = fixture(); f.plugin.settings.excludeExtensionPattern = '['; assert.equal(f.plugin.testExcludeExtension(f.files[0]), true); });
 test('batch renames 35 mixed images beyond unsupported embeds', async () => { const names = ['a.pdf', ...Array.from({ length: 35 }, (_, i) => `old${i}.${i % 2 ? 'webp' : 'png'}`), 'end.mp4']; const f = fixture(names); await f.plugin.batchRenameAllImages(); assert.equal(f.renamed.length, 35); assert.equal(new Set(f.renamed).size, 35); const first = [...f.renamed]; await f.plugin.batchRenameAllImages(); assert.deepEqual(f.renamed, first); });

@@ -301,7 +301,15 @@ export default class PasteImageRenamePlugin extends Plugin {
 				}
 			}
 
-			if (changes.length) editor.transaction({changes})
+			if (changes.length) {
+				if (typeof editor.transaction === 'function') editor.transaction({changes})
+				else {
+					// Editor.transaction arrived in 0.13.0. Older supported editors
+					// use the same validated ranges, from last to first so offsets hold.
+					changes.sort((a, b) => b.from.line - a.from.line || b.from.ch - a.from.ch)
+					for (const change of changes) editor.replaceRange(change.text, change.from, change.to)
+				}
+			}
 		}
 		if (!this.settings.disableRenameNotice) new Notice(`Renamed ${originName} to ${newName}`)
 	}
