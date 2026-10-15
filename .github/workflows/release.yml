@@ -1,0 +1,76 @@
+name: Release Obsidian plugin
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+    # One-time, tightly gated 1.7.0 bootstrap. Remove after its release succeeds.
+    branches: [master]
+    paths: [.github/workflows/release.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: obsidian-plugin-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      artifact_id: ${{ steps.upload-release.outputs.artifact-id }}
+    env:
+      RELEASE_DIR: ${{ runner.temp }}/plugin-release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Validate exact release event and versions
+        run: node scripts/release.mjs validate
+      - run: npm ci
+      - run: node --test tests/release-automation.mjs
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Verify and stage the three release assets
+        run: node scripts/release.mjs prepare
+      - id: upload-release
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: plugin-release-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/plugin-release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      RELEASE_DIR: ${{ runner.temp }}/plugin-release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/plugin-release
+      - name: Publish or verify the immutable release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release.mjs publish
