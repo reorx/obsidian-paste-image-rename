@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - '[0-9]*.[0-9]*.[0-9]*'
-    # One-time, tightly gated 1.7.0 bootstrap. Remove after its release succeeds.
-    branches: [master]
-    paths: [.github/workflows/release.yml]
 
 permissions:
   contents: read

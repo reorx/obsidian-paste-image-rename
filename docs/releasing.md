@@ -30,18 +30,10 @@ unexpected uploads, incomplete published releases, and changed release notes.
 It never moves tags or overwrites/deletes release assets. Inspect those conflicts
 before deciding how to recover them; do not force a release over them.
 
-## One-time 1.7.0 bootstrap
+## First automated release
 
-The initial automation commit can also start the first release without an
-externally authenticated tag push. This exception is restricted to a non-forced
-push to `master`, version `1.7.0`, exactly one direct parent
-`0487fc9acc3cc059edaf8e58e92e0ad5163b7b60`, matching event `before`/`after` values,
-and exact commit subject `ci: bootstrap automated release 1.7.0`.
-It builds and verifies that exact event commit, creates the plain `1.7.0` tag at it,
-and publishes through the same guarded path. No other master push is eligible.
-A tag created using `GITHUB_TOKEN` does not trigger another push workflow, so this
-single run completes publication directly.
-
-Remove the master trigger and bootstrap exception after the verified release.
-Future releases use only plain version-tag pushes. Plugin source, version and
-release notes must not change while a release is being finalized.
+Version [1.7.0](https://github.com/reorx/obsidian-paste-image-rename/releases/tag/1.7.0)
+was published by [this successful Actions run](https://github.com/reorx/obsidian-paste-image-rename/actions/runs/38677284098)
+at commit `943eb06b7764fff52475aa86d175bddc6db2d90c`. Its temporary, tightly gated
+master bootstrap has been removed. The current workflow accepts version-tag
+pushes only; branch pushes cannot publish a release.

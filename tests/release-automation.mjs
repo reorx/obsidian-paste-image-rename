@@ -4,23 +4,25 @@ import {createHash} from 'node:crypto';
 import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {ASSETS, BOOTSTRAP, inspectAssets, publishRelease, validateEvent} from '../scripts/release.mjs';
+import {ASSETS, inspectAssets, publishRelease, validateEvent} from '../scripts/release.mjs';
 
 const sha = 'a'.repeat(40), other = 'b'.repeat(40);
-const tagEvent = () => ({version: '1.7.0', ref: 'refs/tags/1.7.0', sha, head: sha, parents: [BOOTSTRAP.parent], subject: 'release', eventName: 'push', event: {ref: 'refs/tags/1.7.0', after: sha, before: '0'.repeat(40), forced: false, deleted: false}});
-const bootstrapEvent = () => ({...tagEvent(), ref: 'refs/heads/master', subject: BOOTSTRAP.subject, event: {ref: 'refs/heads/master', after: sha, before: BOOTSTRAP.parent, forced: false, deleted: false}});
-
-test('plain exact version tag and exact one-time bootstrap are accepted', () => {
+const tagEvent = () => ({version: '1.7.0', ref: 'refs/tags/1.7.0', sha, head: sha, eventName: 'push', event: {ref: 'refs/tags/1.7.0', after: sha, before: '0'.repeat(40), forced: false, deleted: false}});
+test('plain exact version tag is accepted', () => {
   assert.equal(validateEvent(tagEvent()), 'tag');
-  assert.equal(validateEvent(bootstrapEvent()), 'bootstrap');
 });
 test('prefixed/mismatched tags, forced/deleted pushes and wrong checkout fail closed', () => {
   for (const patch of [{ref: 'refs/tags/v1.7.0'}, {ref: 'refs/tags/1.7.1'}, {head: other}, {version: '01.7.0'}, {eventName: 'pull_request'}]) assert.throws(() => validateEvent({...tagEvent(), ...patch}));
   for (const field of ['forced', 'deleted']) { const e = tagEvent(); e.event[field] = true; assert.throws(() => validateEvent(e)); }
 });
-test('bootstrap cannot be replayed from another parent, subject or version', () => {
-  for (const patch of [{parents: [other]}, {parents: [BOOTSTRAP.parent, other]}, {subject: 'release'}, {version: '1.7.1'}]) assert.throws(() => validateEvent({...bootstrapEvent(), ...patch}));
-  for (const field of ['before', 'after']) { const e = bootstrapEvent(); e.event[field] = other; assert.throws(() => validateEvent(e)); }
+test('all branch pushes including the former bootstrap are rejected', () => {
+  for (const branch of ['master', 'main', 'release']) {
+    const e = tagEvent(); e.ref = `refs/heads/${branch}`; e.event.ref = e.ref;
+    e.subject = 'ci: bootstrap automated release 1.7.0';
+    e.parents = ['0487fc9acc3cc059edaf8e58e92e0ad5163b7b60'];
+    e.event.before = e.parents[0];
+    assert.throws(() => validateEvent(e), /Only exact plain version-tag/);
+  }
 });
 
 function fixture() {
