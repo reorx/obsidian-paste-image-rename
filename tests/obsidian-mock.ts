@@ -55,7 +55,8 @@ export class TAbstractFile {
 export class TFile extends TAbstractFile {
 }
 export class Notice {
-    constructor(public message: string) { }
+    static messages: {text: string, timeout?: number}[] = [];
+    constructor(public message: string, timeout?: number) { Notice.messages.push({text:message,timeout}); }
 }
 // Test-only YAML implementation; production uses Obsidian's public parseYaml.
 export const parseYaml = (text: string) => require('js-yaml').load(text);

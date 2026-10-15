@@ -1,3 +1,4 @@
+import './vault-rename-regressions';
 import './filesystem-regressions';
 import './discard-controller-regressions';
 import './discard-regressions';
