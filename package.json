@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-paste-image-rename",
-	"version": "1.7.0",
+	"version": "1.7.1",
 	"main": "main.js",
 	"scripts": {
 		"start": "node esbuild.config.mjs",
@@ -9,23 +9,34 @@
 		"release": "npm run build && gh release create ${npm_package_version} build/main.js build/styles.css build/manifest.json",
 		"test": "node tests/run.mjs",
 		"typecheck": "tsc --noEmit --skipLibCheck",
-		"lint": "eslint src --ext .ts"
+		"lint": "npm run lint:community && npm run lint:styles",
+		"lint:community": "eslint src package.json",
+		"lint:styles": "stylelint src/styles.css"
 	},
 	"keywords": [],
 	"author": "Reorx",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^24.10.4",
-		"@typescript-eslint/eslint-plugin": "^5.49.0",
-		"@typescript-eslint/parser": "^5.49.0",
-		"builtin-modules": "^3.3.0",
 		"esbuild": "^0.27.2",
 		"obsidian": "1.14.4",
 		"tslib": "2.5.0",
-		"typescript": "^5.9.3"
+		"typescript": "^5.9.3",
+		"eslint": "^9.39.4",
+		"@eslint/js": "^9.39.4",
+		"@eslint/json": "0.14.0",
+		"typescript-eslint": "^8.35.1",
+		"eslint-plugin-obsidianmd": "0.4.2",
+		"stylelint": "^17.0.0",
+		"stylelint-config-obsidianmd": "0.1.0"
 	},
 	"dependencies": {
 		"@lezer/markdown": "1.8.0",
 		"cash-dom": "^8.1.2"
+	},
+	"overrides": {
+		"eslint-plugin-obsidianmd": {
+			"obsidian": "$obsidian"
+		}
 	}
 }

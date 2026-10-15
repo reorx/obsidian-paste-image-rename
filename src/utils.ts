@@ -4,11 +4,10 @@ import {
 } from 'obsidian';
 
 export const DEBUG = !(process.env.BUILD_ENV === 'production')
-if (DEBUG) console.log('DEBUG is enabled')
 
 export function debugLog(...args: unknown[]) {
 	if (DEBUG) {
-		console.log((new Date()).toISOString().slice(11, 23), ...args)
+		console.debug((new Date()).toISOString().slice(11, 23), ...args)
 	}
 }
 
@@ -24,7 +23,7 @@ interface ElementTree {
 
 export function createElementTree(rootEl: HTMLElement, opts: ElementTreeOptions): ElementTree {
 	const result: ElementTree = {
-		el: rootEl.createEl(opts.tag, opts as DomElementInfo),
+		el: rootEl.createEl(opts.tag, opts),
 		children: [],
 	}
 	const children = opts.children || []

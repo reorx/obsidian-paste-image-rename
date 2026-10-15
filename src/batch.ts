@@ -52,7 +52,7 @@ export class ImageBatchRenameModal extends Modal {
 			.addText(text => {
 				npInputEl = text.inputEl
 				text.setValue(this.state.namePattern)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.state.namePattern = value
 					this.state.renameTasks = []
 				}
@@ -60,12 +60,12 @@ export class ImageBatchRenameModal extends Modal {
 			})
 		npInputEl.focus()
 		const npInputState = lockInputMethodComposition(npInputEl)
-		npInputEl.addEventListener('keydown', async (e) => {
+		npInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' && !npInputState.lock) {
 				e.preventDefault()
 				if (!this.state.namePattern) {
 					errorEl.innerText = 'Error: "Name pattern" could not be empty'
-					errorEl.style.display = 'block'
+					errorEl.classList.add('is-visible')
 					return
 				}
 				this.matchImageNames(tbodyEl)
@@ -79,13 +79,13 @@ export class ImageBatchRenameModal extends Modal {
 			.addText(text => {
 				extInputEl = text.inputEl
 				text.setValue(this.state.extPattern)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.state.extPattern = value
 					this.state.renameTasks = []
 				}
 				)
 			})
-		extInputEl.addEventListener('keydown', async (e) => {
+		extInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault()
 				this.matchImageNames(tbodyEl)
@@ -99,14 +99,14 @@ export class ImageBatchRenameModal extends Modal {
 			.addText(text => {
 				nrInputEl = text.inputEl
 				text.setValue(this.state.nameReplace)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.state.nameReplace = value
 					this.state.renameTasks = []
 				}
 				)
 			})
 		const nrInputState = lockInputMethodComposition(nrInputEl)
-		nrInputEl.addEventListener('keydown', async (e) => {
+		nrInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' && !nrInputState.lock) {
 				e.preventDefault()
 				this.matchImageNames(tbodyEl)
@@ -147,9 +147,6 @@ export class ImageBatchRenameModal extends Modal {
 
 		const errorEl = contentEl.createDiv({
 			cls: 'error',
-			attr: {
-				style: 'display: none;',
-			}
 		})
 
 		new Setting(contentEl)

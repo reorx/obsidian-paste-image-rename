@@ -3,6 +3,8 @@ export class MockElement {
     innerText = '';
     value = '';
     style: Record<string, string> = {};
+    classes = new Set<string>();
+    classList = { add: (...names: string[]) => names.forEach(name => this.classes.add(name)), contains: (name: string) => this.classes.has(name) };
     events: Record<string, Function[]> = {};
     tag = '';
     selectionStart = 0;
@@ -60,7 +62,9 @@ export class Notice {
 // Test-only YAML implementation; production uses Obsidian's public parseYaml.
 export const parseYaml = (text: string) => require('js-yaml').load(text);
 
-export const requireApiVersion = () => false;
+export const sdkApi = { supported: false };
+export let requireApiVersion: (() => boolean) | undefined = () => sdkApi.supported;
+export const setApiAvailability = (available: boolean) => { requireApiVersion = available ? () => sdkApi.supported : undefined; };
 
 // Independent SDK clock: tests must not accidentally pass via window.moment.
 export const sdkClock = { now: () => ({ format: (pattern: string) => pattern === 'YYYY' ? '2026' : '10' }) };

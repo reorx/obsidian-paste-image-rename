@@ -1,3 +1,4 @@
+import './community-regressions';
 import './filesystem-regressions';
 import './discard-controller-regressions';
 import './discard-regressions';
@@ -11,7 +12,7 @@ import Plugin from '../src/main';
 import { renderTemplate } from '../src/template';
 import { TFile } from 'obsidian';
 import { sdkClock } from './obsidian-mock';
-(globalThis as any).window = { moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) };
+(globalThis as any).window = { crypto: globalThis.crypto, moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) };
 const settings = { imageNamePattern: '{{fileName}}', dupNumberAtStart: false, dupNumberDelimiter: '-', dupNumberAlways: false, autoRename: true, handleAllAttachments: false, excludeExtensionPattern: '', excludedFolders: '', disableRenameNotice: true };
 function file(name: string) { return Object.assign(new TFile(), { name, basename: name.split('.').slice(0, -1).join('.'), extension: name.split('.').at(-1), path: name, parent: { path: '', name: '' }, stat: { ctime: Date.now(), mtime: Date.now() } }); }
 function fixture(names = ['old.png']) {
@@ -31,9 +32,9 @@ test('same filename is not its own duplicate', async () => { const f = fixture([
 test('concurrent renames allocate unique destinations', async () => { const f = fixture(['one.png', 'two.png']); await Promise.all(f.files.map(x => f.plugin.renameFile(x, 'Note.png', f.note.path))); assert.deepEqual(f.renamed, ['Note.png', 'Note-1.png']); });
 test('rename failure leaves editor text untouched', async () => { const f = fixture(); let edits = 0; f.app.workspace.getActiveViewOfType = () => ({ file: f.note, editor: { getCursor: () => ({ line: 0, ch: 0 }), getLine: () => '![[old.png]]', transaction: () => edits++ } }); f.app.fileManager.renameFile = async () => { throw Error('disk failure'); }; await assert.rejects(f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true)); assert.equal(edits, 0); });
 test('switching notes while renaming never edits the newly active note', async () => { const f = fixture(); let edits = 0; let active = f.note; const editor = { getCursor: () => ({ line: 0, ch: 0 }), getLine: () => '![[old.png]]', transaction: () => edits++ }; f.app.workspace.getActiveViewOfType = () => ({ file: active, editor }); const rename = f.app.fileManager.renameFile; f.app.fileManager.renameFile = async (...a: any[]) => { active = file('Other.md'); await rename(...a); }; await f.plugin.renameFile(f.files[0], 'Note.png', f.note.path, true); assert.equal(edits, 0); });
-test('date and frontmatter tokens render repeatedly without shared regex state', () => { (globalThis as any).window = { moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) }; const data = { fileName: 'Note', dirName: '', imageNameKey: '', firstHeading: '' }; for (let i = 0; i < 3; i++)
+test('date and frontmatter tokens render repeatedly without shared regex state', () => { (globalThis as any).window = { crypto: globalThis.crypto, moment: () => ({ format: (s: string) => s === 'YYYY' ? '2026' : '10' }) }; const data = { fileName: 'Note', dirName: '', imageNameKey: '', firstHeading: '' }; for (let i = 0; i < 3; i++)
     assert.equal(renderTemplate('{{DATE:YYYY}}-{{DATE:MM}}-{{frontmatter:a}}-{{frontmatter:b}}', data, { a: 'A', b: 'B' }), '2026-10-A-B'); });
-test('frontmatter zero and false are retained as text', () => { (globalThis as any).window = { moment: () => ({ format: () => '' }) }; assert.equal(renderTemplate('{{frontmatter:a}}/{{frontmatter:b}}', { fileName: '', dirName: '', imageNameKey: '', firstHeading: '' }, { a: 0, b: false }), '0/false'); });
+test('frontmatter zero and false are retained as text', () => { (globalThis as any).window = { crypto: globalThis.crypto, moment: () => ({ format: () => '' }) }; assert.equal(renderTemplate('{{frontmatter:a}}/{{frontmatter:b}}', { fileName: '', dirName: '', imageNameKey: '', firstHeading: '' }, { a: 0, b: false }), '0/false'); });
 test('batch is idempotent with existing numbered images', async () => { const f = fixture(['Note.png', 'Note-1.png', 'Note-2.png']); await f.plugin.batchRenameAllImages(); await f.plugin.batchRenameAllImages(); assert.deepEqual(f.renamed, []); });
 test('failed rename does not poison queue', async () => { const f = fixture(['one.png', 'two.png']); const rename = f.app.fileManager.renameFile; let first = true; f.app.fileManager.renameFile = async (...a: any[]) => { if (first) {
     first = false;
@@ -541,7 +542,7 @@ test('discard modal serializes both actions and leaves ordinary Cancel non-destr
         let finish:()=>void;const pending=new Promise<void>(resolve=>{finish=resolve;});
         const rename=f.app.fileManager.renameFile;f.app.fileManager.renameFile=async(...args:any[])=>{await pending;await rename(...args);};
         f.plugin.openRenameModal(f.files[0],'new',f.note.path,{execute:async()=>{deleted++;await pending;},cancel:()=>{cancelled++;}});
-        const modal=f.plugin.modals[0] as any,button=modal.contentEl.find('button','Cancel and Delete'),renameButton=modal.contentEl.find('button','Rename');
+        const modal=f.plugin.modals[0] as any,button=modal.contentEl.find('button','Cancel and delete'),renameButton=modal.contentEl.find('button','Rename');
         if(mode==='cancel'){await modal.contentEl.find('button','Cancel').emit('click');await button.emit('click');assert.equal(deleted,0);}
         if(mode==='delete'){const first=button.emit('click');await Promise.resolve();await renameButton.emit('click');const second=button.emit('click');finish!();await first;await second;assert.equal(deleted,1);assert.deepEqual(f.renamed,[]);}
         if(mode==='rename'){await renameButton.emit('click');await button.emit('click');assert.equal(deleted,0);finish!();await new Promise(resolve=>setTimeout(resolve,0));}

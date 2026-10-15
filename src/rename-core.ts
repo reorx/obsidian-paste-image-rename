@@ -120,7 +120,7 @@ export function headingBeforeReference(headings: readonly {heading: string, posi
 	return nearest
 }
 
-export function uuidV4(randomBytes = globalThis.crypto.getRandomValues(new Uint8Array(16))): string {
+export function uuidV4(randomBytes = window.crypto.getRandomValues(new Uint8Array(16))): string {
 	if (randomBytes.length !== 16) throw new Error('UUID generation requires 16 random bytes.')
 	const bytes = new Uint8Array(randomBytes)
 	bytes[6] = (bytes[6] & 0x0f) | 0x40

@@ -88,15 +88,15 @@ export default class PasteImageRenamePlugin extends Plugin {
 	private discardController?: DiscardController
 
 	async onload() {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const pkg = require('../package.json')
-		console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`)
 		await this.loadSettings();
-		if (typeof requireApiVersion === 'function' && requireApiVersion('1.1.1') && typeof this.app.workspace.on === 'function' && typeof this.app.workspace.getLeavesOfType === 'function') {
-			this.discardController = new DiscardController(this.app, file => this.sourceProtectionReason(file))
-			this.registerEvent(this.app.workspace.on('editor-paste', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
-			this.registerEvent(this.app.workspace.on('editor-drop', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
-			this.registerEvent(this.app.workspace.on('editor-change', (_editor, info) => this.discardController?.changed(info.file)))
+		if (typeof requireApiVersion === 'function') {
+			if (requireApiVersion('1.1.1') && typeof this.app.workspace.on === 'function' && typeof this.app.workspace.getLeavesOfType === 'function') {
+				this.discardController = new DiscardController(this.app, file => this.sourceProtectionReason(file))
+				// Observe native insertions only; preventDefault would cancel Obsidian's paste/drop.
+				this.registerEvent(this.app.workspace.on('editor-paste', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
+				this.registerEvent(this.app.workspace.on('editor-drop', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
+				this.registerEvent(this.app.workspace.on('editor-change', (_editor, info) => this.discardController?.changed(info.file)))
+			}
 		}
 
 		// The official Vault API recommends registering here to exclude startup
@@ -210,7 +210,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			this.cancelPendingAttachment(file)
 			// Keep the source captured at creation, even after the user changes tabs.
 			const action = !pending.autoRename ? this.discardController?.prepare(file, source, data, cache) : undefined
-			const start = action ? action.then(discard => this.startRenameProcess(file, pending.autoRename, source, discard)) : this.startRenameProcess(file, pending.autoRename, source)
+			const start = action !== undefined ? action.then(discard => this.startRenameProcess(file, pending.autoRename, source, discard)) : this.startRenameProcess(file, pending.autoRename, source)
 			void start.catch(error => {
 				console.error('Attachment rename failed', error)
 				new Notice(`Attachment left unchanged or rename incomplete: ${error}`)
@@ -239,7 +239,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine = false): Promise<void> {
 		const expectedPath = file.path
 		const expectedSource = this.app.vault.getAbstractFileByPath(sourcePath)
-		const operation = (this.renameQueue || Promise.resolve()).then(() =>
+		const operation = (this.renameQueue ?? Promise.resolve()).then(() =>
 			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath, expectedSource))
 		// A failed rename must not poison subsequent requests.
 		this.renameQueue = operation.catch(() => {})
@@ -319,7 +319,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const source = this.app.vault.getAbstractFileByPath(sourcePath)
 		try { this.assertRenameSource(sourcePath) } catch (error) { new Notice(String(error)); return }
 		const modal = new ImageRenameModal(
-			this.app, file as TFile, newName,
+			this.app, file, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
 				this.assertRenameSource(sourcePath, source)
@@ -331,7 +331,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 			},
 			this.settings.nameInputPosition,
 			discard ? {...discard, execute: discard.execute ? () => {
-				const operation = (this.renameQueue || Promise.resolve()).then(() => discard.execute())
+				const operation = (this.renameQueue ?? Promise.resolve()).then(() => discard.execute())
 				this.renameQueue = operation.catch(() => {})
 				return operation
 			} : undefined} : undefined
@@ -645,7 +645,7 @@ class ImageRenameModal extends Modal {
 			if (renaming || this.closed || discardStarted) return
 			if (!stem.trim()) {
 				errorEl.innerText = 'Error: "New name" could not be empty'
-				errorEl.style.display = 'block'
+				errorEl.classList.add('is-visible')
 				return
 			}
 			renaming = true
@@ -657,7 +657,7 @@ class ImageRenameModal extends Modal {
 				this.close()
 			} catch (error) {
 				errorEl.innerText = String(error)
-				errorEl.style.display = 'block'
+				errorEl.classList.add('is-visible')
 			} finally {
 				renaming = false
 			}
@@ -670,7 +670,7 @@ class ImageRenameModal extends Modal {
 			.addText(text => {
 				nameInputEl = text.inputEl
 				text.setValue(stem)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					rawStem = value
 					stem = sanitizer.filename(value)
 					infoET.children[1].children[1].el.innerText = getNewPath(stem)
@@ -693,13 +693,12 @@ class ImageRenameModal extends Modal {
 					focusNameInput()
 				}))
 		const nameInputState = lockInputMethodComposition(nameInputEl)
-		nameInputEl.addEventListener('keydown', async (e) => {
-			// console.log('keydown', e.key, `lock=${nameInputState.lock}`)
+		nameInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' && !nameInputState.lock) {
 				e.preventDefault()
 				if (!stem) {
 					errorEl.innerText = 'Error: "New name" could not be empty'
-					errorEl.style.display = 'block'
+					errorEl.classList.add('is-visible')
 					return
 				}
 				void doRename()
@@ -708,9 +707,6 @@ class ImageRenameModal extends Modal {
 
 		const errorEl = contentEl.createDiv({
 			cls: 'error',
-			attr: {
-				style: 'display: none;',
-			}
 		})
 
 		if (this.discard) {
@@ -718,11 +714,11 @@ class ImageRenameModal extends Modal {
 			new Setting(contentEl).addButton(button => {
 				disableDiscard = () => { button.buttonEl.disabled = true }
 				button.buttonEl.disabled = !this.discard.execute
-				return button.setButtonText('Cancel and Delete').onClick(async () => {
+				return button.setButtonText('Cancel and delete').onClick(async () => {
 				if (renaming || this.closed || renameStarted || discardStarted || !this.discard.execute) return
 				discardStarted = true; renaming = true; button.buttonEl.disabled = true; disableRename()
-				try { await this.discard.execute(); new Notice('New attachment moved to vault .trash and its inserted link removed. Editor Undo does not restore the file.'); this.close() }
-				catch (error) { if (this.closed) new Notice(String(error)); else { errorEl.innerText = String(error); errorEl.style.display = 'block' } }
+				try { await this.discard.execute(); new Notice('New attachment moved to vault .trash and its inserted link removed. Editor undo does not restore the file.'); this.close() }
+				catch (error) { if (this.closed) new Notice(String(error)); else { errorEl.innerText = String(error); errorEl.classList.add('is-visible') } }
 				finally { renaming = false }
 			})
 			})
@@ -832,7 +828,7 @@ class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Share duplicate numbers across extensions')
-			.setDesc('Use one filename-stem namespace in the attachment folder, so PNG/JPG/etc. receive distinct numbers. Off by default. Existing conflicts are resolved only when those files are renamed.')
+			.setDesc('Share duplicate numbers between filename extensions in the attachment folder. Off by default. Existing conflicts are resolved only when those files are renamed.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.dupNumberAcrossExtensions)
 				.onChange(async value => {
@@ -854,7 +850,7 @@ class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Rename input selection')
-			.setDesc('Initial cursor or selection in the rename prompt. Also applies after Use original name.')
+			.setDesc('Choose the caret or selection position in the rename prompt. Also applies when restoring the original name.')
 			.addDropdown(dropdown => dropdown
 				.addOption('end', 'Cursor at end')
 				.addOption('start', 'Cursor at start')
