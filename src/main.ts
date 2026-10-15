@@ -29,6 +29,8 @@ import { DiscardAction, DiscardController } from './discard-controller';
 import { ImageBatchRenameModal } from './batch';
 import { planImageLinkConversion } from './link-conversion';
 import { ImageLinkConversionModal } from './link-conversion-modal';
+import { VaultImageRenamePlan } from './vault-rename';
+import { VaultImageRenameModal } from './vault-rename-modal';
 import { filenameTemplateStem, renderTemplate, TemplateDate } from './template';
 import { assertFilenameOnly, headingBeforeReference, nameInputSelection, NameInputPosition, updateEmbedDestination, allocateName, splitRelativeFilename, compileExtensionPattern, IMAGE_EXTENSIONS, isExcludedPath, isTemporaryAttachment } from './rename-core';
 import {
@@ -138,6 +140,8 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (DEBUG) {
 			this.addRibbonIcon('wand-glyph', 'Batch rename all images instantly (in the current file)', batchRenameAllImages)
 		}
+
+		this.addCommand({id: 'preview-vault-image-renames', name: 'Preview image renames (whole vault)', callback: () => { void this.openVaultImageRename().catch(error => new Notice(String(error))) }})
 
 		this.addCommand({id: 'convert-markdown-image-links', name: 'Convert Markdown image links to wiki embeds (current note)', callback: () => this.openImageLinkConversion()})
 
@@ -341,6 +345,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 		debugLog('modals count', this.modals.length)
 	}
 
+	async openVaultImageRename() {
+		const plan = await VaultImageRenamePlan.create(this, () => this.unloaded)
+		if (this.unloaded) { plan.close(); return }
+		const modal = new VaultImageRenameModal(this.app, plan, () => {
+			const operation = (this.renameQueue || Promise.resolve()).then(() => plan.apply())
+			this.renameQueue = operation.then(() => {}, () => {})
+			return operation
+		}, () => { const index = this.modals.indexOf(modal); if (index >= 0) this.modals.splice(index,1) })
+		this.modals.push(modal)
+		modal.open()
+	}
+
 	openImageLinkConversion() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
 		if (!view?.file || !view.editor) { new Notice('Open an editable Markdown note first.'); return }
@@ -427,7 +443,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	// returns a new name for the input file, with extension
-	generateNewName(file: TFile, activeFile: TFile, now?: TemplateDate) {
+	generateNewName(file: TFile, activeFile: TFile, now?: TemplateDate, uuid?: string) {
 		let imageNameKey = ''
 		let firstHeading = ''
 		let nearestHeading: string | undefined
@@ -458,6 +474,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		const rendered = renderTemplate(
 			this.settings.imageNamePattern,
 			{
+				uuid,
 				imageNameKey,
 				fileName: activeFile.basename,
 				dirName: activeFile.parent.name,

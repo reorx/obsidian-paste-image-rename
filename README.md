@@ -21,6 +21,7 @@ Paste image rename plugin not only implements Zettlr's feature, but also allows 
     - [Add prefix/suffix to duplicated names](#add-prefixsuffix-to-duplicated-names)
     - [Batch renaming process](#batch-renaming-process)
     - [Batch rename all images instantly](#batch-rename-all-images-instantly)
+    - [Preview image renames across the vault](#preview-image-renames-across-the-vault)
     - [Handle all attachments](#handle-all-attachments)
   - [FAQ](#faq)
   - [Settings](#settings)
@@ -103,6 +104,20 @@ This is a shortcut for using [Batch renaming process](#batch-renaming-process) w
 makes everyday image renaming much easier.
 
 Note that this command has no confirmation, please use it with caution!
+
+### Preview image renames across the vault
+
+**Experimental, bounded static-Markdown workflow:** Run **Preview image renames (whole vault)** from the command palette. This is not a guarantee for arbitrary plugin-generated runtime references. This image-only command inventories the vault, shows each original path, exact proposed destination, referring notes and skipped reasons, then requires **Apply image renames**. It does not rename PDFs or other non-image attachments, move files, create folders, or edit note text itself.
+
+An image is eligible only when every verified referring Markdown note, including ordinary links as well as embeds, produces the same basename. Conflicting sources are skipped; note order never chooses an owner. Repeated references do not create duplicate operations. Excluded or protected sources still count when checking whether a shared image is safe. A single preview timestamp and one random identifier per image are reused across its source proposals. Collision-resolved destinations are frozen too: Apply never regenerates a name. Allocation follows original paths in deterministic lexical order, reserves existing names and earlier planned destinations, and skips case-only renames or destinations that might steal another resolved/unresolved link. New previews can intentionally produce new DATE/UUID names.
+
+Enable Obsidian’s **Automatically update internal links** setting before creating the preview. The command must positively verify this setting and the necessary reference/editor APIs; it does not change settings for you. Unsupported hosts fail closed while existing per-note commands remain available. The plugin’s minimum-version declaration is unchanged; native operation of this new command on Obsidian 0.12.0 has not been verified.
+
+Keep notes saved and the vault idle while previewing/applying. The command checks file identities, reference/naming context, settings, physical inventory, image bytes and open-editor text before applying and between renames. Changed or unverifiable state stops the remaining batch and requires a fresh preview. Only verified destination-only link rewrites for already completed renames may differ from the original snapshots. Core updates to aliases/frontmatter or other unexpected text can therefore stop a batch after some successful renames.
+
+**This is not an atomic transaction and has no rollback.** Closing or cancelling stops the remaining operations, but an in-flight Obsidian rename may finish. The result reports completed paths and an uncertain attempted operation separately. Inspect that result before making another preview; never assume an error undid earlier renames.
+
+The initial implementation deliberately refuses incomplete scans and unsupported reference containers rather than assuming an image has no other references. Any Canvas, Excalidraw, SVG or unsupported non-image/non-Markdown file (including PDFs) blocks this initial plan. HTML, fenced/indented code containers, known dynamic inline expressions and local file/Obsidian URI references also block it; the preview lists the reasons. Consequently this initial command is intended only for small static Markdown/raster-image vaults, not typical mixed-content vaults. Scan limits are 2,000 files, 200 MB total declared file sizes (including images), 20 MB per file and 2 million characters per note/container; exceeding a limit makes the initial preview stop without renaming. Image bytes are read for integrity snapshots, not reference discovery. Apply repeats the full scan before each operation and once afterward, so read volume grows with both vault size and the number of renames. A 12-image synthetic fixture performed 168 binary reads; this is not a native performance benchmark. Keep backups for bulk operations. The preview/apply regression suite uses synthetic host fixtures; it is not proof of native synchronization behavior on every platform.
 
 ### Handle all attachments
 
