@@ -41,6 +41,7 @@ import {
   NameObj,
   path,
   sanitizer,
+  setDebugLogging,
 } from './utils';
 
 interface PluginSettings {
@@ -57,6 +58,7 @@ interface PluginSettings {
 	excludeExtensionPattern: string
 	excludedFolders: string
 	disableRenameNotice: boolean
+	debugLogging?: boolean
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -72,6 +74,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	excludeExtensionPattern: '',
 	excludedFolders: '',
 	disableRenameNotice: false,
+	debugLogging: false,
 }
 
 const PASTED_IMAGE_PREFIX = 'Pasted image '
@@ -181,11 +184,19 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	trackAttachment(file: TAbstractFile) {
 		if (this.unloaded || !(file instanceof TFile) || isMarkdownFile(file)) return
-		if (!isPastedImage(file) && !this.settings.handleAllAttachments) return
+		const skip = (reason: string) => debugLog('Attachment skipped:', reason, file.path)
+		if (!isPastedImage(file) && !this.settings.handleAllAttachments) return skip(`name does not start with "${PASTED_IMAGE_PREFIX}"`)
 		const source = this.getActiveFile()
-		if (!source || this.sourceProtectionReason(source) || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
+		if (!source) return skip('no active Markdown view')
+		const reason = this.sourceProtectionReason(source)
+		if (reason) return skip(`${reason} (source: ${source.path})`)
+		if (this.isExcluded(file, source)) return skip(`excluded folder (source: ${source.path})`)
+		if (isTemporaryAttachment(file.path)) return skip('temporary or dot-folder path')
+		if (this.testExcludeExtension(file)) return skip('excluded extension')
 		// A restored/synced file resolving an existing embed is not a new insertion.
-		if (this.sourceReferencesAttachment(source, file) || this.pendingAttachments.has(file)) return
+		if (this.sourceReferencesAttachment(source, file)) return skip('source already references it')
+		if (this.pendingAttachments.has(file)) return skip('already pending')
+		debugLog('Attachment tracking:', file.path, 'source:', source.path)
 		const timer = window.setTimeout(() => {
 			this.cancelPendingAttachment(file)
 			debugLog('Attachment left unchanged: no new source embed within 30 seconds', file.path)
@@ -201,13 +212,18 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	processPendingAttachments(source: TFile, data?: string, cache?: CachedMetadata) {
 		if (this.unloaded) return
-		if (this.sourceProtectionReason(source)) {
-			for (const [file, pending] of this.pendingAttachments) if (pending.source === source) this.cancelPendingAttachment(file)
+		const reason = this.sourceProtectionReason(source)
+		if (reason) {
+			for (const [file, pending] of this.pendingAttachments) if (pending.source === source) {
+				debugLog('Attachment cancelled:', reason, file.path)
+				this.cancelPendingAttachment(file)
+			}
 			return
 		}
 		for (const [file, pending] of this.pendingAttachments) {
 			if (pending.source !== source || !this.sourceReferencesAttachment(source, file)) continue
 			this.cancelPendingAttachment(file)
+			debugLog('Attachment rename starting:', file.path, 'autoRename:', pending.autoRename)
 			// Keep the source captured at creation, even after the user changes tabs.
 			const action = !pending.autoRename ? this.discardController?.prepare(file, source, data, cache) : undefined
 			const start = action !== undefined ? action.then(discard => this.startRenameProcess(file, pending.autoRename, source, discard)) : this.startRenameProcess(file, pending.autoRename, source)
@@ -530,6 +546,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		setDebugLogging(this.settings.debugLogging ?? false)
 	}
 
 	async saveSettings() {
@@ -921,5 +938,16 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}
 			));
+
+		new Setting(containerEl)
+			.then(setting => setting.nameEl.setText('Debug logging'))
+			.setDesc('Log why attachments are skipped or renamed. Open the developer console with Ctrl+Shift+I (Cmd+Option+I on macOS) and enable the Verbose log level.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.debugLogging ?? false)
+				.onChange(async value => {
+					this.plugin.settings.debugLogging = value
+					setDebugLogging(value)
+					await this.plugin.saveSettings()
+				}))
 	}
 }

@@ -8,7 +8,7 @@ const labels = ['Image name pattern', 'Duplicate number at start (or end)',
   'Duplicate number delimiter', 'Always add duplicate number',
   'Share duplicate numbers across extensions', 'Duplicate number minimum digits',
   'Rename input selection', 'Auto rename', 'Handle all attachments',
-  'Exclude extension pattern', 'Excluded folders', 'Disable rename notice'];
+  'Exclude extension pattern', 'Excluded folders', 'Disable rename notice', 'Debug logging'];
 
 async function settingsFixture() {
   const plugin = new Plugin(null as any, null as any);
@@ -24,14 +24,14 @@ async function settingsFixture() {
   return {plugin, saved, tab, settings: Setting.created.slice(first)};
 }
 
-test('all twelve settings labels, controls, defaults and render order remain unchanged', async () => {
+test('all thirteen settings labels, controls, defaults and render order remain unchanged', async () => {
   const f = await settingsFixture();
   assert.deepEqual(f.settings.map(setting => setting.nameEl.innerText), labels);
   assert.equal(f.settings[0].controlEl.find('input')!.value, '{{fileName}}');
   assert.equal(f.settings[2].controlEl.find('input')!.value, '-');
   assert.equal(f.settings[5].controlEl.find('input')!.value, '1');
   assert.equal(f.settings[6].controlEl.find('select')!.value, 'end');
-  for (const index of [1, 3, 4, 7, 8, 11]) assert.equal((f.settings[index].controlEl.find('toggle') as any).checked, false);
+  for (const index of [1, 3, 4, 7, 8, 11, 12]) assert.equal((f.settings[index].controlEl.find('toggle') as any).checked, false);
   for (const index of [9, 10]) assert.equal(f.settings[index].controlEl.find('input')!.value, '');
   assert.deepEqual(f.saved, []);
   const initial = structuredClone(f.plugin.settings);
@@ -39,7 +39,7 @@ test('all twelve settings labels, controls, defaults and render order remain unc
   f.tab.display();
   assert.deepEqual(Setting.created.slice(first).map(setting => setting.nameEl.innerText), labels);
   assert.deepEqual(f.plugin.settings, initial);
-  assert.equal(f.tab.containerEl.children.length, 12);
+  assert.equal(f.tab.containerEl.children.length, 13);
 });
 
 test('DOM label rendering retains setting sanitization, validation and persistence callbacks', async () => {
