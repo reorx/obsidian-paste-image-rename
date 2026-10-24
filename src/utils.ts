@@ -5,8 +5,14 @@ import {
 
 export const DEBUG = !(process.env.BUILD_ENV === 'production')
 
+let debugEnabled = DEBUG
+
+export function setDebugLogging(on: boolean) {
+	debugEnabled = on || DEBUG
+}
+
 export function debugLog(...args: unknown[]) {
-	if (DEBUG) {
+	if (debugEnabled) {
 		console.debug((new Date()).toISOString().slice(11, 23), ...args)
 	}
 }
