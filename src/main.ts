@@ -26,6 +26,7 @@ import {
 } from 'obsidian';
 
 import { DiscardAction, DiscardController } from './discard-controller';
+import { ExcalidrawPasteController, ExcalidrawPasteProof } from './excalidraw-paste';
 import { ImageBatchRenameModal } from './batch';
 import { planImageLinkConversion } from './link-conversion';
 import { ImageLinkConversionModal } from './link-conversion-modal';
@@ -86,15 +87,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 	private unloaded = false
 	private drawingSources = new WeakSet<TFile>()
 	private discardController?: DiscardController
+	private excalidrawPaste?: ExcalidrawPasteController
 
 	async onload() {
 		await this.loadSettings();
 		if (typeof requireApiVersion === 'function') {
 			if (requireApiVersion('1.1.1') && typeof this.app.workspace.on === 'function' && typeof this.app.workspace.getLeavesOfType === 'function') {
 				this.discardController = new DiscardController(this.app, file => this.sourceProtectionReason(file))
+				this.excalidrawPaste = new ExcalidrawPasteController(this.app, (link, sourcePath) => this.app.metadataCache.getFirstLinkpathDest(link, sourcePath))
 				// Observe native insertions only; preventDefault would cancel Obsidian's paste/drop.
-				this.registerEvent(this.app.workspace.on('editor-paste', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
-				this.registerEvent(this.app.workspace.on('editor-drop', (event, editor, info) => { if (info instanceof MarkdownView) this.discardController?.observe(event, editor, info) }))
+				this.registerEvent(this.app.workspace.on('editor-paste', (event, editor, info) => { if (info instanceof MarkdownView) { this.discardController?.observe(event, editor, info); this.excalidrawPaste?.observe(event, editor, info) } }))
+				this.registerEvent(this.app.workspace.on('editor-drop', (event, editor, info) => { if (info instanceof MarkdownView) { this.discardController?.observe(event, editor, info); this.excalidrawPaste?.observe(event, editor, info) } }))
 				this.registerEvent(this.app.workspace.on('editor-change', (_editor, info) => this.discardController?.changed(info.file)))
 			}
 		}
@@ -103,15 +106,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 		// scans. Creation timestamps are unreliable for copied/large/mobile files.
 		this.app.workspace.onLayoutReady(() => {
 			if (this.unloaded) return
-			this.registerEvent(this.app.vault.on('create', file => { this.discardController?.changed(file, true); this.trackAttachment(file) }))
+			this.registerEvent(this.app.vault.on('create', file => { this.discardController?.changed(file, true); this.excalidrawPaste?.created(file); this.trackAttachment(file) }))
 			this.registerEvent(this.app.vault.on('delete', file => {
 				this.discardController?.changed(file)
+				this.excalidrawPaste?.modified(file)
 				for (const [attachment, pending] of this.pendingAttachments) {
 					if (attachment === file || pending.source === file) this.cancelPendingAttachment(attachment)
 				}
 			}))
-			this.registerEvent(this.app.vault.on('modify', file => this.discardController?.changed(file)))
-			this.registerEvent(this.app.vault.on('rename', file => this.discardController?.changed(file)))
+			this.registerEvent(this.app.vault.on('modify', file => { this.discardController?.changed(file); this.excalidrawPaste?.modified(file) }))
+			this.registerEvent(this.app.vault.on('rename', file => { this.discardController?.changed(file); this.excalidrawPaste?.modified(file) }))
 			this.registerEvent(this.app.metadataCache.on('changed', (source, data, cache) => { this.sourceProtectionReason(source); this.processPendingAttachments(source, data, cache) }))
 		})
 
@@ -166,11 +170,14 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (!cache) return 'Source metadata is not available yet. Wait for indexing and try again.'
 	}
 
-	private assertRenameSource(sourcePath: string, expectedSource?: TAbstractFile) {
+	private assertRenameSource(sourcePath: string, expectedSource?: TAbstractFile, proof?: ExcalidrawPasteProof) {
 		const source = this.app.vault.getAbstractFileByPath(sourcePath)
 		if (!(source instanceof TFile) || source.path !== sourcePath || (expectedSource && source !== expectedSource)) throw new Error('The original source note is no longer available.')
 		const reason = this.sourceProtectionReason(source)
-		if (reason) throw new Error(reason)
+		if (proof) {
+			if (proof.source !== source) throw new Error('The verified paste belongs to a different note.')
+			proof.assertCurrent()
+		} else if (reason) throw new Error(reason)
 	}
 
 	private sourceReferencesAttachment(source: TFile, attachment: TFile): boolean {
@@ -183,7 +190,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (this.unloaded || !(file instanceof TFile) || isMarkdownFile(file)) return
 		if (!isPastedImage(file) && !this.settings.handleAllAttachments) return
 		const source = this.getActiveFile()
-		if (!source || this.sourceProtectionReason(source) || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
+		if (!source || (this.sourceProtectionReason(source) && !this.excalidrawPaste?.canTrack(file, source)) || this.isExcluded(file, source) || isTemporaryAttachment(file.path) || this.testExcludeExtension(file)) return
 		// A restored/synced file resolving an existing embed is not a new insertion.
 		if (this.sourceReferencesAttachment(source, file) || this.pendingAttachments.has(file)) return
 		const timer = window.setTimeout(() => {
@@ -201,8 +208,17 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 	processPendingAttachments(source: TFile, data?: string, cache?: CachedMetadata) {
 		if (this.unloaded) return
-		if (this.sourceProtectionReason(source)) {
-			for (const [file, pending] of this.pendingAttachments) if (pending.source === source) this.cancelPendingAttachment(file)
+		const protectedSource = this.sourceProtectionReason(source)
+		if (protectedSource) {
+			for (const [file, pending] of this.pendingAttachments) {
+				if (pending.source !== source) continue
+				if (!this.excalidrawPaste?.canTrack(file, source)) { this.cancelPendingAttachment(file); continue }
+				if (!this.sourceReferencesAttachment(source, file)) continue
+				this.cancelPendingAttachment(file)
+				void this.excalidrawPaste.prepare(file, source, data, cache).then(proof => {
+					if (proof) return this.startRenameProcess(file, pending.autoRename, source, undefined, proof)
+				}).catch(error => new Notice(`Excalidraw image left unchanged: ${error}`))
+			}
 			return
 		}
 		for (const [file, pending] of this.pendingAttachments) {
@@ -218,46 +234,50 @@ export default class PasteImageRenamePlugin extends Plugin {
 		}
 	}
 
-	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile(), discard?: DiscardAction) {
+	async startRenameProcess(file: TFile, autoRename = false, activeFile = this.getActiveFile(), discard?: DiscardAction, proof?: ExcalidrawPasteProof) {
 		if (this.unloaded || this.app.vault.getAbstractFileByPath(file.path) !== file) { discard?.cancel(); return }
 		if (!activeFile || this.isExcluded(file, activeFile)) return
 		const reason = this.sourceProtectionReason(activeFile)
-		if (reason) { new Notice(reason); return }
+		if (reason && !proof) { new Notice(reason); return }
+		if (proof) this.assertRenameSource(activeFile.path, activeFile, proof)
 
 		const { stem, newName, isMeaningful }= this.generateNewName(file, activeFile)
 		debugLog('generated newName:', newName, isMeaningful)
 
 		if (!isMeaningful || !autoRename) {
-			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path, discard || {reason:'Cancel and Delete requires Obsidian 1.1.1+ and a verified new single-file paste/drop.', cancel:()=>{}})
+			this.openRenameModal(file, isMeaningful ? stem : '', activeFile.path, proof ? {reason: 'Cancel and Delete is unavailable in Excalidraw notes.', cancel: () => proof.cancel()} : discard || {reason:'Cancel and Delete requires Obsidian 1.1.1+ and a verified new single-file paste/drop.', cancel:()=>{}}, proof)
 			return
 		}
-		await this.renameFile(file, newName, activeFile.path, true)
+		await this.renameFile(file, newName, activeFile.path, true, proof)
 	}
 
 	// Allocation and rename must be one serialized operation: concurrent paste events
 	// otherwise choose the same free destination before either rename completes.
-	renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine = false): Promise<void> {
+	renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine = false, proof?: ExcalidrawPasteProof): Promise<void> {
 		const expectedPath = file.path
 		const expectedSource = this.app.vault.getAbstractFileByPath(sourcePath)
 		const operation = (this.renameQueue ?? Promise.resolve()).then(() =>
-			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath, expectedSource))
+			this.performRename(file, inputNewName, sourcePath, replaceCurrentLine, expectedPath, expectedSource, proof))
 		// A failed rename must not poison subsequent requests.
 		this.renameQueue = operation.catch(() => {})
 		return operation
 	}
 
-	private async performRename(file: TFile, inputNewName: string, sourcePath: string, replaceSourceLinks: boolean, expectedPath: string, expectedSource: TAbstractFile) {
+	private async performRename(file: TFile, inputNewName: string, sourcePath: string, replaceSourceLinks: boolean, expectedPath: string, expectedSource: TAbstractFile, proof?: ExcalidrawPasteProof) {
 		if (this.unloaded) return
 		if (this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment was replaced or deleted before this rename.')
-		this.assertRenameSource(sourcePath, expectedSource)
+		this.assertRenameSource(sourcePath, expectedSource, proof)
 		if (getVaultConfig(this.app)?.alwaysUpdateLinks === false) {
 			throw new Error('Enable Obsidian’s Automatically update internal links setting before renaming attachments, so shared references remain valid.')
 		}
 		splitRelativeFilename(inputNewName)
-		const { name: newName } = await this.deduplicateNewName(inputNewName, file)
+		const { name: newName } = await this.deduplicateNewName(inputNewName, file, proof?.source)
 		if (this.unloaded) return
-		this.assertRenameSource(sourcePath, expectedSource)
+		this.assertRenameSource(sourcePath, expectedSource, proof)
 		if (file.path !== expectedPath || this.app.vault.getAbstractFileByPath(expectedPath) !== file) throw new Error('The attachment moved while this rename was waiting. Try again from its current location.')
+		const retained = proof ? await proof.preflight() : undefined
+		this.assertRenameSource(sourcePath, expectedSource, proof)
+		if (proof && proof.file !== file) throw new Error('The verified paste belongs to a different attachment.')
 		const originName = file.name
 		const newPath = path.join(file.parent.path, newName)
 		if (newPath === file.path) return
@@ -274,6 +294,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 
 
 		try {
+			retained?.()
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
 			new Notice(`Failed to rename ${newName}: ${err}`)
@@ -315,15 +336,15 @@ export default class PasteImageRenamePlugin extends Plugin {
 		if (!this.settings.disableRenameNotice) new Notice(`Renamed ${originName} to ${newName}`)
 	}
 
-	openRenameModal(file: TFile, newName: string, sourcePath: string, discard?: DiscardAction) {
+	openRenameModal(file: TFile, newName: string, sourcePath: string, discard?: DiscardAction, proof?: ExcalidrawPasteProof) {
 		const source = this.app.vault.getAbstractFileByPath(sourcePath)
-		try { this.assertRenameSource(sourcePath) } catch (error) { new Notice(String(error)); return }
+		try { this.assertRenameSource(sourcePath, undefined, proof) } catch (error) { new Notice(String(error)); return }
 		const modal = new ImageRenameModal(
 			this.app, file, newName,
 			(confirmedName: string) => {
 				debugLog('confirmedName:', confirmedName)
-				this.assertRenameSource(sourcePath, source)
-				return this.renameFile(file, confirmedName, sourcePath, true)
+				this.assertRenameSource(sourcePath, source, proof)
+				return this.renameFile(file, confirmedName, sourcePath, true, proof)
 			},
 			() => {
 				const index = this.modals.indexOf(modal)
@@ -483,13 +504,16 @@ export default class PasteImageRenamePlugin extends Plugin {
 	}
 
 	// newName: foo.ext
-	async deduplicateNewName(newName: string, file: TFile): Promise<NameObj> {
+	async deduplicateNewName(newName: string, file: TFile, drawingSource?: TFile): Promise<NameObj> {
 		const {directory, filename} = splitRelativeFilename(newName)
 		const destinationDirectory = path.join(file.parent.path, directory)
 		assertFilenameOnly(newName)
 		const listed = await this.app.vault.adapter.list(destinationDirectory)
 		const currentName = destinationDirectory === path.join(file.parent.path) ? file.name : undefined
-		const name = allocateName(filename, [...listed.files, ...(listed.folders || [])].map(sibling => path.basename(sibling)), currentName, this.settings)
+		// Excalidraw owns these sibling export names, even before an export exists.
+		const exportStem = drawingSource?.basename.replace(/\.excalidraw$/i, '')
+		const reserved = drawingSource ? [drawingSource.basename, exportStem].flatMap(stem => ['', '.dark', '.light'].flatMap(theme => ['png', 'svg'].map(ext => `${stem}${theme}.${ext}`))) : []
+		const name = allocateName(filename, [...listed.files, ...(listed.folders || []), ...reserved].map(sibling => path.basename(sibling)), currentName, this.settings)
 		const extension = path.extension(name)
 		return {name: path.join(directory, name), stem: name.slice(0, -extension.length - 1), extension}
 	}
@@ -508,6 +532,7 @@ export default class PasteImageRenamePlugin extends Plugin {
 	onunload() {
 		this.unloaded = true
 		this.discardController?.stop()
+		this.excalidrawPaste?.stop()
 		for (const file of this.pendingAttachments.keys()) this.cancelPendingAttachment(file)
 		const modals = [...this.modals]
 		modals.forEach(modal => modal.close())

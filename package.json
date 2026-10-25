@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-paste-image-rename",
-	"version": "1.7.2",
+	"version": "1.7.3",
 	"main": "main.js",
 	"scripts": {
 		"start": "node esbuild.config.mjs",
@@ -28,7 +28,8 @@
 		"typescript-eslint": "^8.35.1",
 		"eslint-plugin-obsidianmd": "0.4.2",
 		"stylelint": "^17.0.0",
-		"stylelint-config-obsidianmd": "0.1.0"
+		"stylelint-config-obsidianmd": "0.1.0",
+		"lz-string": "1.5.0"
 	},
 	"dependencies": {
 		"@lezer/markdown": "1.8.0",

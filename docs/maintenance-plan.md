@@ -1,7 +1,18 @@
 # Maintenance plan and progress
 
-Updated: 2026-10-15. Reproduction-pass baseline: `b2c2ac6ad25043c95aff55ac0583a24d80b0b509`.
+Updated: 2026-10-25. Historical reproduction-pass baseline: `b2c2ac6ad25043c95aff55ac0583a24d80b0b509`.
 Current branch: `master`. The accepted maintenance branch was fast-forward merged with explicit maintainer approval. Future work in this repository defaults to `master`; the maintenance branches remain preserved. 35 verified issue closures in total. Version 1.7.0 was released before this pass; this pass creates no release.
+
+## Current checkpoint — 2026-10-25 Excalidraw dual-mode fix
+
+Obsidian was updated to official stable **1.14.5** and the supplied #112 dual-mode
+failure reproduced with Excalidraw **2.29.0**. Version **1.7.3** adds narrowly
+verified, explicit opt-in single-raster body-paste renaming. The drawing-wide guard
+remains for batch/conversion/deletion and ordinary unverified attachments.
+See [release notes](releases/1.7.3.md) and [verification](test-evidence/excalidraw-1.7.3.md).
+PR #124 diagnostics and paused PR #123 are not included. #112 stays open because
+its other historical platform/conflict reports are not established solved by this
+specific fix. Earlier checkpoint counts below are historical, not a fresh inventory.
 
 ## Historical checkpoint — 2026-10-14 sequential pass
 
@@ -92,7 +103,7 @@ not a closed issue.
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/107">#107</a></td><td>Orphaned images during rename</td><td>Data integrity</td><td>Paused</td><td>Native isolated-vault trust approval pending; synthetic filesystem mapping probes passed.</td><td><a href="#issue-107">Details</a></td></tr>
 <tr><th colspan="6">P1</th></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/119">#119</a></td><td>attachment rename limitations in a note</td><td>Batch bug</td><td>Paused</td><td>350-file screenshot-derived fixture passes; mid-batch scope defect fixed separately, original silent-stop cause unconfirmed.</td><td><a href="#issue-119">Details</a></td></tr>
-<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td>Paused</td><td>Old timestamp failure reproduced; current matrix passes; aggregate native platform/conflict causes unconfirmed.</td><td><a href="#issue-112">Details</a></td></tr>
+<tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/112">#112</a></td><td>Stopped working some time ago</td><td>Platform compatibility</td><td>Paused</td><td>Dual-mode Markdown cause reproduced on 1.14.5 and opt-in fix added in 1.7.3; other aggregate platform/conflict causes unconfirmed.</td><td><a href="#issue-112">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/108">#108</a></td><td>pasting in an image create duplicate named images</td><td>Data integrity investigation</td><td>Paused</td><td>200 repeated-event and three-file prefix probes preserve one rename per identity; native clipboard duplicate remains unconfirmed.</td><td><a href="#issue-108">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/96">#96</a></td><td>Better integration with git plugin</td><td>Compatibility / integrity</td><td>Skipped</td><td>Explicitly skipped by maintainer: reliable insertion provenance remains unresolved.</td><td><a href="#issue-96">Details</a></td></tr>
 <tr><td><a href="https://github.com/reorx/obsidian-paste-image-rename/issues/91">#91</a></td><td>Paste does not work anymore in Obsidian 1.5.12</td><td>Platform compatibility</td><td>Paused</td><td>Filename/event-order matrix passes eligible local files; Sonoma/Imgur integration untested.</td><td><a href="#issue-91">Details</a></td></tr>
@@ -345,6 +356,7 @@ of defects or pending work must be read with the later verification checkpoints.
 <a id="issue-112"></a>
 
 ### P1 · [#112 Stopped working some time ago](https://github.com/reorx/obsidian-paste-image-rename/issues/112)
+- 2026-10-25: The supplied Excalidraw case now has an opt-in body-paste fix in 1.7.3, after native 1.14.5 reproduction. See [exact scope and tests](test-evidence/excalidraw-1.7.3.md). The aggregate issue remains open; do not generalize this result to all older reports.
 - Category: Platform compatibility
 - Current GitHub status (2026-10-14): Open.
 - Reproduction / request: No prompt on 1.8.10; macOS CleanShot/Finder and Windows JPG reports; Linux confirmed PR67 workaround.

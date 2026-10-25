@@ -637,3 +637,50 @@ test('manual rename label and control retain their plain-text rendering and beha
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.deepEqual(f.renamed, ['new.png']);
 });
+
+import './excalidraw-paste-regressions';
+
+function dualProofFixture() {
+    const f = fixture();
+    f.app.metadataCache.getFileCache = () => ({frontmatter: {'excalidraw-plugin':'parsed'}});
+    let valid = true, preflights = 0;
+    const proof = {source:f.note, file:f.files[0], assertCurrent:()=>{if(!valid) throw Error('Paste changed');}, preflight:async()=>{preflights++; return ()=>{if(!valid) throw Error('Paste changed');};}};
+    return {...f, proof, revoke:()=>{valid=false;}, preflights:()=>preflights};
+}
+test('dual-mode scoped proof allows only its source and attachment, leaving general guard intact', async () => {
+    const f=dualProofFixture();
+    assert.match(f.plugin.sourceProtectionReason(f.note) || '', /drawing sources/);
+    await f.plugin.renameFile(f.files[0], 'body.png', f.note.path, true, f.proof);
+    assert.deepEqual(f.renamed,['body.png']); assert.equal(f.preflights(),1);
+    const g=dualProofFixture(); g.proof.source=file('Other.md');
+    await assert.rejects(g.plugin.renameFile(g.files[0],'body.png',g.note.path,true,g.proof),/different note/);
+    assert.deepEqual(g.renamed,[]);
+    const h=dualProofFixture(); h.proof.file=file('other.png');
+    await assert.rejects(h.plugin.renameFile(h.files[0],'body.png',h.note.path,true,h.proof),/different attachment/);
+    assert.deepEqual(h.renamed,[]);
+});
+test('dual-mode scoped proof is rechecked after allocation and final reference preflight', async () => {
+    for(const phase of ['allocation','preflight']) {
+        const f=dualProofFixture();
+        if(phase==='allocation') f.app.vault.adapter.list=async()=>{f.revoke();return {files:[],folders:[]};};
+        else f.proof.preflight=async()=>{f.revoke();return ()=>{};};
+        await assert.rejects(f.plugin.renameFile(f.files[0],'body.png',f.note.path,true,f.proof),/Paste changed/);
+        assert.deepEqual(f.renamed,[]);
+    }
+});
+test('dual-mode proof never enables batch or conversion and reserves future export paths', async () => {
+    const f=dualProofFixture(); await f.plugin.batchRenameAllImages(); f.plugin.openBatchRenameModal();
+    assert.deepEqual(f.renamed,[]); assert.equal(f.plugin.modals.length,0);
+    for(const name of ['Note.png','Note.dark.png','Note.light.png','Note.svg']) {
+        const result=await f.plugin.deduplicateNewName(name,f.files[0],f.note);
+        assert.notEqual(result.name,name);
+    }
+    await f.plugin.renameFile(f.files[0],'Note.png',f.note.path,true,f.proof);
+    assert.deepEqual(f.renamed,['Note-1.png']);
+});
+test('dual-mode rename does not patch editor text across the drawing guard', async () => {
+    const f=dualProofFixture(); let edits=0;
+    f.app.workspace.getActiveViewOfType=()=>({file:f.note,editor:{getLine:()=> '![[old.png]]',transaction:()=>edits++}});
+    await f.plugin.renameFile(f.files[0],'body.png',f.note.path,true,f.proof);
+    assert.equal(edits,0);
+});

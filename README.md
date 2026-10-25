@@ -17,6 +17,7 @@ Paste image rename plugin not only implements Zettlr's feature, but also allows 
 - [Obsidian paste image rename](#obsidian-paste-image-rename)
   - [How to use](#how-to-use)
     - [Basic usage](#basic-usage)
+    - [Excalidraw dual-mode Markdown (opt-in)](#excalidraw-dual-mode-markdown-opt-in)
     - [Set `imageNameKey` frontmatter](#set-imagenamekey-frontmatter)
     - [Add prefix/suffix to duplicated names](#add-prefixsuffix-to-duplicated-names)
     - [Batch renaming process](#batch-renaming-process)
@@ -37,6 +38,35 @@ By typing the new name and clicking "Rename" (or just press enter), the image wi
 If you set "Image name pattern" to `{{fileName}}` (it's the default behavior after 1.2.0),
 "New name" will be generated as the name of the active file.
 ![](images/modal-fileName.png)
+
+### Excalidraw dual-mode Markdown (opt-in)
+
+Drawing files remain protected by default. In a dual-mode Excalidraw note, add
+`allow-paste-image-rename: true` (a YAML boolean) to its existing frontmatter,
+then switch to **Markdown mode** and paste one new raster image into the body
+**above** the commented `# Excalidraw Data` section. Normal Auto rename settings
+apply; otherwise the rename dialog opens. This requires Obsidian 1.1.1 or newer.
+
+Only a verified native single-image paste/drop is eligible. Existing images,
+images shared with another note/drawing, drawing-mode insertions, multi-file
+pastes, selections, SVG/PDF files, and edits inside/after the drawing data remain
+unchanged. Batch renaming, link conversion, and Cancel and Delete remain disabled
+for Excalidraw notes. Finish the prompt within 30 seconds without switching views
+or editing the note; otherwise paste again. Regular Markdown behavior is unchanged.
+
+The plugin verifies the source and image bytes and checks indexed Markdown,
+Canvas, Excalidraw, and SVG content plus open Markdown editors for shared
+references. Oversized, malformed, changing, or ambiguously encoded documents fail
+closed. This is not generic support for every drawing format or external link.
+Close all Excalidraw drawing and Canvas panes before pasting, including background
+panes: their unsaved scenes cannot be verified. The scan is limited to 10,000
+indexed files, 4 MB per textual file and 50 MB total textual data. Compressed
+drawings have bounded decoding limits. Unverifiable HTML-entity references are
+rejected rather than guessed.
+
+Drawing/export content is never edited by this compatibility path; Obsidian owns
+the new body-link update. The current note’s conventional same-basename PNG/SVG export filenames are reserved, so a
+note named `Sketch.md` may produce `Sketch-1.png` rather than `Sketch.png`.
 
 ### Set `imageNameKey` frontmatter
 
