@@ -6,23 +6,37 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 export const ASSETS = ['main.js', 'manifest.json', 'styles.css'];
+export const BOOTSTRAP = {
+  version: '1.7.3',
+  parent: '5017f66e8ce5ba79e28bb1a59f5275931ef55877',
+  subject: 'ci: bootstrap automated release 1.7.3',
+};
 const repository = 'reorx/obsidian-paste-image-rename';
 const hash = data => createHash('sha256').update(data).digest('hex');
 const json = file => JSON.parse(readFileSync(file, 'utf8'));
 const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
 
-export function validateEvent({version, ref, sha, eventName, event, head}) {
+export function validateEvent({version, ref, sha, eventName, event, head, parents, subject}) {
   assert.match(version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, 'Version must be plain x.y.z');
   assert.match(sha, /^[0-9a-f]{40}$/, 'Expected a full commit SHA');
   assert.equal(head, sha, 'Checkout must equal the event commit');
   assert.equal(eventName, 'push', 'Only explicit push events can release');
   assert.equal(event.deleted, false, 'Deleted refs cannot release');
   assert.equal(event.forced, false, 'Force pushes cannot release');
-  assert.equal(ref, `refs/tags/${version}`, 'Only exact plain version-tag pushes can release');
+  if (ref === `refs/tags/${version}`) {
+    // GitHub may report the tag object's SHA in after for an annotated tag;
+    // GITHUB_SHA and the checkout still identify its dereferenced commit.
+    assert.equal(event.ref, ref);
+    return 'tag';
+  }
+  assert.equal(ref, 'refs/heads/master', 'Tag must match manifest version exactly');
   assert.equal(event.ref, ref);
-  // For annotated tags, GITHUB_SHA is the dereferenced commit; validateCheckout
-  // also resolves the local tag to ensure it still identifies that exact commit.
-  return 'tag';
+  assert.equal(version, BOOTSTRAP.version, 'Bootstrap is limited to one version');
+  assert.equal(event.before, BOOTSTRAP.parent, 'Bootstrap must start at the reviewed release commit');
+  assert.equal(event.after, sha, 'Bootstrap event must identify this exact commit');
+  assert.deepEqual(parents, [BOOTSTRAP.parent], 'Bootstrap must have exactly the reviewed direct parent');
+  assert.equal(subject, BOOTSTRAP.subject, 'Bootstrap needs the exact one-time commit subject');
+  return 'bootstrap';
 }
 
 function validateCheckout() {
@@ -36,7 +50,8 @@ function validateCheckout() {
   const sha = process.env.GITHUB_SHA;
   const mode = validateEvent({version: manifest.version, ref: process.env.GITHUB_REF, sha,
     eventName: process.env.GITHUB_EVENT_NAME, event: json(process.env.GITHUB_EVENT_PATH),
-    head: git('rev-parse', 'HEAD')});
+    head: git('rev-parse', 'HEAD'), parents: git('show', '-s', '--format=%P', 'HEAD').split(' ').filter(Boolean),
+    subject: git('show', '-s', '--format=%s', 'HEAD')});
   if (mode === 'tag') assert.equal(git('rev-parse', `refs/tags/${manifest.version}^{commit}`), sha, 'Tag moved since the event');
   const notes = readFileSync(`docs/releases/${manifest.version}.md`, 'utf8');
   assert.ok(notes.trim(), 'Release notes are required');

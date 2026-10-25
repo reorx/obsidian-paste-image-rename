@@ -4,35 +4,33 @@ import {createHash} from 'node:crypto';
 import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {ASSETS, inspectAssets, publishRelease, validateEvent} from '../scripts/release.mjs';
+import {ASSETS, BOOTSTRAP, inspectAssets, publishRelease, validateEvent} from '../scripts/release.mjs';
 
 const sha = 'a'.repeat(40), other = 'b'.repeat(40);
-const tagEvent = () => ({version: '1.7.0', ref: 'refs/tags/1.7.0', sha, head: sha, eventName: 'push', event: {ref: 'refs/tags/1.7.0', after: sha, before: '0'.repeat(40), forced: false, deleted: false}});
-test('plain exact version tag is accepted', () => {
+const tagEvent = () => ({version: '1.7.3', ref: 'refs/tags/1.7.3', sha, head: sha, parents: [BOOTSTRAP.parent], subject: 'release', eventName: 'push', event: {ref: 'refs/tags/1.7.3', after: sha, before: '0'.repeat(40), forced: false, deleted: false}});
+const bootstrapEvent = () => ({...tagEvent(), ref: 'refs/heads/master', subject: BOOTSTRAP.subject, event: {ref: 'refs/heads/master', after: sha, before: BOOTSTRAP.parent, forced: false, deleted: false}});
+
+test('plain exact version tag and exact one-time bootstrap are accepted', () => {
   assert.equal(validateEvent(tagEvent()), 'tag');
+  assert.equal(validateEvent(bootstrapEvent()), 'bootstrap');
 });
 test('prefixed/mismatched tags, forced/deleted pushes and wrong checkout fail closed', () => {
-  for (const patch of [{ref: 'refs/tags/v1.7.0'}, {ref: 'refs/tags/1.7.1'}, {head: other}, {version: '01.7.0'}, {eventName: 'pull_request'}]) assert.throws(() => validateEvent({...tagEvent(), ...patch}));
+  for (const patch of [{ref: 'refs/tags/v1.7.3'}, {ref: 'refs/tags/1.7.4'}, {head: other}, {version: '01.7.3'}, {eventName: 'pull_request'}]) assert.throws(() => validateEvent({...tagEvent(), ...patch}));
   for (const field of ['forced', 'deleted']) { const e = tagEvent(); e.event[field] = true; assert.throws(() => validateEvent(e)); }
 });
-test('all branch pushes including the former bootstrap are rejected', () => {
-  for (const branch of ['master', 'main', 'release']) {
-    const e = tagEvent(); e.ref = `refs/heads/${branch}`; e.event.ref = e.ref;
-    e.subject = 'ci: bootstrap automated release 1.7.0';
-    e.parents = ['0487fc9acc3cc059edaf8e58e92e0ad5163b7b60'];
-    e.event.before = e.parents[0];
-    assert.throws(() => validateEvent(e), /Only exact plain version-tag/);
-  }
+test('bootstrap cannot be replayed from another parent, subject or version', () => {
+  for (const patch of [{parents: [other]}, {parents: [BOOTSTRAP.parent, other]}, {subject: 'release'}, {version: '1.7.4'}]) assert.throws(() => validateEvent({...bootstrapEvent(), ...patch}));
+  for (const field of ['before', 'after']) { const e = bootstrapEvent(); e.event[field] = other; assert.throws(() => validateEvent(e)); }
 });
 
 function fixture() {
   const data = Object.fromEntries(ASSETS.map(name => [name, Buffer.from(`reviewed ${name}`)]));
-  const plan = {repository: 'reorx/obsidian-paste-image-rename', version: '1.7.0', sha, notes: 'Reviewed release notes\n', assets: ASSETS.map(name => ({name, size: data[name].length, sha256: createHash('sha256').update(data[name]).digest('hex')}))};
+  const plan = {repository: 'reorx/obsidian-paste-image-rename', version: '1.7.3', sha, notes: 'Reviewed release notes\n', assets: ASSETS.map(name => ({name, size: data[name].length, sha256: createHash('sha256').update(data[name]).digest('hex')}))};
   const state = {tag: null, release: null, assets: [], mutations: [], failUpload: false};
   const client = {
     async get(p, missing) {
       if (p.includes('/git/ref/')) return state.tag;
-      if (p.endsWith('/releases/tags/1.7.0')) return state.release;
+      if (p.endsWith('/releases/tags/1.7.3')) return state.release;
       if (p.includes('/releases?per_page=')) return state.release ? [state.release] : [];
       if (p.endsWith('/releases/1')) return state.release;
       if (p.endsWith('/assets?per_page=100')) return state.assets;
@@ -42,7 +40,7 @@ function fixture() {
       state.mutations.push({kind: 'post', p, body});
       if (p.endsWith('/git/refs')) { state.tag = {object: {type: 'commit', sha: body.sha}}; return state.tag; }
       assert.ok(p.endsWith('/releases'));
-      state.release = {...body, id: 1, html_url: 'https://github.com/reorx/obsidian-paste-image-rename/releases/tag/1.7.0'};
+      state.release = {...body, id: 1, html_url: 'https://github.com/reorx/obsidian-paste-image-rename/releases/tag/1.7.3'};
       return state.release;
     },
     async patch(p, body) { state.mutations.push({kind: 'patch', p, body}); Object.assign(state.release, body); return state.release; },
@@ -103,19 +101,19 @@ test('tag change during upload stops before release publication', async () => {
 test('asset inspection checks exact names, embedded version and license notices', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'plugin-release-test-'));
   try {
-    writeFileSync(path.join(directory, 'main.js'), `version: "1.7.0"\n${readFileSync('THIRD_PARTY_LICENSES.txt', 'utf8')}`);
-    writeFileSync(path.join(directory, 'manifest.json'), JSON.stringify({version: '1.7.0'}));
+    writeFileSync(path.join(directory, 'main.js'), `version: "1.7.3"\n${readFileSync('THIRD_PARTY_LICENSES.txt', 'utf8')}`);
+    writeFileSync(path.join(directory, 'manifest.json'), JSON.stringify({version: '1.7.3'}));
     writeFileSync(path.join(directory, 'styles.css'), 'body {}');
-    assert.deepEqual(inspectAssets(directory, '1.7.0').map(a => a.name), ASSETS);
-    assert.throws(() => inspectAssets(directory, '1.7.1'));
+    assert.deepEqual(inspectAssets(directory, '1.7.3').map(a => a.name), ASSETS);
+    assert.throws(() => inspectAssets(directory, '1.7.4'));
     writeFileSync(path.join(directory, 'secret.txt'), 'not for release');
-    assert.throws(() => inspectAssets(directory, '1.7.0'), /three plugin assets/);
+    assert.throws(() => inspectAssets(directory, '1.7.3'), /three plugin assets/);
   } finally { rmSync(directory, {recursive: true, force: true}); }
 });
 
 test('draft hidden from tag lookup is resumed through release enumeration', async () => {
   const f = fixture(); f.seed(true, ['main.js']); const get = f.client.get;
-  f.client.get = (p, missing) => p.endsWith('/releases/tags/1.7.0') && f.state.release.draft ? null : get(p, missing);
+  f.client.get = (p, missing) => p.endsWith('/releases/tags/1.7.3') && f.state.release.draft ? null : get(p, missing);
   await f.run(); assert.equal(f.state.release.draft, false);
   assert.ok(!f.state.mutations.some(m => m.kind === 'post'));
 });
